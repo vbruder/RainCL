@@ -28,8 +28,42 @@ public class Geometry {
     private int instanceCount;
     private int instanceAttributeSize;
     private final List<VertexAttribute> attributes = new LinkedList<VertexAttribute>();
+    
+    private Texture heightTex;
+    private Texture normalTex;
 
-
+    /**
+     * @brief set normal texture
+     * @param normalTex texture containing normal information
+     */
+    public void setNormalTex(Texture normalTex) {
+        this.normalTex = normalTex;
+    }
+  
+    /**
+     * @brief returns normal texture
+     * @return normal texture
+     */
+    public Texture getNormalTex() {
+        return normalTex;
+    }
+    
+    /**
+     * @brief set height texture
+     * @param heightTex texture containing height information
+     */
+    public void setHeightTex(Texture heightTex) {
+        this.heightTex = heightTex;
+    }
+    
+    /**
+     * @brief returns height texture
+     * @return height texture
+     */
+    public Texture getHeightTex() {
+        return heightTex;
+    }
+    
     /**
      * Setzt den IntBuffer, der die Indexdaten dieser Geometrie beinhaltet und
      * die zugehoerige Topologie.

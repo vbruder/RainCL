@@ -68,8 +68,8 @@ public class Raindrops {
     private CLMem old_pos, new_pos, old_velos, new_velos;
     
     //asteroid settings
-    private int count = 16384*2;       //(int)Math.pow(2, 10);//(int)Math.pow(2, n); //2^n to work properly with local memory
-    private float clusterScale = 4;
+    private int count = 16384;       //(int)Math.pow(2, 10);//(int)Math.pow(2, n); //2^n to work properly with local memory
+    private float clusterScale = 1;
     private float veloScale = 1f;
     
     //kernel settings
@@ -188,8 +188,8 @@ public class Raindrops {
         glUniform1f(esLoc, 16.0f);
         glUniform3f(caLoc, 1.0f, 1.0f, 1.0f);
         
-        diffuseTexture = Util.generateTexture("raindrop.jpg");
-        specularTexture = Util.generateTexture("raindrop_spec.jpg");
+        diffuseTexture = Util.generateTexture("media/raindrop.jpg");
+        specularTexture = Util.generateTexture("media/raindrop_spec.jpg");
     }
     
     /**
@@ -199,8 +199,8 @@ public class Raindrops {
      */
     private void createData() {
         
-        this.raindrops_old = GeometryFactory.createSphere(0.02f, 16, 8);
-        this.raindrops_new = GeometryFactory.createSphere(0.02f, 16, 8);
+        this.raindrops_old = GeometryFactory.createSphere(0.01f, 16, 8);
+        this.raindrops_new = GeometryFactory.createSphere(0.01f, 16, 8);
         
         this.posBuffer = BufferUtils.createFloatBuffer(4*count);
         this.veloBuffer = BufferUtils.createFloatBuffer(4*count);
@@ -222,7 +222,7 @@ public class Raindrops {
             //spawning velocity
             //TODO influence by wind
 //            float vx = r.nextInt() / (float)Integer.MAX_VALUE * this.veloScale;
-            float vy = 2.0f; //Math.abs(r.nextInt() / (float)Integer.MAX_VALUE * this.veloScale);
+            float vy = 1.0f; //Math.abs(r.nextInt() / (float)Integer.MAX_VALUE * this.veloScale);
 //            float vz = r.nextInt() / (float)Integer.MAX_VALUE * this.veloScale;
             this.veloBuffer.put(0.0f);
             this.veloBuffer.put(vy);

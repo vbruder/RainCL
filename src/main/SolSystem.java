@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package main;
 
 import static opengl.GL.*;
@@ -37,6 +33,8 @@ import util.Geometry;
 import util.GeometryFactory;
 import util.RadiantOrb;
 import util.Raindrops;
+import util.ShaderProgram;
+import util.Texture;
 import util.Util;
 
 /**
@@ -64,13 +62,7 @@ public class SolSystem {
     private static int modelLoc;
     private static int flModelITLoc;
     private static int viewProjLoc;
-    
-    // scene data
-    private static Geometry earth = null;
-    private static Geometry moon = null;
-    private static Geometry clouds = null;
 
-    private static int earthFineness = 0;
     private static RadiantOrb orbs[] = new RadiantOrb[MAX_ORBS];
 
     // current configurations
@@ -87,20 +79,11 @@ public class SolSystem {
     private static float ingameTimePerSecond = 1.0f;
     
     // uniform data
-    private static final Matrix4f earthModelMatrix = new Matrix4f();
-    private static final Matrix4f moonModelMatrix = new Matrix4f();
-    private static final Matrix4f cloudsModelMatrix = new Matrix4f();
     private static final Matrix4f viewProjMatrix = new Matrix4f();
     private static final Vector3f inverseLightDirection = new Vector3f();
-    private static int earthTexture;
-    private static int earthSpecularTexture;
-    private static int moonTexture;
-    private static int cloudsTexture;
     
-    // temp data
-    private static final Matrix4f moonRotation = new Matrix4f();
-    private static final Matrix4f moonTilt = new Matrix4f();
-    private static final Matrix4f moonTranslation = new Matrix4f();
+    // shader Programs
+    private static ShaderProgram sProg;
     
     public static void main(String[] argv) {
         try {
@@ -128,12 +111,7 @@ public class SolSystem {
             orbSP = Util.createShaderProgram("./shader/Orb_VS.glsl", "./shader/Orb_FS.glsl");
 
             inverseLightDirection.set(1.0f, 0.2f, 0.0f);
-            inverseLightDirection.normalise();           
-
-            earthTexture = Util.generateTexture("earth.jpg");
-            earthSpecularTexture = Util.generateTexture("earth_spec.jpg");
-            moonTexture = Util.generateTexture("moon.jpg");
-            cloudsTexture = Util.generateTexture("clouds.jpg");
+            inverseLightDirection.normalise();
             
             for(int i=0; i < MAX_ORBS; ++i) {
                 orbs[i] = new RadiantOrb();
@@ -144,11 +122,7 @@ public class SolSystem {
                 orbs[i].setColor(new Vector3f((float)Math.random(), (float)Math.random(), (float)Math.random()));
             }
             
-            cam.move(-10.0f, 0.0f, 0.0f);
-            changeFineness(32);
-           
-            Util.translationX(3.0f, moonTranslation);
-            Util.rotationX((float)Math.toRadians(15.0), moonTilt);
+            cam.move(0.5f, 0.1f, 0.5f);
                         
             render();
             raindrops.destroy();
@@ -166,6 +140,13 @@ public class SolSystem {
         long now, millis;
         long frameTimeDelta = 0;
         int frames = 0;
+        
+        sProg = new ShaderProgram("shader/simulation_vs.glsl", "shader/simulation_fs.glsl");
+        
+        Geometry terrain = GeometryFactory.createTerrainFromMap("media/map1.png", 0.3f);
+        Texture normalTex = terrain.getNormalTex();
+        Texture heightTex = terrain.getHeightTex();
+        
         while(bContinue && !Display.isCloseRequested()) {
             // time handling
             now = System.currentTimeMillis();
@@ -205,38 +186,26 @@ public class SolSystem {
                 orbs[i].bindLightInformationToShader(fragmentLightingSP, i);
             }
 
-            // earth
-            texture2uniform(earthTexture, GL_TEXTURE_2D, 0, flDiffuseTexLoc);
-            texture2uniform(earthSpecularTexture, GL_TEXTURE_2D, 1, flSpecularTexLoc);
-            matrix2uniform(earthModelMatrix, modelLoc);
-            matrix2uniform(earthModelMatrix, flModelITLoc); // just rotation
-            //earth.draw();
-
-            // moon
-            matrix2uniform(moonModelMatrix, modelLoc);
-            matrix2uniform(moonModelMatrix, flModelITLoc); // just rotation and translation
-            texture2uniform(moonTexture, GL_TEXTURE_2D, 2, flDiffuseTexLoc);
-            texture2uniform(0, GL_TEXTURE_2D, 1, flSpecularTexLoc);
-            //moon.draw();
-            
-            // clouds
-            matrix2uniform(cloudsModelMatrix, modelLoc);
-            matrix2uniform(cloudsModelMatrix, flModelITLoc); // just rotation
-            texture2uniform(cloudsTexture, GL_TEXTURE_2D, 3, flDiffuseTexLoc);
-            glEnable(GL_BLEND);
-            //clouds.draw();
-            glDisable(GL_BLEND);
-
             // orbs
             setActiveProgram(orbSP);
             for(int i=0; i < MAX_ORBS; ++i) {
                 orbs[i].draw(orbSP);
             } 
             
+            //terrain
+            sProg.use();
+            sProg.setUniform("proj", cam.getProjection());
+            sProg.setUniform("view", cam.getView());
+            sProg.setUniform("normalTex", normalTex);
+            sProg.setUniform("heightTex", heightTex);
+
+            terrain.draw();
+            
             // present screen
             Display.update();
             Display.sync(60);
         }
+        sProg.delete();
     }
     
     /**
@@ -266,8 +235,8 @@ public class SolSystem {
                     case Keyboard.KEY_SPACE: moveDir.y -= 1.0f; break;
                     case Keyboard.KEY_C: moveDir.y += 1.0f; break;
                     case Keyboard.KEY_F1: cam.changeProjection(); break;
-                    case Keyboard.KEY_UP: changeFineness(2 * earthFineness); break;
-                    case Keyboard.KEY_DOWN: changeFineness(earthFineness / 2); break;
+                    case Keyboard.KEY_UP: break;
+                    case Keyboard.KEY_DOWN: break;
                     case Keyboard.KEY_LEFT:
                         if(Keyboard.isKeyDown(Keyboard.KEY_RSHIFT)) {
                             ingameTimePerSecond = 0.0f;
@@ -317,68 +286,19 @@ public class SolSystem {
     }
     
     /**
-     * Hilfsmethode, um eine Textur in eine Uniform zu schreiben. Das
-     * zugehoerige Programmobjekt muss aktiv sein.
-     * @param texture ID der Textur
-     * @param target Bindtarget der Textur (z.B. GL_TEXTURE_2D)
-     * @param slot Slot, der die Textur zur Vefuegung stellen soll
-     * @param location Location der Uniform
-     */
-    private static void texture2uniform(int texture, int target, int slot, int location) {
-        glActiveTexture(GL_TEXTURE0 + slot);
-        glBindTexture(target, texture);
-        glUniform1i(location, slot);
-    }
-    
-    /**
      * Aktualisiert Model Matrizen der Erde und des Mondes.
      * @param millis Millisekunden, die seit dem letzten Aufruf vergangen sind.
      */
     private static void animate(long millis) {
         // update ingame time properly
         ingameTime += ingameTimePerSecond * 1e-3f * (float)millis;
-        
-        // earth
-        float earthRotationAngle = Util.PI_MUL2 * ingameTime;
-        Util.rotationY(earthRotationAngle, earthModelMatrix);
-        
-        // clouds
-        float cloudsRotationAngle = earthRotationAngle * 0.7f;
-        Util.rotationY(cloudsRotationAngle, cloudsModelMatrix);
-        
-        // moon
-        float moonRotationAngle = earthRotationAngle / 27.0f;
-        Util.rotationY(moonRotationAngle, moonRotation);
-        Util.mul(moonModelMatrix, moonTilt, moonRotation, moonTranslation);
-        
+               
         // orbs
         for(int i=0; i < MAX_ORBS; ++i) {
             orbs[i].animate(millis);
         }
         
         raindrops.updateSimulation(millis);
-    }
-    
-    /**
-     * Aendert die Feinheit der Kugelannaeherung der Erde und des Mondes.
-     * @param newFineness die neue Feinheit
-     */
-    private static void changeFineness(int newFineness) {
-        if(newFineness >= 4 && newFineness <= 8192) {
-            if(earth != null) {
-                earth.delete();
-            }
-            if(moon != null) {
-                moon.delete();
-            }
-            if(clouds != null) {
-                clouds.delete();
-            }
-            earth = GeometryFactory.createSphere(1.0f, newFineness, newFineness/2);
-            clouds = GeometryFactory.createSphere(1.05f, newFineness/2, newFineness/4);
-            moon = GeometryFactory.createSphere(0.5f, newFineness/2, newFineness/4);
-            earthFineness = newFineness;
-        }
     }
     
     /**
