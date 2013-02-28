@@ -3,6 +3,7 @@
 in vec3 coords;
 in vec3 normal;
 in vec3 positionFS;
+
 out vec4 fragColor;
 
 uniform sampler2D normalTex;

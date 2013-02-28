@@ -1,8 +1,5 @@
 package util;
 
-import static opengl.GL.GL_BLEND;
-import static opengl.GL.glDisable;
-import static opengl.GL.glEnable;
 import static opengl.GL.glGetUniformLocation;
 import static opengl.GL.glUniform1f;
 import static opengl.GL.glUniform3f;
@@ -47,9 +44,7 @@ import org.lwjgl.util.vector.Matrix4f;
 
 /**
  * 
- * @author Valentin Bruder
- * @mail   vbruder@uos.de
- * @brief  Represents raindrops
+ * @author Valentin Bruder (vbruder@uos.de)
  */
 public class Raindrops {
     
@@ -67,10 +62,10 @@ public class Raindrops {
     //opencl buffer
     private CLMem old_pos, new_pos, old_velos, new_velos;
     
-    //asteroid settings
-    private int count = 16384;       //(int)Math.pow(2, 10);//(int)Math.pow(2, n); //2^n to work properly with local memory
-    private float clusterScale = 1;
-    private float veloScale = 1f;
+    //particle settings
+    private int count = (int)Math.pow(2.0, 14.0);    //2^n to work properly with local memory
+    private float clusterScale = 0.5f;
+    //private float veloScale = 1.f;
     
     //kernel settings
     private boolean swap = true;
@@ -83,9 +78,10 @@ public class Raindrops {
     private Geometry raindrops_new;
     
     //shader
+    private ShaderProgram raindropSP;
+    
     private int diffuseTexture;
     private int specularTexture;
-    private int shaderProgram;
     private int viewProjLoc;
     private int eyeLoc;
     private int diffTexLoc;
@@ -99,19 +95,16 @@ public class Raindrops {
     private final Matrix4f viewProj = new Matrix4f();
     
     /**
-     * Asteroid-Partikelsystem
+     * particle system
      * 
-     * Die Implementation benutzt jeweils zwei Buffer f�r die Position und die Velocity.
-     * Nach jedem Zeitschritt werden die Buffer getauscht.
-     * Somit kommt es bei der parallelen Verarbeitung zu keinen Problemen.
-     * Die Vertauschen wird ueber zwei Kernel und zwei Geometry Objekte geregelt.
-     * Die Eingangsdaten sind in beiden Kernel jeweils vertauscht.
-     * In der updateSimulation Methode wird im Wechsel immer ein Kernel aufgerufen.
-     * In der draw Methode wird das zuletzt ver�nderte Geometry Objekt gezeichnet.
-     * Um die Asterioden zu Zeichnen wird 'OpenGL Instancing' verwendet. Im Vertexshader wird
-     * die Welttranslation (Positionsbuffer) f�r jede Instanz auf jeden Vertex addiert.
+     * The implementation uses two buffers for each, position and velocity.
+     * Buffers are swapped after each time step.
+     * Swapping is realized with two kernels and two geometries.
+     * In the updateSimulation method the two kernels are called in turn.
+     * In draw() the last modified geometry object is drawn.
+     * Thereby OpenGL instancing is used.
      * @param device_type GPU /CPU
-     * @param drawable OpenGL drawable
+     * @param drawable OpenGL drawable.
      * @throws LWJGLException
      */
     public Raindrops(Device_Type device_type, Drawable drawable) throws LWJGLException {
@@ -126,8 +119,8 @@ public class Raindrops {
     }
     
     /**
-     * Das angeforderte Device wird gestezt (GPU /CPU) (wenn vorhanden sonst fehler)
-     * Context, Queue und Program werden erstellt.
+     * Sets the called device (GPU/CPU) (if existent else throw error)
+     * Creates context, queue and program.
      * @param type
      * @param source
      * @param drawable
@@ -162,38 +155,39 @@ public class Raindrops {
         clBuildProgram(this.program, this.device, "", null);
     }
     
-    public int getShaderProgram() {
-        return this.shaderProgram;
+    public ShaderProgram getShaderProgram() {
+        return this.raindropSP;
     }
     
     /**
-     * Erzeugt das OpenGL Shaderprogram zum Rendern der Partikel
+     * Creates OpenGL shader program to render particles
      */
-    private void createShaderProgram() {
+    private void createShaderProgram() { 
         
-        shaderProgram = Util.createShaderProgram("./shader/Raindrop_VS.glsl", "./shader/Raindrop_FS.glsl");
-        viewProjLoc = glGetUniformLocation(shaderProgram, "viewProj");
-        diffTexLoc = glGetUniformLocation(shaderProgram, "diffuseTex");
-        specTexLoc = glGetUniformLocation(shaderProgram, "specularTex");
-        eyeLoc = glGetUniformLocation(shaderProgram, "eyePosition");
-        kaLoc = glGetUniformLocation(shaderProgram, "k_a");
-        kdLoc = glGetUniformLocation(shaderProgram, "k_dif");
-        ksLoc = glGetUniformLocation(shaderProgram, "k_spec");
-        esLoc = glGetUniformLocation(shaderProgram, "es");
-        caLoc = glGetUniformLocation(shaderProgram, "c_a");
-        GL.glUseProgram(shaderProgram);
+        raindropSP = new ShaderProgram("./shader/Raindrop.vsh", "./shader/Raindrop.fsh");
+        viewProjLoc = glGetUniformLocation(raindropSP.getID(), "viewProj");
+        diffTexLoc = glGetUniformLocation(raindropSP.getID(), "diffuseTex");
+        specTexLoc = glGetUniformLocation(raindropSP.getID(), "specularTex");
+        eyeLoc = glGetUniformLocation(raindropSP.getID(), "eyePosition");
+        kaLoc = glGetUniformLocation(raindropSP.getID(), "k_a");
+        kdLoc = glGetUniformLocation(raindropSP.getID(), "k_dif");
+        ksLoc = glGetUniformLocation(raindropSP.getID(), "k_spec");
+        esLoc = glGetUniformLocation(raindropSP.getID(), "es");
+        caLoc = glGetUniformLocation(raindropSP.getID(), "c_a");
+        raindropSP.use();
         glUniform1f(kaLoc, 0.05f);
         glUniform1f(kdLoc, 0.6f);
         glUniform1f(ksLoc, 0.3f);
         glUniform1f(esLoc, 16.0f);
         glUniform3f(caLoc, 1.0f, 1.0f, 1.0f);
         
+        //textures on raindrops
         diffuseTexture = Util.generateTexture("media/raindrop.jpg");
         specularTexture = Util.generateTexture("media/raindrop_spec.jpg");
     }
     
     /**
-     * Erzeugt per "Zufall" initiale Positions und Geschwindigkeits Daten
+     * Create initial position and velocity data pseudo randomly.
      * Positions Layout[x, y, z, radius]
      * Velocity Layout[v_x, v_y, v_z, _]
      */
@@ -210,9 +204,9 @@ public class Raindrops {
         while(i < this.count) {
             
             //spawning position
-            float x = this.clusterScale * r.nextInt() / (float)Integer.MAX_VALUE;
+            float x = this.clusterScale * r.nextInt() / (float)Integer.MAX_VALUE + 0.5f;
             float y = this.clusterScale * r.nextInt() / (float)Integer.MAX_VALUE;
-            float z = this.clusterScale * r.nextInt() / (float)Integer.MAX_VALUE;
+            float z = this.clusterScale * r.nextInt() / (float)Integer.MAX_VALUE + 0.5f;
             // if(x*x + y*y + z*z < this.clusterScale*3/2f || x*x + y*y + z*z > clusterScale*3f) continue;
             float rand = r.nextFloat() * 0.15f + 0.05f;
             this.posBuffer.put(x);
@@ -258,12 +252,12 @@ public class Raindrops {
     }
     
     /**
-     * @brief renders the particel system
+     * @brief draws the particles
      * @param cam Camera
      */
     public void draw(Camera cam) {
         
-        GL.glUseProgram(shaderProgram);
+        raindropSP.use();
         
         glUniform3f(this.eyeLoc, cam.getCamPos().x, cam.getCamPos().y, cam.getCamPos().z);       
         Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);  

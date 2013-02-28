@@ -6,8 +6,10 @@ import org.lwjgl.opengl.GL20;
 import org.lwjgl.util.vector.Matrix4f;
 
 /**
+ * 
+ * @author Valentin Bruder
+ * @date 28.02.2013
  *
- * @author nico3000
  */
 public class ShaderProgram {
     private int id, vs, fs;
@@ -25,10 +27,10 @@ public class ShaderProgram {
     }
     
     /**
-     * Hilfsmethode, um eine Matrix in eine Uniform zu schreiben. Das
-     * zugehoerige Programmobjekt muss aktiv sein.
-     * @param matrix Quellmatrix
-     * @param varName Zielvariable im Shader
+     * @brief Helper method to write a matrix into a uniform. The related program object has to be active.
+     *
+     * @param matrix source matrix
+     * @param varName target variable in shader
      */
     public void setUniform(String varName, Matrix4f matrix) {
         int loc = glGetUniformLocation(this.id, varName);
@@ -45,10 +47,10 @@ public class ShaderProgram {
     }
     
     /**
-     * Hilfsmethode, um eine Textur in eine Uniform zu schreiben. Das
-     * zugehoerige Programmobjekt muss aktiv sein.
-     * @param texture Textur
-     * @param varName Zielvariable im Shader
+     * @brief Helper method to write a texture into a uniform. The related program object has to be active.
+     *
+     * @param texture Texture
+     * @param varName target variable in shader
      */
     public void setUniform(String varName, Texture texture) {
         int loc = glGetUniformLocation(this.id, varName);
@@ -59,39 +61,40 @@ public class ShaderProgram {
     }
     
     /**
-     * Attribut Index von positionMC
+     * Attribute index of positionMC
      */
     public static final int ATTR_POS = 0;
 
     /**
-     * Attribut Index von normalMC
+     * Attribute index of normalMC
      */
     public static final int ATTR_NORMAL = 1;
 
     /**
-     * Attribut Index von vertexColor
+     * Attribute index of vertexColor
      */
     public static final int ATTR_COLOR = 2;
     
     /**
-     * Attribut Index von vertexColor2
+     * Attribute index of vertexColor2
      */
     public static final int ATTR_COLOR2 = 3;
     
     /**
-     * Attribut Index von tex
+     * Attribute index of tex
      */
     public static final int ATTR_TEX = 4;
     
     /**
-     * Attribut Index von instance
+     * Attribute Index of instance
      */
     public static final int ATTR_INSTANCE = 5;
     
     /**
-     * Erzeugt ein ShaderProgram aus einem Vertex- und Fragmentshader.
-     * @param vs Pfad zum Vertexshader
-     * @param fs Pfad zum Fragmentshader
+     * @brief Creates a shader program from a vertex and a fragment shader.
+     * 
+     * @param vs path of vertex shader
+     * @param fs path of fragment shader
      * @return ShaderProgram ID
      */
     private void createShaderProgram(String vs, String fs) {
@@ -131,6 +134,9 @@ public class ShaderProgram {
         System.out.print(log);
     }
     
+    /**
+     * @brief Cleanup shader program
+     */
     public void delete() {
         GL20.glDetachShader(this.id, this.fs);
         GL20.glDetachShader(this.id, this.vs);

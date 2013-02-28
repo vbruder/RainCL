@@ -58,9 +58,9 @@ float dt)
     
 	new_velos[myId].xyz = old_velos[myId].xyz;
 	//respawn particle
-	if (myPos.y < -2.0f)
+	if (myPos.y < -0.1f)
 	{
-		myPos.y = 3.0f + ((float)rand/1000000000.0f);
+		myPos.y = 2.1f + ((float)rand/1000000000.0f);
 	}
     new_points[myId].xyz = myPos.xyz - old_velos[myId].xyz * dt;
 }

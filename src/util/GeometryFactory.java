@@ -337,6 +337,12 @@ public class GeometryFactory {
         return vaid;
     }
     
+    /**
+     * @brief Creates a terrain out of a hight map.
+     * @param map path of hight map
+     * @param amplitude scaling factor for height
+     * @return the created terrain geometry
+     */
     static public Geometry createTerrainFromMap(String map, float amplitude) {
         // vertex array id
         int vaid = glGenVertexArrays();
