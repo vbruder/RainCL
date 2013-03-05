@@ -23,15 +23,18 @@ import static opengl.OpenCL.clReleaseProgram;
 import static opengl.OpenCL.create;
 
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.Random;
 
 import opengl.GL;
+import opengl.OpenCL;
 import opengl.OpenCL.Device_Type;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.LWJGLException;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.opencl.CL10;
+import org.lwjgl.opencl.CL10GL;
 import org.lwjgl.opencl.CLCommandQueue;
 import org.lwjgl.opencl.CLContext;
 import org.lwjgl.opencl.CLDevice;
@@ -40,6 +43,7 @@ import org.lwjgl.opencl.CLMem;
 import org.lwjgl.opencl.CLPlatform;
 import org.lwjgl.opencl.CLProgram;
 import org.lwjgl.opengl.Drawable;
+import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Matrix4f;
 
 /**
@@ -60,10 +64,10 @@ public class Raindrops {
     private FloatBuffer posBuffer, veloBuffer;
     
     //opencl buffer
-    private CLMem old_pos, new_pos, old_velos, new_velos;
+    private CLMem old_pos, new_pos, old_velos, new_velos, heightmap, normalmap;
     
     //particle settings
-    private int count = (int)Math.pow(2.0, 14.0);    //2^n to work properly with local memory
+    private int maxParticles;
     private float clusterScale = 0.5f;
     //private float veloScale = 1.f;
     
@@ -76,6 +80,9 @@ public class Raindrops {
     //raindrop geometry
     private Geometry raindrops_old;
     private Geometry raindrops_new;
+    
+    // terrain texture IDs
+    private int heightTexId, normalTexId;
     
     //shader
     private ShaderProgram raindropSP;
@@ -107,14 +114,19 @@ public class Raindrops {
      * @param drawable OpenGL drawable.
      * @throws LWJGLException
      */
-    public Raindrops(Device_Type device_type, Drawable drawable) throws LWJGLException {
+    public Raindrops(Device_Type device_type, Drawable drawable, int heigthTexId, int normalTexId, int maxParticles) throws LWJGLException {
+        
+        this.maxParticles = maxParticles;
+        this.heightTexId = heigthTexId;
+        this.normalTexId = normalTexId;
         
         this.createCLContext(device_type, Util.getFileContents("./shader/RainSim.cl"), drawable);
         this.createData();
         this.createBuffer();
         this.createKernels();
         this.createShaderProgram();
-        this.gwz.put(0, this.count);
+        
+        this.gwz.put(0, this.maxParticles);
         this.lwz.put(0, this.localWorkSize);   
     }
     
@@ -196,12 +208,12 @@ public class Raindrops {
         this.raindrops_old = GeometryFactory.createSphere(0.01f, 16, 8);
         this.raindrops_new = GeometryFactory.createSphere(0.01f, 16, 8);
         
-        this.posBuffer = BufferUtils.createFloatBuffer(4*count);
-        this.veloBuffer = BufferUtils.createFloatBuffer(4*count);
+        this.posBuffer = BufferUtils.createFloatBuffer(4*maxParticles);
+        this.veloBuffer = BufferUtils.createFloatBuffer(4*maxParticles);
         
         int i = 0;
         Random r = new Random(4);
-        while(i < this.count) {
+        while(i < this.maxParticles) {
             
             //spawning position
             float x = this.clusterScale * r.nextInt() / (float)Integer.MAX_VALUE + 0.5f;
@@ -213,14 +225,15 @@ public class Raindrops {
             this.posBuffer.put(y);
             this.posBuffer.put(z);
             this.posBuffer.put(rand);
+            
             //spawning velocity
             //TODO influence by wind
 //            float vx = r.nextInt() / (float)Integer.MAX_VALUE * this.veloScale;
-            float vy = 1.0f; //Math.abs(r.nextInt() / (float)Integer.MAX_VALUE * this.veloScale);
-//            float vz = r.nextInt() / (float)Integer.MAX_VALUE * this.veloScale;
-            this.veloBuffer.put(0.0f);
-            this.veloBuffer.put(vy);
-            this.veloBuffer.put(0.0f);
+//            float vy = Math.abs(r.nextInt() / (float)Integer.MAX_VALUE * this.veloScale);
+//            float vz = r.nextInt() / (float)Integer.MAX_VALUE * this.veloScale;           
+            this.veloBuffer.put(0.f);
+            this.veloBuffer.put(1.f);
+            this.veloBuffer.put(0.f);
             this.veloBuffer.put((float) (4/3 * Util.PI * Math.pow(rand, 3)));
             i++;
         }
@@ -237,16 +250,21 @@ public class Raindrops {
         
         clEnqueueAcquireGLObjects(this.queue, this.new_pos, null, null);
         clEnqueueAcquireGLObjects(this.queue, this.old_pos, null, null);
+        clEnqueueAcquireGLObjects(this.queue, this.heightmap, null, null);
+        clEnqueueAcquireGLObjects(this.queue, this.normalmap, null, null);
         
         if(this.swap) {            
-            this.kernel0.setArg(5, 1e-3f*deltaTime);
+            this.kernel0.setArg(7, 1e-3f*deltaTime);
             clEnqueueNDRangeKernel(this.queue, kernel0, 1, null, gwz, lwz, null, null);            
         } else {           
-            this.kernel1.setArg(5, 1e-3f*deltaTime);
+            this.kernel1.setArg(7, 1e-3f*deltaTime);
             clEnqueueNDRangeKernel(this.queue, kernel1, 1, null, gwz, lwz, null, null);           
         }
         clEnqueueReleaseGLObjects(this.queue, this.new_pos, null, null);
         clEnqueueReleaseGLObjects(this.queue, this.old_pos, null, null);
+        clEnqueueReleaseGLObjects(this.queue, this.heightmap, null, null);
+        clEnqueueReleaseGLObjects(this.queue, this.normalmap, null, null);
+        
         clFinish(this.queue);
         this.swap = !this.swap;
     }
@@ -283,7 +301,7 @@ public class Raindrops {
     }
     
     /**
-     * @brief Creates all significant OpenCL buffers
+     * Creates all significant OpenCL buffers
      */
     private void createBuffer() {
         this.raindrops_old.setInstanceBuffer(this.posBuffer, 4);
@@ -304,21 +322,33 @@ public class Raindrops {
      * @brief Creates two OpenCL kernels.
      */
     private void createKernels() {
+        
+        IntBuffer errorCheck = BufferUtils.createIntBuffer(1);
+        heightmap = CL10GL.clCreateFromGLTexture2D(this.context, CL10.CL_MEM_READ_ONLY, GL11.GL_TEXTURE_2D, 0, heightTexId, errorCheck);
+        normalmap = CL10GL.clCreateFromGLTexture2D(this.context, CL10.CL_MEM_READ_ONLY, GL11.GL_TEXTURE_2D, 0, normalTexId, errorCheck);
+        OpenCL.checkError(errorCheck.get(0));
+        
+        //kernel 0
         this.kernel0 = clCreateKernel(this.program, "rain_sim");
         this.kernel0.setArg(0, this.old_pos);
         this.kernel0.setArg(1, this.new_pos);
         this.kernel0.setArg(2, this.old_velos);
         this.kernel0.setArg(3, this.new_velos);
-        this.kernel0.setArg(4, this.count);
-        this.kernel0.setArg(5, 0f);
+        this.kernel0.setArg(4, this.heightmap);
+        this.kernel0.setArg(5, this.normalmap);
+        this.kernel0.setArg(6, this.maxParticles);
+        this.kernel0.setArg(7, 0.f);
         
+        //kernel 1
         this.kernel1 = clCreateKernel(this.program, "rain_sim");
         this.kernel1.setArg(0, this.new_pos);
         this.kernel1.setArg(1, this.old_pos);
         this.kernel1.setArg(2, this.new_velos);
         this.kernel1.setArg(3, this.old_velos);
-        this.kernel1.setArg(4, this.count);
-        this.kernel1.setArg(5, 0f);
+        this.kernel1.setArg(4, this.heightmap);
+        this.kernel1.setArg(5, this.normalmap);
+        this.kernel1.setArg(6, this.maxParticles);
+        this.kernel1.setArg(7, 0.f);
     }
     
     /**

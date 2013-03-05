@@ -60,6 +60,12 @@ public class Rain {
     private static final Matrix4f viewProjMatrix = new Matrix4f();
     private static final Vector3f inverseLightDirection = new Vector3f();
     
+    // terrain
+    private static Geometry terrain;
+    private static Texture normalTex, heightTex;
+    
+    private static int maxParticles = (int) Math.pow(2.0, 14.0);
+    
     public static void main(String[] argv) {
         try {
             init();
@@ -70,9 +76,13 @@ public class Rain {
             glEnable(GL_DEPTH_TEST);
             glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
             
-            raindrops = new Raindrops(Device_Type.GPU, Display.getDrawable());
-            
+            //create terrain
+            terrain = GeometryFactory.createTerrainFromMap("media/map1.png", 0.3f);
+            normalTex = terrain.getNormalTex();
+            heightTex = terrain.getHeightTex();
             terrainSP = new ShaderProgram("shader/simulation.vsh", "shader/simulation.fsh");
+        
+            raindrops = new Raindrops(Device_Type.GPU, Display.getDrawable(), heightTex.getId(), normalTex.getId(), maxParticles);
 
             inverseLightDirection.set(1.0f, 0.2f, 0.0f);
             inverseLightDirection.normalise();
@@ -98,11 +108,6 @@ public class Rain {
         long now, millis;
         long frameTimeDelta = 0;
         int frames = 0;
-        
-        //create terrain
-        Geometry terrain = GeometryFactory.createTerrainFromMap("media/map1.png", 0.3f);
-        Texture normalTex = terrain.getNormalTex();
-        Texture heightTex = terrain.getHeightTex();
         
         while(bContinue && !Display.isCloseRequested()) {
             // time handling
