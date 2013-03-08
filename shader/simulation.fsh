@@ -37,12 +37,8 @@ vec3 getNormal(vec2 tc)  {
 
 void main(void)
 {
-    // if (positionFS.x < 0 || positionFS.z < 0 || positionFS.x > 1 || positionFS.z > 1)
-        // discard;
-
-    float h = coords.y + 0.4;
-
-    fragColor = vec4(0.5 + 0.5*getNormal(vec2(coords.x,coords.z)),1.0);
+    //fragColor = vec4(0.5 + 0.5*getNormal(vec2(coords.x,coords.z)),1.0);
+    fragColor = texture(heightTex, vec2(coords.x,coords.z))*3.f;
 
 //    vec3 color = texture(heightTex, vec2(coords.x,coords.z)).xyz + vec3(0.4);
 //    fragColor = vec4(color,1.0);

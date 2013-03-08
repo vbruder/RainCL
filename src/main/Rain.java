@@ -22,6 +22,7 @@ import org.lwjgl.LWJGLException;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
+import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
 
@@ -77,11 +78,12 @@ public class Rain {
             glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
             
             //create terrain
-            terrain = GeometryFactory.createTerrainFromMap("media/map1.png", 0.3f);
+            terrain = GeometryFactory.createTerrainFromMap("media/map1.png", 0.25f);
             normalTex = terrain.getNormalTex();
             heightTex = terrain.getHeightTex();
             terrainSP = new ShaderProgram("shader/simulation.vsh", "shader/simulation.fsh");
-        
+            
+            //create rain
             raindrops = new Raindrops(Device_Type.GPU, Display.getDrawable(), heightTex.getId(), normalTex.getId(), maxParticles);
 
             inverseLightDirection.set(1.0f, 0.2f, 0.0f);
@@ -121,7 +123,7 @@ public class Rain {
                 frameTimeDelta -= 1000;
                 frames = 0;
             }
-            
+
             // input and animation
             handleInput(millis);
             animate(millis);
@@ -129,18 +131,17 @@ public class Rain {
             // clear screen
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             
-            //glUseProgram(raindrops.getShaderProgram());
-            //raindrops
-            raindrops.draw(cam);
-            
             //terrain
             terrainSP.use();
             terrainSP.setUniform("proj", cam.getProjection());
             terrainSP.setUniform("view", cam.getView());
             terrainSP.setUniform("normalTex", normalTex);
             terrainSP.setUniform("heightTex", heightTex);
-
             terrain.draw();
+            
+            //raindrops
+            raindrops.getShaderProgram().use();
+            raindrops.draw(cam);
             
             // present screen
             Display.update();
@@ -215,7 +216,7 @@ public class Rain {
     }
     
     /**
-     * Aktualisiert Model Matrizen der Erde und des Mondes.
+     * 
      * @param millis Millisekunden, die seit dem letzten Aufruf vergangen sind.
      */
     private static void animate(long millis) {

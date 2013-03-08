@@ -33,7 +33,7 @@ public class Geometry {
     private Texture normalTex;
 
     /**
-     * @brief set normal texture
+     * Set normal texture.
      * @param normalTex texture containing normal information
      */
     public void setNormalTex(Texture normalTex) {
@@ -41,7 +41,7 @@ public class Geometry {
     }
   
     /**
-     * @brief returns normal texture
+     * Returns the normal texture.
      * @return normal texture
      */
     public Texture getNormalTex() {
@@ -49,7 +49,7 @@ public class Geometry {
     }
     
     /**
-     * @brief set height texture
+     * Set height texture.
      * @param heightTex texture containing height information
      */
     public void setHeightTex(Texture heightTex) {
@@ -57,7 +57,7 @@ public class Geometry {
     }
     
     /**
-     * @brief returns height texture
+     * Returns the height texture.
      * @return height texture
      */
     public Texture getHeightTex() {

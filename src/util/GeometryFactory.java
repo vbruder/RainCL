@@ -400,8 +400,8 @@ public class GeometryFactory {
         indexData.position(0);
         
         // create normal texture from normaltexturebuffer
-        Texture tex = new Texture(GL_TEXTURE_2D, NORMALTEX_UNIT);
-        tex.bind();
+        Texture nTex = new Texture(GL_TEXTURE_2D, NORMALTEX_UNIT);
+        nTex.bind();
         glTexImage2D(GL_TEXTURE_2D,
                 0,
                 GL_RGBA8,
@@ -432,7 +432,7 @@ public class GeometryFactory {
         geo.setIndices(indexData, GL_TRIANGLE_STRIP);
         geo.setVertices(vertexData);
         geo.addVertexAttribute(ShaderProgram.ATTR_POS, 3, 0);
-        geo.setNormalTex(tex);
+        geo.setNormalTex(nTex);
         geo.setHeightTex(hTex);
 //        geo.addVertexAttribute(ShaderProgram.ATTR_NORMAL, 3, 12);
 

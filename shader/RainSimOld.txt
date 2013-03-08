@@ -62,10 +62,11 @@ float dt)
 	int rand = (myId * 0x5DEECE66DL + 0xBL) & ((1L << 48) - 1);
     
 	new_velos[myId].xyz = old_velos[myId].xyz;
+
 	//respawn particle
 	if (myPos.y <= (height.x))// + RADIUS))
 	{
-		myPos.y = height.x;
+		myPos.y = height.x+1000.f;
 		// myPos.y = 2.3f + ((float)rand / 1000000000.0f);
 	}
     new_points[myId].xyz = myPos.xyz - old_velos[myId].xyz *dt;
