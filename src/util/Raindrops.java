@@ -44,10 +44,11 @@ import org.lwjgl.opencl.CLPlatform;
 import org.lwjgl.opencl.CLProgram;
 import org.lwjgl.opengl.Drawable;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL31;
 import org.lwjgl.util.vector.Matrix4f;
 
 /**
- * 
+ * Raindrop particle system
  * @author Valentin Bruder (vbruder@uos.de)
  */
 public class Raindrops {
@@ -83,6 +84,8 @@ public class Raindrops {
     
     // terrain texture IDs
     private int heightTexId, normalTexId;
+    private int HEIGHTTEX_UNIT = 4;
+    private Texture hTex;
     
     //shader
     private ShaderProgram raindropSP;
@@ -120,6 +123,10 @@ public class Raindrops {
         this.heightTexId = heightTexId;
         this.normalTexId = normalTexId;
         
+        //openGL context
+        hTex = Texture.generateTexture("media/map1.png", HEIGHTTEX_UNIT);
+        
+        //openCL context
         this.createCLContext(device_type, Util.getFileContents("./shader/RainSim.cl"), drawable);
         this.createData();
         this.createBuffer();
@@ -158,7 +165,7 @@ public class Raindrops {
                     break;
                 }
             }
-        }
+        }             
         
         this.context = create(platform, platform.getDevices(device_type), null, drawable);      
         this.queue = clCreateCommandQueue(this.context, this.device, 0);       
@@ -249,12 +256,12 @@ public class Raindrops {
     }
 
     /**
-     * @brief Calls kernel to update into the next time step. Is called once each frame. 
+     * Calls kernel to update into the next time step. Is called once each frame. 
      * @param deltaTime
      */
     public void updateSimulation(long deltaTime) {
         
-//        GL11.glFinish();
+        GL11.glFinish();
         clEnqueueAcquireGLObjects(this.queue, this.new_pos, null, null);
         clEnqueueAcquireGLObjects(this.queue, this.old_pos, null, null);
         clEnqueueAcquireGLObjects(this.queue, this.heightmap, null, null);
@@ -277,7 +284,7 @@ public class Raindrops {
     }
     
     /**
-     * @brief draws the particles
+     * draws the particles
      * @param cam Camera
      */
     public void draw(Camera cam) {
@@ -298,13 +305,11 @@ public class Raindrops {
         GL.glBindTexture(GL.GL_TEXTURE_2D, this.specularTexture);
         GL.glUniform1i(this.specTexLoc, 1);
         
-//        glEnable(GL_BLEND);
         if(this.swap) {
             this.raindrops_old.draw();
         } else {
             this.raindrops_new.draw();
         }
-//        glDisable(GL_BLEND);
     }
     
     /**
@@ -321,8 +326,9 @@ public class Raindrops {
         this.new_pos = clCreateFromGLBuffer(this.context, CL_MEM_READ_WRITE, this.raindrops_new.getInstanceBuffer());
         this.old_pos = clCreateFromGLBuffer(this.context, CL_MEM_READ_WRITE, this.raindrops_old.getInstanceBuffer());
         
+        //TODO: Problem with Texture in OpenCL
         IntBuffer errorCheck = BufferUtils.createIntBuffer(1);
-        this.heightmap = CL12GL.clCreateFromGLTexture(this.context, CL10.CL_MEM_READ_ONLY, GL11.GL_TEXTURE_2D, 0, this.heightTexId, errorCheck);
+        this.heightmap = CL12GL.clCreateFromGLTexture(this.context, CL10.CL_MEM_READ_ONLY, GL11.GL_TEXTURE_2D, 0, hTex.getId(), errorCheck);
         this.normalmap = CL12GL.clCreateFromGLTexture(this.context, CL10.CL_MEM_READ_ONLY, GL11.GL_TEXTURE_2D, 0, this.normalTexId, errorCheck);
         OpenCL.checkError(errorCheck.get(0));
         
@@ -331,7 +337,7 @@ public class Raindrops {
     }
     
     /**
-     * @brief Creates two OpenCL kernels.
+     * Creates two OpenCL kernels.
      */
     private void createKernels() {
                
@@ -357,9 +363,9 @@ public class Raindrops {
         this.kernel1.setArg(6, this.maxParticles);
         this.kernel1.setArg(7, 0.f);
     }
-    
+      
     /**
-     * @brief Frees memory.
+     * Frees memory.
      */
     public void destroy() {
         clReleaseMemObject(this.new_pos);

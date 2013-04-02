@@ -16,10 +16,4 @@ void main(void)
     coords = positionMC;
     normal = normalMC;
     positionFS = positionMC.xyz;
-/*
-    gl_Position = vec4(positionMC, 0.0, 1.0);
-
-    texCoord = vec2(0.5, 0.5) + 0.5 * positionMC;
-    texCoord.y = 1.0 - texCoord.y;
-*/
 }

@@ -338,8 +338,8 @@ public class GeometryFactory {
     }
     
     /**
-     * @brief Creates a terrain out of a hight map.
-     * @param map path of hight map
+     * @brief Creates a terrain out of a height map.
+     * @param map path of height map
      * @param amplitude scaling factor for height
      * @return the created terrain geometry
      */

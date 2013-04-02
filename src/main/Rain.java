@@ -34,8 +34,10 @@ import util.ShaderProgram;
 import util.Texture;
 
 /**
- * @brief main
- * @author Valentin Bruder (vbruder@uos.de
+ * main class
+ * This framework uses LWJGL (www.lwjgl.org)
+ * 
+ * @author Valentin Bruder (vbruder@uos.de)
  */
 public class Rain {
     
@@ -151,8 +153,8 @@ public class Rain {
     }
     
     /**
-     * Behandelt Input und setzt die Kamera entsprechend.
-     * @param millis Millisekunden seit dem letzten Aufruf
+     * Handle input and change camera accordingly.
+     * @param millis milliseconds, passed since last update
      */
     public static void handleInput(long millis) {
         float moveSpeed = 2e-3f*(Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) ? 2.0f : 1.0f)*(float)millis;
@@ -216,8 +218,8 @@ public class Rain {
     }
     
     /**
-     * 
-     * @param millis Millisekunden, die seit dem letzten Aufruf vergangen sind.
+     * updates all moving particles
+     * @param millis milliseconds, passed since last update
      */
     private static void animate(long millis) {
         // update ingame time properly
