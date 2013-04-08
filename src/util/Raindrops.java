@@ -1,6 +1,10 @@
 package util;
 
+import static opengl.GL.GL_FLOAT;
+import static opengl.GL.GL_RGBA;
+import static opengl.GL.GL_TEXTURE_2D;
 import static opengl.GL.glGetUniformLocation;
+import static opengl.GL.glTexImage2D;
 import static opengl.GL.glUniform1f;
 import static opengl.GL.glUniform3f;
 import static opengl.OpenCL.CL_MEM_COPY_HOST_PTR;
@@ -34,7 +38,7 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.LWJGLException;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.opencl.CL10;
-import org.lwjgl.opencl.CL12GL;
+import org.lwjgl.opencl.CL10GL;
 import org.lwjgl.opencl.CLCommandQueue;
 import org.lwjgl.opencl.CLContext;
 import org.lwjgl.opencl.CLDevice;
@@ -44,8 +48,10 @@ import org.lwjgl.opencl.CLPlatform;
 import org.lwjgl.opencl.CLProgram;
 import org.lwjgl.opengl.Drawable;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL31;
+import org.lwjgl.opengl.GL30;
 import org.lwjgl.util.vector.Matrix4f;
+
+import util.Util.ImageContents;
 
 /**
  * Raindrop particle system
@@ -124,7 +130,7 @@ public class Raindrops {
         this.normalTexId = normalTexId;
         
         //openGL context
-        hTex = Texture.generateTexture("media/map1.png", HEIGHTTEX_UNIT);
+        //hTex = Texture.generateTexture("media/map1.png", HEIGHTTEX_UNIT);
         
         //openCL context
         this.createCLContext(device_type, Util.getFileContents("./shader/RainSim.cl"), drawable);
@@ -221,23 +227,23 @@ public class Raindrops {
         int i = 0;
         Random r = new Random(4);
         
-        float[][][] ic = Util.getImageContents("media/map1.png");
-        float length1 = (float)ic.length;
-        float length2 = (float)ic[0].length;
-        
+       //float[][][] ic = Util.getImageContents("media/map1.png");
+        //float length1 = (float)ic.length;
+        //float length2 = (float)ic[0].length;
+        r = new Random(0);
         while(i < this.maxParticles) {
-            
+            clusterScale = 1;
             //spawning position
-            float x = this.clusterScale * r.nextInt() / (float)Integer.MAX_VALUE + 0.5f;
-            float y = this.clusterScale * r.nextInt() / (float)Integer.MAX_VALUE;
-            float z = this.clusterScale * r.nextInt() / (float)Integer.MAX_VALUE + 0.5f;
+            float x = -0.5f + this.clusterScale * r.nextFloat();
+            float y = 1;//this.clusterScale * r.nextInt() / (float)Integer.MAX_VALUE;
+            float z = -0.5f + this.clusterScale * r.nextFloat();
             // if(x*x + y*y + z*z < this.clusterScale*3/2f || x*x + y*y + z*z > clusterScale*3f) continue;
             float rand = r.nextFloat() * 0.15f + 0.05f;
             
             this.posBuffer.put(x);
             this.posBuffer.put(y);
             this.posBuffer.put(z);
-            this.posBuffer.put(0.3f*ic[(int)(x*length1)][(int) (z*length2)][0]);
+            this.posBuffer.put(1f);//0.3f*ic[(int)(x*length1)][(int) (z*length2)][0]);
             
             //spawning velocity
             //TODO influence by wind
@@ -261,7 +267,6 @@ public class Raindrops {
      */
     public void updateSimulation(long deltaTime) {
         
-        GL11.glFinish();
         clEnqueueAcquireGLObjects(this.queue, this.new_pos, null, null);
         clEnqueueAcquireGLObjects(this.queue, this.old_pos, null, null);
         clEnqueueAcquireGLObjects(this.queue, this.heightmap, null, null);
@@ -326,10 +331,31 @@ public class Raindrops {
         this.new_pos = clCreateFromGLBuffer(this.context, CL_MEM_READ_WRITE, this.raindrops_new.getInstanceBuffer());
         this.old_pos = clCreateFromGLBuffer(this.context, CL_MEM_READ_WRITE, this.raindrops_old.getInstanceBuffer());
         
-        //TODO: Problem with Texture in OpenCL
         IntBuffer errorCheck = BufferUtils.createIntBuffer(1);
-        this.heightmap = CL12GL.clCreateFromGLTexture(this.context, CL10.CL_MEM_READ_ONLY, GL11.GL_TEXTURE_2D, 0, hTex.getId(), errorCheck);
-        this.normalmap = CL12GL.clCreateFromGLTexture(this.context, CL10.CL_MEM_READ_ONLY, GL11.GL_TEXTURE_2D, 0, this.normalTexId, errorCheck);
+        
+        ImageContents content = Util.loadImage("media/map1.png");
+        FloatBuffer data = BufferUtils.createFloatBuffer(content.height * content.width);
+        for(int i = 0; i < content.height * content.width; ++i)
+        {
+        	data.put(content.data.get(4 * i));
+        }
+        data.position(0);
+        
+        hTex = new Texture(GL_TEXTURE_2D, HEIGHTTEX_UNIT);
+        hTex.bind();
+        glTexImage2D(GL_TEXTURE_2D,
+                0,
+                GL30.GL_R16F,
+                content.width,
+                content.height,
+                0,
+                GL11.GL_RED,
+                GL_FLOAT,
+                data);
+        
+        this.heightmap = CL10GL.clCreateFromGLTexture2D(this.context, CL10.CL_MEM_READ_ONLY, GL11.GL_TEXTURE_2D, 0, hTex.getId(), errorCheck);
+        this.normalmap = CL10GL.clCreateFromGLTexture2D(this.context, CL10.CL_MEM_READ_ONLY, GL11.GL_TEXTURE_2D, 0, this.normalTexId, errorCheck);
+        
         OpenCL.checkError(errorCheck.get(0));
         
         this.posBuffer = null;

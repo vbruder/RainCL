@@ -1,6 +1,8 @@
 package util;
 
 import static opengl.GL.*;
+
+import org.lwjgl.Sys;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;

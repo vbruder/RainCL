@@ -13,7 +13,7 @@ out vec3 positionFS;
 void main(void)
 {
     gl_Position = proj * view * vec4(positionMC, 1.0);
-    coords = positionMC;
+    coords = positionMC + vec3(0.5, 0, 0.5);
     normal = normalMC;
     positionFS = positionMC.xyz;
 }

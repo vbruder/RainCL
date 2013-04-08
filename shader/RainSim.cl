@@ -6,7 +6,7 @@
 #define TIME_SCALE 1.0f
 #define LOCAL_MEM_SIZE 64
 
-constant sampler_t sampler = CLK_NORMALIZED_COORDS_FALSE| CLK_FILTER_LINEAR| CLK_ADDRESS_REPEAT;
+constant sampler_t sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_FILTER_LINEAR| CLK_ADDRESS_REPEAT;
 
 __kernel void rain_sim(
 __global float4* oldPos,
@@ -34,13 +34,14 @@ float dt)
 	// dimf.y = (float)dim.y;
 	
 	//wrong lookup? (myPos.xz is float pos of particle)
-	float4 height = read_imagef(heightmap, sampler, myPos.xz);
+	float2 tc = (float2)(0.5f, 0.5f) + myPos.xz;
+	float4 height = read_imagef(heightmap, sampler, (float2)(1-tc.x, tc.y));
 	// float4 normal = read_imagef(normalmap, sampler, myPos.xz);
 	
 	//pseudo random int
 	int rand = (myId * 0x5DEECE66DL + 0xBL) & ((1L << 48) - 1);
 	
-	myPos.y = height.x*10;
+	//myPos.y = height.x*10;
 	
 	//respawn particle
 	// if (myPos.y <= myPos.w)
@@ -48,5 +49,5 @@ float dt)
 		// myPos.y = 2.3f + ((float)rand / 1000000000.0f);
 	// }
 
-    newPos[myId].xyz = myPos.xyz - oldVelo[myId].xyz * 0.f;//dt;
+    newPos[myId].xyz = (float3)(myPos.x, height.x, myPos.z);//myPos.xyz;// - oldVelo[myId].xyz * 0.f;//dt;
 }

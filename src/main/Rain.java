@@ -67,7 +67,7 @@ public class Rain {
     private static Geometry terrain;
     private static Texture normalTex, heightTex;
     
-    private static int maxParticles = (int) Math.pow(2.0, 14.0);
+    private static int maxParticles = 1 << 14;//(int) Math.pow(2.0, 14.0);
     
     public static void main(String[] argv) {
         try {
