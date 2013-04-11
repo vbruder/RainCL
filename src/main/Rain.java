@@ -30,6 +30,7 @@ import util.Camera;
 import util.Geometry;
 import util.GeometryFactory;
 import util.Raindrops;
+import util.Rainstreaks;
 import util.ShaderProgram;
 import util.Texture;
 
@@ -42,6 +43,7 @@ import util.Texture;
 public class Rain {
     
     private static Raindrops raindrops;
+    private static Rainstreaks rainstreaks;
     
     // shader programs
     private static ShaderProgram terrainSP;
@@ -67,7 +69,7 @@ public class Rain {
     private static Geometry terrain;
     private static Texture normalTex, heightTex;
     
-    private static int maxParticles = 1 << 14;//(int) Math.pow(2.0, 14.0);
+    private static int maxParticles = 1 << 13;
     
     public static void main(String[] argv) {
         try {
@@ -86,8 +88,9 @@ public class Rain {
             terrainSP = new ShaderProgram("shader/simulation.vsh", "shader/simulation.fsh");
             
             //create rain
-            raindrops = new Raindrops(Device_Type.GPU, Display.getDrawable(), heightTex.getId(), normalTex.getId(), maxParticles);
-
+//            raindrops = new Raindrops(Device_Type.GPU, Display.getDrawable(), heightTex.getId(), normalTex.getId(), maxParticles);
+            rainstreaks = new Rainstreaks(maxParticles);
+                       
             inverseLightDirection.set(1.0f, 0.2f, 0.0f);
             inverseLightDirection.normalise();
             
@@ -97,7 +100,7 @@ public class Rain {
             render();
             
             //cleanup 
-            raindrops.destroy();
+//            raindrops.destroy();
             OpenCL.destroy();
             destroy();            
         } catch (LWJGLException ex) {
@@ -142,8 +145,11 @@ public class Rain {
             terrain.draw();
             
             //raindrops
-            raindrops.getShaderProgram().use();
-            raindrops.draw(cam);
+//            raindrops.getShaderProgram().use();
+//            raindrops.draw(cam);
+            
+            rainstreaks.getShaderProgram().use();
+            rainstreaks.draw(cam);
             
             // present screen
             Display.update();
@@ -224,6 +230,6 @@ public class Rain {
     private static void animate(long millis) {
         // update ingame time properly
         ingameTime += ingameTimePerSecond * 1e-3f * (float)millis;        
-        raindrops.updateSimulation(millis);
+//        raindrops.updateSimulation(millis);
     }
 }

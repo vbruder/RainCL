@@ -235,7 +235,7 @@ public class Raindrops {
             clusterScale = 1;
             //spawning position
             float x = -0.5f + this.clusterScale * r.nextFloat();
-            float y = 1;//this.clusterScale * r.nextInt() / (float)Integer.MAX_VALUE;
+            float y =  0.5f + this.clusterScale * r.nextFloat();
             float z = -0.5f + this.clusterScale * r.nextFloat();
             // if(x*x + y*y + z*z < this.clusterScale*3/2f || x*x + y*y + z*z > clusterScale*3f) continue;
             float rand = r.nextFloat() * 0.15f + 0.05f;
@@ -243,7 +243,7 @@ public class Raindrops {
             this.posBuffer.put(x);
             this.posBuffer.put(y);
             this.posBuffer.put(z);
-            this.posBuffer.put(1f);//0.3f*ic[(int)(x*length1)][(int) (z*length2)][0]);
+            this.posBuffer.put(0.1f);//0.3f*ic[(int)(x*length1)][(int) (z*length2)][0]);
             
             //spawning velocity
             //TODO influence by wind
@@ -251,7 +251,7 @@ public class Raindrops {
 //            float vy = Math.abs(r.nextInt() / (float)Integer.MAX_VALUE * this.veloScale);
 //            float vz = r.nextInt() / (float)Integer.MAX_VALUE * this.veloScale;           
             this.veloBuffer.put(0.f);
-            this.veloBuffer.put(1.f);
+            this.veloBuffer.put(0.1f);
             this.veloBuffer.put(0.f);
             this.veloBuffer.put((float) (4/3 * Util.PI * Math.pow(rand, 3)));
             i++;

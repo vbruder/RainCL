@@ -4,7 +4,7 @@
 #define SHEAR 0.12f
 #define GRAVITY 0.7f
 #define TIME_SCALE 1.0f
-#define LOCAL_MEM_SIZE 64
+#define LOCAL_MEM_SIZE 128
 
 constant sampler_t sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_FILTER_LINEAR| CLK_ADDRESS_REPEAT;
 
@@ -33,7 +33,6 @@ float dt)
 	// dimf.x = normalize((float)dim.x);
 	// dimf.y = (float)dim.y;
 	
-	//wrong lookup? (myPos.xz is float pos of particle)
 	float2 tc = (float2)(0.5f, 0.5f) + myPos.xz;
 	float4 height = read_imagef(heightmap, sampler, (float2)(1-tc.x, tc.y));
 	// float4 normal = read_imagef(normalmap, sampler, myPos.xz);
@@ -41,7 +40,7 @@ float dt)
 	//pseudo random int
 	int rand = (myId * 0x5DEECE66DL + 0xBL) & ((1L << 48) - 1);
 	
-	//myPos.y = height.x*10;
+	myPos.y = height.x*0.25f;
 	
 	//respawn particle
 	// if (myPos.y <= myPos.w)
@@ -49,5 +48,5 @@ float dt)
 		// myPos.y = 2.3f + ((float)rand / 1000000000.0f);
 	// }
 
-    newPos[myId].xyz = (float3)(myPos.x, height.x, myPos.z);//myPos.xyz;// - oldVelo[myId].xyz * 0.f;//dt;
+    newPos[myId].xyz = (float3)(myPos.x, myPos.y, myPos.z);//myPos.xyz;// - oldVelo[myId].xyz * 0.f;//dt;
 }
