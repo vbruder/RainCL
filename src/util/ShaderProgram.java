@@ -12,10 +12,28 @@ import org.lwjgl.util.vector.Matrix4f;
  *
  */
 public class ShaderProgram {
-    private int id, vs, fs;
-    
+    private int id, vs, fs, gs;
+
+    private boolean isGeomShader = false;
+ 
+    /**
+     * Create a shader program <i>without</i> geometry shader.
+     * @param vertexShader
+     * @param fragmentShader
+     */
     public ShaderProgram(String vertexShader, String fragmentShader) {
         this.createShaderProgram(vertexShader, fragmentShader);
+    }
+    
+    /**
+     * Create a shader program <i>with</i> geometry shader.
+     * @param vertexShader
+     * @param fragmentShader
+     * @param geometryShader
+     */
+    public ShaderProgram(String vertexShader, String fragmentShader, String geometryShader) {
+        this.isGeomShader  = true;
+        this.createShaderProgram(vertexShader, fragmentShader, geometryShader);
     }
     
     public void use() {
@@ -95,6 +113,59 @@ public class ShaderProgram {
      * 
      * @param vs path of vertex shader
      * @param fs path of fragment shader
+     * @param gs path of geometry shader
+     * @return ShaderProgram ID
+     */
+    private void createShaderProgram(String vs, String fs, String gs) {
+        this.id = glCreateProgram();
+        
+        this.vs = glCreateShader(GL_VERTEX_SHADER);
+        this.fs = glCreateShader(GL_FRAGMENT_SHADER);
+        this.gs = glCreateShader(GL_GEOMETRY_SHADER);
+        
+        glAttachShader(this.id, this.vs);
+        glAttachShader(this.id, this.fs);
+        glAttachShader(this.id, this.gs);
+        
+        String vertexShaderContents = Util.getFileContents(vs);
+        String fragmentShaderContents = Util.getFileContents(fs);
+        String geometryShaderContents = Util.getFileContents(gs);
+        
+        glShaderSource(this.vs, vertexShaderContents);
+        glShaderSource(this.fs, fragmentShaderContents);
+        glShaderSource(this.gs, geometryShaderContents);
+        
+        glCompileShader(this.vs);
+        glCompileShader(this.fs);
+        glCompileShader(this.gs);
+        
+        String log;
+        log = glGetShaderInfoLog(this.vs, 1024);
+        System.out.print(log);
+        log = glGetShaderInfoLog(this.fs, 1024);
+        System.out.print(log);
+        log = glGetShaderInfoLog(this.gs, 1024);
+        System.out.print(log);
+        
+        glBindAttribLocation(this.id, ATTR_POS, "positionMC");
+        glBindAttribLocation(this.id, ATTR_NORMAL, "normalMC");        
+        glBindAttribLocation(this.id, ATTR_COLOR, "vertexColor");
+        glBindAttribLocation(this.id, ATTR_COLOR2, "vertexColor2");
+        glBindAttribLocation(this.id, ATTR_TEX, "vertexTexCoords");
+        glBindAttribLocation(this.id, ATTR_INSTANCE, "instancedData");
+        
+        glLinkProgram(this.id);        
+        
+        log = glGetProgramInfoLog(this.id, 1024);
+        System.out.print(log);
+    }
+    
+    /**
+     * @brief Creates a shader program from a vertex and a fragment shader.
+     * 
+     * @param vs path of vertex shader
+     * @param fs path of fragment shader
+     * @param gs path of geometry shader
      * @return ShaderProgram ID
      */
     private void createShaderProgram(String vs, String fs) {
@@ -140,8 +211,15 @@ public class ShaderProgram {
     public void delete() {
         GL20.glDetachShader(this.id, this.fs);
         GL20.glDetachShader(this.id, this.vs);
+        
         GL20.glDeleteShader(this.fs);
         GL20.glDeleteShader(this.vs);
+        
+        if (isGeomShader) {
+            GL20.glDetachShader(this.id, this.gs);
+            GL20.glDeleteShader(this.gs);
+        }
+        
         GL20.glDeleteProgram(this.id);
     }
 }

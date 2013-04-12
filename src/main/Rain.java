@@ -69,7 +69,7 @@ public class Rain {
     private static Geometry terrain;
     private static Texture normalTex, heightTex;
     
-    private static int maxParticles = 1 << 13;
+    private static int maxParticles = 1 << 12;
     
     public static void main(String[] argv) {
         try {
@@ -85,7 +85,7 @@ public class Rain {
             terrain = GeometryFactory.createTerrainFromMap("media/map1.png", 0.25f);
             normalTex = terrain.getNormalTex();
             heightTex = terrain.getHeightTex();
-            terrainSP = new ShaderProgram("shader/simulation.vsh", "shader/simulation.fsh");
+            terrainSP = new ShaderProgram("shader/terrain.vsh", "shader/terrain.fsh");
             
             //create rain
 //            raindrops = new Raindrops(Device_Type.GPU, Display.getDrawable(), heightTex.getId(), normalTex.getId(), maxParticles);

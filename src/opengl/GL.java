@@ -145,6 +145,11 @@ public class GL {
     public static final int GL_FRAGMENT_SHADER = GL20.GL_FRAGMENT_SHADER;
     
     /**
+     * GL32.GL_GEOMETRY_SHADER
+     */
+    public static final int GL_GEOMETRY_SHADER = GL32.GL_GEOMETRY_SHADER;
+    
+    /**
      * GL11.GL_BACK
      */
     public static final int GL_FRONT = GL11.GL_FRONT;

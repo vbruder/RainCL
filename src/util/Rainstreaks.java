@@ -70,7 +70,7 @@ public class Rainstreaks {
 
 	private void createShaderProgram() {
 		
-        rainstreakSP = new ShaderProgram("./shader/Raindrop.vsh", "./shader/Raindrop.fsh");
+        rainstreakSP = new ShaderProgram("./shader/Rainstreak.vsh", "./shader/Rainstreak.fsh", "./shader/Rainstreak.gsh");
         viewProjLoc = glGetUniformLocation(rainstreakSP.getID(), "viewProj");
         diffTexLoc = glGetUniformLocation(rainstreakSP.getID(), "diffuseTex");
         specTexLoc = glGetUniformLocation(rainstreakSP.getID(), "specularTex");
