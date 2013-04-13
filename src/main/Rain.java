@@ -42,7 +42,6 @@ import util.Texture;
  */
 public class Rain {
     
-    private static Raindrops raindrops;
     private static Rainstreaks rainstreaks;
     
     // shader programs
@@ -88,8 +87,7 @@ public class Rain {
             heightTex = terrain.getHeightTex();
             terrainSP = new ShaderProgram("shader/terrain.vsh", "shader/terrain.fsh");
             
-            //create rain
-//            raindrops = new Raindrops(Device_Type.GPU, Display.getDrawable(), heightTex.getId(), normalTex.getId(), maxParticles);
+            //create rain streaks
             rainstreaks = new Rainstreaks(maxParticles);
                        
             inverseLightDirection.set(1.0f, 0.2f, 0.0f);
@@ -101,7 +99,6 @@ public class Rain {
             render();
             
             //cleanup 
-//            raindrops.destroy();
             OpenCL.destroy();
             destroy();            
         } catch (LWJGLException ex) {
@@ -145,10 +142,7 @@ public class Rain {
             terrainSP.setUniform("heightTex", heightTex);
             terrain.draw();
             
-            //raindrops
-//            raindrops.getShaderProgram().use();
-//            raindrops.draw(cam);
-            
+            //rain streaks          
             rainstreaks.getShaderProgram().use();
             rainstreaks.draw(cam);
             

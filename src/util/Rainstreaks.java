@@ -65,22 +65,27 @@ public class Rainstreaks {
 		this.maxParticles = maxParticles;
 		this.createData();
 		this.createShaderProgram();
-		
 	}
 
 	private void createShaderProgram() {
 		
         rainstreakSP = new ShaderProgram("./shader/Rainstreak.vsh", "./shader/Rainstreak.fsh", "./shader/Rainstreak.gsh");
+        //geom shader
         viewProjLoc = glGetUniformLocation(rainstreakSP.getID(), "viewProj");
+        eyeLoc = glGetUniformLocation(rainstreakSP.getID(), "eyePosition");
+        
+        //fragment shader
         diffTexLoc = glGetUniformLocation(rainstreakSP.getID(), "diffuseTex");
         specTexLoc = glGetUniformLocation(rainstreakSP.getID(), "specularTex");
-        eyeLoc = glGetUniformLocation(rainstreakSP.getID(), "eyePosition");
         kaLoc = glGetUniformLocation(rainstreakSP.getID(), "k_a");
         kdLoc = glGetUniformLocation(rainstreakSP.getID(), "k_dif");
         ksLoc = glGetUniformLocation(rainstreakSP.getID(), "k_spec");
         esLoc = glGetUniformLocation(rainstreakSP.getID(), "es");
         caLoc = glGetUniformLocation(rainstreakSP.getID(), "c_a");
+        
         rainstreakSP.use();
+        
+        //set uniforms (fragment shader)
         glUniform1f(kaLoc, 0.05f);
         glUniform1f(kdLoc, 0.6f);
         glUniform1f(ksLoc, 0.3f);
@@ -103,13 +108,11 @@ public class Rainstreaks {
 		int i = 0;
 		
 		while(i < this.maxParticles) {
-            clusterScale = 1;
+
             //spawning position
             float x = -0.5f + clusterScale * r.nextFloat();
             float y =  0.5f + clusterScale * r.nextFloat();
             float z = -0.5f + clusterScale * r.nextFloat();
-            // if(x*x + y*y + z*z < this.clusterScale*3/2f || x*x + y*y + z*z > clusterScale*3f) continue;
-            float rand = r.nextFloat() * 0.15f + 0.05f;
             
             posBuffer.put(x);
             posBuffer.put(y);
@@ -117,10 +120,10 @@ public class Rainstreaks {
             posBuffer.put(1.f);
             
             //spawning velocity       
-            veloBuffer.put(0.f);
+            veloBuffer.put(0.0f);
             veloBuffer.put(0.1f);
-            veloBuffer.put(0.f);
-            veloBuffer.put(1.f);
+            veloBuffer.put(0.0f);
+            veloBuffer.put(1.0f);
             i++;
         }
         
@@ -162,5 +165,4 @@ public class Rainstreaks {
     public ShaderProgram getShaderProgram() {
         return this.rainstreakSP;
     }
-
 }
