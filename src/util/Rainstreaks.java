@@ -114,13 +114,13 @@ public class Rainstreaks {
             posBuffer.put(x);
             posBuffer.put(y);
             posBuffer.put(z);
-            posBuffer.put(0.1f);
+            posBuffer.put(1.f);
             
             //spawning velocity       
             veloBuffer.put(0.f);
             veloBuffer.put(0.1f);
             veloBuffer.put(0.f);
-            veloBuffer.put((float) (4/3 * Util.PI * Math.pow(rand, 3)));
+            veloBuffer.put(1.f);
             i++;
         }
         

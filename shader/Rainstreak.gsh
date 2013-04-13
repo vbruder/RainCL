@@ -9,23 +9,36 @@ layout (triangle_strip, max_vertices = 4) out;
 
 // model view projection matrix
 uniform mat4 viewProj;
+uniform vec3 eyePosition;
 
 void main(void)
 {
-    // transform to world coords
-    vec4 pos = gl_in[0].gl_Position * viewProj;
-    vec4 trans1 = vec4( 0.00, -0.03, 0, 1) * viewProj;
-    vec4 trans2 = vec4( 0.01,  0.00, 0, 1) * viewProj;
-    vec4 trans3 = vec4( 0.01, -0.03, 0, 1) * viewProj;
+    vec3 worldPos = normalize(gl_in[0].gl_Position.xyz);
+    vec3 velVec = vec3(0, -2.0, 0);
+
+    float height = 1.0/20.0;
+    float width = height/10.0;
     
+    velVec = normalize(velVec);
+    vec3 eyeVec = normalize(eyePosition - worldPos);
+    vec3 eyeOnVelVecPlane = eyePosition - ((dot(eyeVec, velVec)) * velVec);
+    vec3 projectedEyeVec = eyeOnVelVecPlane - worldPos;
+    vec3 sideVec = normalize(cross(projectedEyeVec, velVec));
+
     // create two vertices (triangle strip) out of point position
-    gl_Position = pos;
+    vec4 outPos[4];
+    outPos[0] = vec4(worldPos - (sideVec * 0.5*width), 1.0);
+    outPos[1] = outPos[0] + vec4((sideVec * width),  1.0);
+    outPos[2] = outPos[0] + vec4((velVec  * height), 1.0);
+    outPos[3] = outPos[2] + vec4((sideVec * width),  1.0);
+
+    gl_Position = viewProj * outPos[0];
     EmitVertex();
-    gl_Position = pos + trans1;
+    gl_Position = viewProj * outPos[1];
     EmitVertex();
-    gl_Position = pos + trans2;
+    gl_Position = viewProj * outPos[2];
     EmitVertex();
-    gl_Position = pos + trans3;
+    gl_Position = viewProj * outPos[3];
     EmitVertex();
     EndPrimitive();
 }

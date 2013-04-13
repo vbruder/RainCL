@@ -69,15 +69,16 @@ public class Rain {
     private static Geometry terrain;
     private static Texture normalTex, heightTex;
     
-    private static int maxParticles = 1 << 12;
+    // 2^20 ~ 1 mio
+    private static int maxParticles = 1 << 10;
     
     public static void main(String[] argv) {
         try {
             init();
             OpenCL.init();
-            glEnable(GL_CULL_FACE);
-            glFrontFace(GL_CCW);
-            glCullFace(GL_BACK);
+//            glEnable(GL_CULL_FACE);
+//            glFrontFace(GL_CCW);
+//            glCullFace(GL_BACK);
             glEnable(GL_DEPTH_TEST);
             glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
             

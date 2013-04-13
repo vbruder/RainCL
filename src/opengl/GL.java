@@ -1,6 +1,7 @@
 package opengl;
 
 import org.lwjgl.opengl.*;
+
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import org.lwjgl.LWJGLException;
@@ -35,6 +36,7 @@ public class GL {
     public static void init() throws LWJGLException {
         if(!GL.initialized) {
             Display.setDisplayMode(new DisplayMode(WIDTH, HEIGHT));
+            Display.setTitle("RainCL");
             boolean supported = true;
             try {
                 Display.create(new PixelFormat(), new ContextAttribs(3, 3).withProfileCore(true));
