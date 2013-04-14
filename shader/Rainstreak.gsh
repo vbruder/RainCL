@@ -14,7 +14,7 @@ uniform vec3 eyePosition;
 void main(void)
 {
     vec3 worldPos = normalize(gl_in[0].gl_Position.xyz);
-    vec3 velVec = vec3(1, -20.0, 1);
+    vec3 velVec = vec3(1, -3.0, 1);
     
     //size of rain streaks
     float height = 1.0/20.0;
@@ -43,21 +43,3 @@ void main(void)
     EmitVertex();
     EndPrimitive();
 }
-
-
-// void GenRainSpriteVertices(float3 worldPos, float3 velVec, float3 eyePos, out float3 outPos[4])
-//{
-//    float height = g_SpriteSize/2.0;
-//    float width = height/10.0;
-
-//    velVec = normalize(velVec);
-//    float3 eyeVec = eyePos - worldPos;
-//    float3 eyeOnVelVecPlane = eyePos - ((dot(eyeVec, velVec)) * velVec);
-//    float3 projectedEyeVec = eyeOnVelVecPlane - worldPos;
-//    float3 sideVec = normalize(cross(projectedEyeVec, velVec));
-    
-//    outPos[0] = worldPos - (sideVec * 0.5*width);
-//    outPos[1] = outPos[0] + (sideVec * width);
-//    outPos[2] = outPos[0] + (velVec * height);
-//    outPos[3] = outPos[2] + (sideVec * width );
-//}
