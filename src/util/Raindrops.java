@@ -189,7 +189,7 @@ public class Raindrops {
      */
     private void createShaderProgram() { 
         
-        raindropSP = new ShaderProgram("./shader/Raindrop.vsh", "./shader/Raindrop.fsh");
+        raindropSP = new ShaderProgram("./shader/Raindrop.vsh", "./shader/Raindrop.fsh", false);
         viewProjLoc = glGetUniformLocation(raindropSP.getID(), "viewProj");
         diffTexLoc = glGetUniformLocation(raindropSP.getID(), "diffuseTex");
         specTexLoc = glGetUniformLocation(raindropSP.getID(), "specularTex");

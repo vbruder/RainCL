@@ -17,23 +17,17 @@ public class ShaderProgram {
     private boolean isGeomShader = false;
  
     /**
-     * Create a shader program <i>without</i> geometry shader.
+     * Create a shader program either with or without geometry shader.
      * @param vertexShader
-     * @param fragmentShader
+     * @param secondShader can be either geometry or fragment shader
+     * @param isGeomShader indicates weather shader program contains geometry shader
      */
-    public ShaderProgram(String vertexShader, String fragmentShader) {
-        this.createShaderProgram(vertexShader, fragmentShader);
-    }
-    
-    /**
-     * Create a shader program <i>with</i> geometry shader.
-     * @param vertexShader
-     * @param fragmentShader
-     * @param geometryShader
-     */
-    public ShaderProgram(String vertexShader, String fragmentShader, String geometryShader) {
-        this.isGeomShader  = true;
-        this.createShaderProgram(vertexShader, fragmentShader, geometryShader);
+    public ShaderProgram(String vertexShader, String secondShader, boolean isGeomShader) {
+    	this.isGeomShader = isGeomShader;
+    	if (this.isGeomShader)
+    		this.createShaderProgramGS(vertexShader, secondShader);
+    	else
+    		this.createShaderProgramFS(vertexShader, secondShader);
     }
     
     public void use() {
@@ -112,37 +106,29 @@ public class ShaderProgram {
      * @brief Creates a shader program from a vertex and a fragment shader.
      * 
      * @param vs path of vertex shader
-     * @param fs path of fragment shader
      * @param gs path of geometry shader
      * @return ShaderProgram ID
      */
-    private void createShaderProgram(String vs, String fs, String gs) {
+    private void createShaderProgramGS(String vs, String gs) {
         this.id = glCreateProgram();
         
         this.vs = glCreateShader(GL_VERTEX_SHADER);
-        this.fs = glCreateShader(GL_FRAGMENT_SHADER);
         this.gs = glCreateShader(GL_GEOMETRY_SHADER);
         
         glAttachShader(this.id, this.vs);
-        glAttachShader(this.id, this.fs);
         glAttachShader(this.id, this.gs);
         
         String vertexShaderContents = Util.getFileContents(vs);
-        String fragmentShaderContents = Util.getFileContents(fs);
         String geometryShaderContents = Util.getFileContents(gs);
         
         glShaderSource(this.vs, vertexShaderContents);
-        glShaderSource(this.fs, fragmentShaderContents);
         glShaderSource(this.gs, geometryShaderContents);
         
         glCompileShader(this.vs);
-        glCompileShader(this.fs);
         glCompileShader(this.gs);
         
         String log;
         log = glGetShaderInfoLog(this.vs, 1024);
-        System.out.print(log);
-        log = glGetShaderInfoLog(this.fs, 1024);
         System.out.print(log);
         log = glGetShaderInfoLog(this.gs, 1024);
         System.out.print(log);
@@ -168,7 +154,7 @@ public class ShaderProgram {
      * @param gs path of geometry shader
      * @return ShaderProgram ID
      */
-    private void createShaderProgram(String vs, String fs) {
+    private void createShaderProgramFS(String vs, String fs) {
         this.id = glCreateProgram();
         
         this.vs = glCreateShader(GL_VERTEX_SHADER);

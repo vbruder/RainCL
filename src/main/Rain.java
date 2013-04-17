@@ -85,7 +85,7 @@ public class Rain {
             terrain = GeometryFactory.createTerrainFromMap("media/map1.png", 0.25f);
             normalTex = terrain.getNormalTex();
             heightTex = terrain.getHeightTex();
-            terrainSP = new ShaderProgram("shader/terrain.vsh", "shader/terrain.fsh");
+            terrainSP = new ShaderProgram("shader/terrain.vsh", "shader/terrain.fsh", false);
             
             //create rain streaks
             rainstreaks = new Rainstreaks(maxParticles);
@@ -143,8 +143,8 @@ public class Rain {
             terrain.draw();
             
             //rain streaks          
-            rainstreaks.getShaderProgram().use();
-            rainstreaks.draw(cam);
+            //rainstreaks.getShaderProgram().use();
+            rainstreaks.draw(cam, millis);
             
             // present screen
             Display.update();

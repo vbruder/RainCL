@@ -1,5 +1,9 @@
 package opengl;
 
+import static opengl.GL.GL_POINTS;
+import static opengl.GL.GL_TRANSFORM_FEEDBACK;
+import static opengl.GL.GL_TRANSFORM_FEEDBACK_BUFFER;
+
 import org.lwjgl.opengl.*;
 
 import java.nio.FloatBuffer;
@@ -307,6 +311,11 @@ public class GL {
     public static final int GL_STATIC_DRAW = GL15.GL_STATIC_DRAW;    
     
     /**
+     * GL15.GL_STATIC_DRAW
+     */      
+    public static final int GL_DYNAMIC_DRAW = GL15.GL_DYNAMIC_DRAW;    
+    
+    /**
      * GL11.GL_STENCIL_BUFFER_BIT
      */
     public static final int GL_STENCIL_BUFFER_BIT = GL11.GL_STENCIL_BUFFER_BIT;
@@ -390,6 +399,21 @@ public class GL {
      * GL11.GL_ZERO
      */
     public static final int GL_ZERO = GL11.GL_ZERO;
+    
+    /**
+     * GL40.GL_TRANSFORM_FEEDBACK
+     */
+    public static final int GL_TRANSFORM_FEEDBACK = GL40.GL_TRANSFORM_FEEDBACK;
+    
+    /**
+     * GL30.GL_TRANSFORM_FEEDBACK_BUFFER
+     */
+    public static final int GL_TRANSFORM_FEEDBACK_BUFFER = GL30.GL_TRANSFORM_FEEDBACK_BUFFER;
+    
+    /**
+     * GL30.GL_RASTERIZER_DISCARD
+     */
+    public static final int GL_RASTERIZER_DISCARD = GL30.GL_RASTERIZER_DISCARD;
 
     /**
      * OpenGL 1.3
@@ -910,6 +934,75 @@ public class GL {
     public static void glVertexAttribPointer(int index, int size, int type, boolean normalized, int stride, long buffer_buffer_offset) {
         GL20.glVertexAttribPointer(index, size, type, normalized, stride, buffer_buffer_offset);
         GL.checkError("glVertexAttribPointer");
+    }
+
+    /**
+     * OpenGL 3.0
+     * @see <a href="http://www.opengl.org/sdk/docs/man4/xhtml/glBeginTransformFeedback.xml">glBeginTransformFeedback</a>
+     */
+    public static void glBeginTransformFeedback(int node){
+    	GL30.glBeginTransformFeedback(node);
+    	GL.checkError("glBeginTransformFeedback");
+    }   
+    
+    /**
+     * OpenGL 4.0
+     * @return 
+     * @see <a href="http://www.opengl.org/sdk/docs/man4/xhtml/glGenTransformFeedbacks.xml">glGenTransformFeedbacks</a>
+     */
+    public static int glGenTransformFeedbacks(){
+    	int value = GL40.glGenTransformFeedbacks();
+    	GL.checkError("glGenTransformFeedbacks");
+    	return value;
+    }
+
+    /**
+     * OpenGL 3.0
+     * @see <a href="http://www.opengl.org/sdk/docs/man4/xhtml/glEndTransformFeedback.xml">glEndTransformFeedback</a>
+     */
+    public static void glEndTransformFeedback(){
+    	GL30.glEndTransformFeedback();
+    	GL.checkError("glEndTransformFeedback");
+    }
+    
+    /**
+     * OpenGL 4.0
+     * @see <a href="http://www.opengl.org/sdk/docs/man4/xhtml/glDrawTransformFeedback.xml">glDrawTransformFeedback</a>
+     */
+    public static void glDrawTransformFeedback(int node, int id){
+    	GL40.glDrawTransformFeedback(node, id);
+    	GL.checkError("glDrawTransformFeedback");
+    }   
+    
+    /**
+     * OpenGL 4.0
+     * @see <a href="http://www.opengl.org/sdk/docs/man4/xhtml/glBindTransformFeedback.xml">glBindTransformFeedback</a>
+     */
+    public static void glBindTransformFeedback(int target, int id){
+    	GL40.glBindTransformFeedback(target, id);
+    	GL.checkError("glBindTransformFeedback");
+    }  
+    
+    /**
+     * OpenGL 3.0
+     * @see <a href="http://www.opengl.org/sdk/docs/man4/xhtml/glBindBufferBase.xml">glBindBufferBase</a>
+     * @param target
+     * @param index
+     * @param buffer
+     */
+    public static void glBindBufferBase(int target, int index, int buffer){
+        GL30.glBindBufferBase(target, index, buffer);
+        GL.checkError("glBindBufferBase");
+    }
+    
+    /**
+     * OpenGL 2.0
+     * @see <a href="http://www.opengl.org/sdk/docs/man4/xhtml/glDisableVertexAttribArray.xml">glDisableVertexAttribArray</a>
+     * @param index
+     */
+    public static void glDisableVertexAttribArray(int index){
+    	GL20.glDisableVertexAttribArray(index);
+    	GL.checkError("glDisableVertexAttribArray");
     }
     
     private static void checkError(String source) {
