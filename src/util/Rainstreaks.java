@@ -164,8 +164,8 @@ public class Rainstreaks {
               
         //transform feedback buffer and particle buffer
         this.tfbid[0] = glGenTransformFeedbacks();      
-        this.pbid[0] = glGenBuffers();
         this.tfbid[1] = glGenTransformFeedbacks();
+        this.pbid[0] = glGenBuffers();
         this.pbid[1] = glGenBuffers();
         
         for (int j = 0; j < tfbid.length; j++) {
@@ -196,8 +196,8 @@ public class Rainstreaks {
     private void updateParticles(Camera cam, long millis){
 
     	this.StreakUpdateSP.use();
-    	
-        Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);  
+
+    	Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);  
         viewProj.store(Util.MAT_BUFFER);
         Util.MAT_BUFFER.position(0);
         GL.glUniformMatrix4(viewProjLocGS, false, Util.MAT_BUFFER);
@@ -211,6 +211,7 @@ public class Rainstreaks {
         glEnableVertexAttribArray(ShaderProgram.ATTR_POS);
         glVertexAttribPointer(ShaderProgram.ATTR_POS, 4, GL_FLOAT, false, 16, 0);
         
+        //TODO: GL_INVALID_OPERATION
         glBeginTransformFeedback(GL_TRIANGLES);
     
         //first draw
@@ -227,8 +228,8 @@ public class Rainstreaks {
     }
     
     private void renderParticles(Camera cam) {
-    	
-    	StreakRenderSP.use();
+
+        StreakRenderSP.use();
         
         GL.glUniform3f(this.eyeLoc, cam.getCamPos().x, cam.getCamPos().y, cam.getCamPos().z);       
         Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);  

@@ -1,9 +1,5 @@
 package opengl;
 
-import static opengl.GL.GL_POINTS;
-import static opengl.GL.GL_TRANSFORM_FEEDBACK;
-import static opengl.GL.GL_TRANSFORM_FEEDBACK_BUFFER;
-
 import org.lwjgl.opengl.*;
 
 import java.nio.FloatBuffer;
@@ -13,10 +9,7 @@ import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
 /**
- * Veraenderungen erfolgen auf eigene Gefahr! Wenn Sie Probleme bekommen und
- * diese Datei nicht in ihrem Originalzustand ist, koennen wir Ihnen dabei nicht
- * helfen.
- * @author Sascha Kolodzey, Nico Marniok
+ * 
  */
 public class GL {
     /**
@@ -43,7 +36,7 @@ public class GL {
             Display.setTitle("RainCL");
             boolean supported = true;
             try {
-                Display.create(new PixelFormat(), new ContextAttribs(3, 3).withProfileCore(true));
+                Display.create(new PixelFormat(), new ContextAttribs(4, 2).withProfileCore(true));
             } catch (LWJGLException e) {
                 Display.create();
                 supported = false;
@@ -70,7 +63,7 @@ public class GL {
             System.out.println(info);          
             
             if(!supported) {
-                throw new RuntimeException("Die Grafikkarte unterstuetzt, die von uns geforderte OpenGL Version 3.2 nicht. Bitte kopiere den Inhalt der Box 'OpenGL info' und schicke ihn an nmarniok@uos.de.");
+                throw new RuntimeException("Your hardware does not support the required OpenGL version 4.2.");
             }
             
             glPrimitiveRestartIndex(RESTART_INDEX);
@@ -939,6 +932,7 @@ public class GL {
     /**
      * OpenGL 3.0
      * @see <a href="http://www.opengl.org/sdk/docs/man4/xhtml/glBeginTransformFeedback.xml">glBeginTransformFeedback</a>
+     * @param node
      */
     public static void glBeginTransformFeedback(int node){
     	GL30.glBeginTransformFeedback(node);
