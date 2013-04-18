@@ -4,6 +4,7 @@ import opengl.GL;
 import static opengl.GL.*;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.util.vector.Matrix4f;
+import org.lwjgl.util.vector.Vector3f;
 
 /**
  * 
@@ -69,6 +70,20 @@ public class ShaderProgram {
         if(loc != -1) {
             texture.bind();
             glUniform1i(loc, texture.getUnit());
+        }
+    }
+    
+    /**
+     * @brief Helper method to write a three dimensional float vector into a uniform.
+     * 		  The related program object has to be active.
+     *
+     * @param vec vector with 3 floats
+     * @param varName target variable in shader
+     */
+    public void setUniform(String varName, Vector3f vec) {
+        int loc = glGetUniformLocation(this.id, varName);
+        if(loc != -1) {
+            glUniform3f(loc, vec.x, vec.y, vec.z);
         }
     }
     

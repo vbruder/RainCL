@@ -80,7 +80,7 @@ public class Rainstreaks {
 	//current transform feedback buffer
 	private int currTFB;
 
-	private boolean isFirst;
+	private boolean isFirstFrame;
 	private int viewProjLocVS;
 
 	public Rainstreaks(int maxParticles) {
@@ -88,7 +88,7 @@ public class Rainstreaks {
 		this.maxParticles = maxParticles;
 		this.currBuf = 0;
 		this.currTFB = 1;
-		this.isFirst = true;
+		this.isFirstFrame = true;
 		
 		this.createData();
 		this.createShaderProgram();
@@ -98,37 +98,6 @@ public class Rainstreaks {
 		
         this.StreakRenderSP = new ShaderProgram("./shader/StreakRender.vsh", "./shader/StreakRender.fsh", false);
         this.StreakUpdateSP = new ShaderProgram("./shader/StreakUpdate.vsh", "./shader/StreakUpdate.gsh", true);
-        
-        //update shader
-        // --geometry
-        viewProjLocGS = glGetUniformLocation(StreakUpdateSP.getID(), "viewProj");
-        eyeLoc = glGetUniformLocation(StreakUpdateSP.getID(), "eyePosition");
-        
-        //rendering shader
-        // --vertex
-        viewProjLocVS = glGetUniformLocation(StreakRenderSP.getID(), "viewProj");
-        
-        // --fragment
-        diffTexLoc = glGetUniformLocation(StreakRenderSP.getID(), "diffuseTex");
-        specTexLoc = glGetUniformLocation(StreakRenderSP.getID(), "specularTex");
-        kaLoc = glGetUniformLocation(StreakRenderSP.getID(), "k_a");
-        kdLoc = glGetUniformLocation(StreakRenderSP.getID(), "k_dif");
-        ksLoc = glGetUniformLocation(StreakRenderSP.getID(), "k_spec");
-        esLoc = glGetUniformLocation(StreakRenderSP.getID(), "es");
-        caLoc = glGetUniformLocation(StreakRenderSP.getID(), "c_a");
-        
-        StreakRenderSP.use();
-        
-        //set uniforms (fragment shader)
-        glUniform1f(kaLoc, 0.05f);
-        glUniform1f(kdLoc, 0.6f);
-        glUniform1f(ksLoc, 0.3f);
-        glUniform1f(esLoc, 16.0f);
-        glUniform3f(caLoc, 1.0f, 1.0f, 1.0f);
-        
-        //textures on raindrops
-        diffuseTexture = Util.generateTexture("media/raindrop.jpg");
-        specularTexture = Util.generateTexture("media/raindrop_spec.jpg");
 	}
 
 	private void createData() {
@@ -190,17 +159,16 @@ public class Rainstreaks {
                
         //swap buffers
         this.currBuf = this.currTFB;
-        this.currTFB = (this.currBuf + 1) & 0x1;
+        this.currTFB = (this.currTFB + 1) & 0x1;
     }
     
     private void updateParticles(Camera cam, long millis){
 
+    	//set uniforms in GS
     	this.StreakUpdateSP.use();
-
     	Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);  
-        viewProj.store(Util.MAT_BUFFER);
-        Util.MAT_BUFFER.position(0);
-        GL.glUniformMatrix4(viewProjLocGS, false, Util.MAT_BUFFER);
+        StreakUpdateSP.setUniform("viewProj", viewProj);
+        StreakUpdateSP.setUniform("eyePosition", cam.getCamPos());
     	
     	//disable rest of render pipeline
     	glEnable(GL_RASTERIZER_DISCARD);
@@ -212,16 +180,16 @@ public class Rainstreaks {
         glVertexAttribPointer(ShaderProgram.ATTR_POS, 4, GL_FLOAT, false, 16, 0);
         
         //TODO: GL_INVALID_OPERATION
-        glBeginTransformFeedback(GL_TRIANGLES);
+        glBeginTransformFeedback(GL_POINTS);
     
         //first draw
-        if (this.isFirst) {
+        if (this.isFirstFrame) {
             glDrawArrays(GL_POINTS, 0, maxParticles);
-            this.isFirst = false;
+            this.isFirstFrame = false;
         }
         //all other draws
         else {
-            glDrawTransformFeedback(GL_TRIANGLE_STRIP, this.tfbid[currBuf]);
+            glDrawTransformFeedback(GL_POINTS, this.tfbid[currBuf]);
         }            
         glEndTransformFeedback();
         glDisableVertexAttribArray(ShaderProgram.ATTR_POS);
@@ -229,20 +197,25 @@ public class Rainstreaks {
     
     private void renderParticles(Camera cam) {
 
+    	//set uniforms VS and FS
         StreakRenderSP.use();
-        
-        GL.glUniform3f(this.eyeLoc, cam.getCamPos().x, cam.getCamPos().y, cam.getCamPos().z);       
-        Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);  
-        viewProj.store(Util.MAT_BUFFER);
-        Util.MAT_BUFFER.position(0);
-        GL.glUniformMatrix4(viewProjLocVS, false, Util.MAT_BUFFER);
+        Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);
+        StreakRenderSP.setUniform("viewProj", viewProj);
     	
 		glDisable(GL_RASTERIZER_DISCARD);
 		glBindBuffer(GL_ARRAY_BUFFER, this.pbid[this.currTFB]);
 		glEnableVertexAttribArray(ShaderProgram.ATTR_POS);
 		glVertexAttribPointer(ShaderProgram.ATTR_POS, 4, GL_FLOAT, false, 16, 0);
-		glDrawTransformFeedback(GL_TRIANGLE_STRIP, this.tfbid[this.currTFB]);
+		glDrawTransformFeedback(GL_POINTS, this.tfbid[this.currTFB]);
         glDisableVertexAttribArray(ShaderProgram.ATTR_POS);
+	}
+    
+	public ShaderProgram getStreakRenderSP() {
+		return StreakRenderSP;
+	}
+
+	public ShaderProgram getStreakUpdateSP() {
+		return StreakUpdateSP;
 	}
     
 }

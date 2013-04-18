@@ -11,7 +11,7 @@ out vec3 coords;
 
 void main(void)
 {
-    gl_Position = viewProj * vec4(positionMC, 1.0);
+    gl_Position = viewProj * vec4(positionMC, 1.0);// + vec4(0, 0.1, 0,1.0);
     normal = normalMC;
     coords = positionMC + vec3(0.5, 0, 0.5);
     positionFS = positionMC.xyz;

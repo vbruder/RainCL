@@ -69,7 +69,7 @@ public class Rain {
     private static Texture normalTex, heightTex;
     
     // 2^20 ~ 1 mio
-    private static int maxParticles = 1 << 5;
+    private static int maxParticles = 1 << 6;
     
     public static void main(String[] argv) {
         try {
@@ -151,6 +151,8 @@ public class Rain {
             Display.sync(60);
         }
         terrainSP.delete();
+        rainstreaks.getStreakRenderSP().delete();
+        rainstreaks.getStreakUpdateSP().delete();
     }
     
     /**

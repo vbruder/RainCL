@@ -5,7 +5,8 @@ precision highp float;
 // generate two triangles with 4 vertices (2 shared in triangle strip)
 // out of each point
 layout (points) in;
-layout (triangle_strip, max_vertices = 4) out;
+//layout (triangle_strip, max_vertices = 4) out;
+layout (points, max_vertices = 4) out;
 
 // view projection matrix and eye position
 uniform mat4 viewProj;
@@ -14,7 +15,7 @@ uniform vec3 eyePosition;
 void main(void)
 {
     vec3 worldPos = normalize(gl_in[0].gl_Position.xyz);
-    vec3 velVec = vec3(1, -3.0, 1);
+    vec3 velVec = vec3(0, -3.0, 0);
     
     //size of rain streaks
     float height = 1.0/20.0;
