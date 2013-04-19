@@ -409,6 +409,11 @@ public class GL {
     public static final int GL_RASTERIZER_DISCARD = GL30.GL_RASTERIZER_DISCARD;
 
     /**
+     * GL43.GL_DEBUG_OUTPUT_SYNCHRONOUS
+     */
+    public static final int GL_DEBUG_OUTPUT_SYNCHRONOUS = GL43.GL_DEBUG_OUTPUT_SYNCHRONOUS; 
+    
+    /**
      * OpenGL 1.3
      * @see <a href="http://www.opengl.org/sdk/docs/man4/xhtml/glActiveTexture.xml">glActiveTexture</a>
      * @param texture 
@@ -932,10 +937,10 @@ public class GL {
     /**
      * OpenGL 3.0
      * @see <a href="http://www.opengl.org/sdk/docs/man4/xhtml/glBeginTransformFeedback.xml">glBeginTransformFeedback</a>
-     * @param node
+     * @param primitiveMode - must be "GL_POINTS", "GL_LINES" or "GL_TRIANGLES"
      */
-    public static void glBeginTransformFeedback(int node){
-    	GL30.glBeginTransformFeedback(node);
+    public static void glBeginTransformFeedback(int primitiveMode){
+    	GL30.glBeginTransformFeedback(primitiveMode);
     	GL.checkError("glBeginTransformFeedback");
     }   
     
@@ -999,7 +1004,7 @@ public class GL {
     	GL.checkError("glDisableVertexAttribArray");
     }
     
-    private static void checkError(String source) {
+    public static void checkError(String source) {
         if(checkForErrors) {
             int errorcode = GL11.glGetError();
             String errorstring = null;

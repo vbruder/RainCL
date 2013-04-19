@@ -78,6 +78,7 @@ public class Rain {
 //            glEnable(GL_CULL_FACE);
 //            glFrontFace(GL_CCW);
 //            glCullFace(GL_BACK);
+            //glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
             glEnable(GL_DEPTH_TEST);
             glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
             

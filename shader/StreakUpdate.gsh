@@ -1,4 +1,4 @@
-#version 330 core
+#version 400 core
 
 precision highp float;
 
@@ -11,6 +11,8 @@ layout (points, max_vertices = 4) out;
 // view projection matrix and eye position
 uniform mat4 viewProj;
 uniform vec3 eyePosition;
+
+out vec3 positionFS;
 
 void main(void)
 {
@@ -35,12 +37,16 @@ void main(void)
     outPos[3] = outPos[2] + vec4((sideVec * width),  1.0);
 
     gl_Position = viewProj * outPos[0];
+    positionFS = outPos[0].xyz;
     EmitVertex();
     gl_Position = viewProj * outPos[1];
+    positionFS = outPos[1].xyz;
     EmitVertex();
     gl_Position = viewProj * outPos[2];
+    positionFS = outPos[2].xyz;
     EmitVertex();
     gl_Position = viewProj * outPos[3];
+    positionFS = outPos[3].xyz;
     EmitVertex();
     EndPrimitive();
 }

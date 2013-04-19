@@ -18,10 +18,6 @@ import static opengl.GL.glBindVertexArray;
 import static opengl.GL.glBufferData;
 import static opengl.GL.glEnableVertexAttribArray;
 import static opengl.GL.glGenBuffers;
-import static opengl.GL.glGenVertexArrays;
-import static opengl.GL.glGetUniformLocation;
-import static opengl.GL.glUniform1f;
-import static opengl.GL.glUniform3f;
 import static opengl.GL.glVertexAttribPointer;
 import static opengl.GL.glGenTransformFeedbacks;
 import static opengl.GL.glBindBufferBase;
@@ -38,8 +34,6 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.Random;
 
-import opengl.GL;
-
 import org.lwjgl.BufferUtils;
 import org.lwjgl.util.vector.Matrix4f;
 
@@ -52,18 +46,6 @@ public class Rainstreaks {
     //shader programs
     private ShaderProgram StreakRenderSP;
 	private ShaderProgram StreakUpdateSP;
-    
-    private int diffuseTexture;
-    private int specularTexture;
-    private int viewProjLocGS;
-    private int eyeLoc;
-    private int diffTexLoc;
-    private int specTexLoc;
-    private int kaLoc;
-    private int kdLoc;
-    private int ksLoc;
-    private int esLoc;
-    private int caLoc;
 
     private final Matrix4f viewProj = new Matrix4f();
     
@@ -71,9 +53,9 @@ public class Rainstreaks {
 
 	private FloatBuffer posBuffer;
 
-	//transform feedback buffer
+	//transform feedback buffers
 	private int[] tfbid = new int[2];
-	//particle buffer
+	//particle buffers
 	private int[] pbid = new int[2];
 	//current vertex buffer
 	private int currBuf;
@@ -81,8 +63,11 @@ public class Rainstreaks {
 	private int currTFB;
 
 	private boolean isFirstFrame;
-	private int viewProjLocVS;
-
+	
+	/**
+	 * Constructor
+	 * @param maxParticles number of particles to draw
+	 */
 	public Rainstreaks(int maxParticles) {
 		
 		this.maxParticles = maxParticles;
@@ -94,12 +79,18 @@ public class Rainstreaks {
 		this.createShaderProgram();
 	}
 
+	/**
+	 * Create shader programs for update and draw.
+	 */
 	private void createShaderProgram() {
 		
         this.StreakRenderSP = new ShaderProgram("./shader/StreakRender.vsh", "./shader/StreakRender.fsh", false);
         this.StreakUpdateSP = new ShaderProgram("./shader/StreakUpdate.vsh", "./shader/StreakUpdate.gsh", true);
 	}
 
+	/**
+	 * Create initial particle positions, velocities and other dates.
+	 */
 	private void createData() {
 
 		this.posBuffer = BufferUtils.createFloatBuffer(4 * maxParticles);
@@ -149,7 +140,7 @@ public class Rainstreaks {
 	}
 	
     /**
-     * draws the particles
+     * Update and render particles. Swap buffers afterwards.
      * @param cam Camera
      */
     public void draw(Camera cam, long millis) {
@@ -162,6 +153,11 @@ public class Rainstreaks {
         this.currTFB = (this.currTFB + 1) & 0x1;
     }
     
+    /**
+     * Update particles using transform feedback.
+     * @param cam
+     * @param millis
+     */
     private void updateParticles(Camera cam, long millis){
 
     	//set uniforms in GS
@@ -180,24 +176,28 @@ public class Rainstreaks {
         glVertexAttribPointer(ShaderProgram.ATTR_POS, 4, GL_FLOAT, false, 16, 0);
         
         //TODO: GL_INVALID_OPERATION
-        glBeginTransformFeedback(GL_POINTS);
-    
-        //first draw
-        if (this.isFirstFrame) {
-            glDrawArrays(GL_POINTS, 0, maxParticles);
-            this.isFirstFrame = false;
-        }
-        //all other draws
-        else {
-            glDrawTransformFeedback(GL_POINTS, this.tfbid[currBuf]);
-        }            
+        glBeginTransformFeedback(GL_POINTS); 
+            //initial draw
+            if (this.isFirstFrame) {
+                glDrawArrays(GL_POINTS, 0, maxParticles);
+                this.isFirstFrame = false;
+            }
+            //other draws
+            else {
+                glDrawTransformFeedback(GL_POINTS, this.tfbid[currBuf]);
+            }            
         glEndTransformFeedback();
+        
         glDisableVertexAttribArray(ShaderProgram.ATTR_POS);
     }
     
+    /**
+     * Render particles
+     * @param cam
+     */
     private void renderParticles(Camera cam) {
 
-    	//set uniforms VS and FS
+    	//set uniforms in VS and FS
         StreakRenderSP.use();
         Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);
         StreakRenderSP.setUniform("viewProj", viewProj);
@@ -210,10 +210,18 @@ public class Rainstreaks {
         glDisableVertexAttribArray(ShaderProgram.ATTR_POS);
 	}
     
+    /**
+     * Returns shader program object for rendering streaks.
+     * @return ShaderProgram
+     */
 	public ShaderProgram getStreakRenderSP() {
 		return StreakRenderSP;
 	}
 
+	/**
+	 * Returns shader program object for updating streaks.
+	 * @return ShaderProgram
+	 */
 	public ShaderProgram getStreakUpdateSP() {
 		return StreakUpdateSP;
 	}

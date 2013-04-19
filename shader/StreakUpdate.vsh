@@ -1,5 +1,4 @@
-#version 330 core
-
+#version 400
 in vec3 positionMC;
 
 //simple passthrough for geometry shader
