@@ -414,6 +414,11 @@ public class GL {
     public static final int GL_DEBUG_OUTPUT_SYNCHRONOUS = GL43.GL_DEBUG_OUTPUT_SYNCHRONOUS; 
     
     /**
+     * GL30.GL_INTERLEAVED_ATTRIBS
+     */
+    public static final int GL_INTERLEAVED_ATTRIBS = GL30.GL_INTERLEAVED_ATTRIBS;
+    
+    /**
      * OpenGL 1.3
      * @see <a href="http://www.opengl.org/sdk/docs/man4/xhtml/glActiveTexture.xml">glActiveTexture</a>
      * @param texture 
@@ -673,6 +678,16 @@ public class GL {
         int id = GL15.glGenBuffers();
         GL.checkError("glGenBuffers");
         return id;
+    }
+    
+    /**
+     * OpenGL 1.5
+     * @see <a href="http://www.opengl.org/sdk/docs/man4/xhtml/glGenBuffers.xml">glGenBuffers</a>
+     * @param IntBuffer 
+     */
+    public static void glGenBuffers(IntBuffer ib) {
+        GL15.glGenBuffers(ib);
+        GL.checkError("glGenBuffers");
     }
     
     /**
@@ -954,6 +969,15 @@ public class GL {
     	GL.checkError("glGenTransformFeedbacks");
     	return value;
     }
+    
+    /**
+     * OpenGL 4.0
+     * @see <a href="http://www.opengl.org/sdk/docs/man4/xhtml/glGenTransformFeedbacks.xml">glGenTransformFeedbacks</a>
+     */
+    public static void glGenTransformFeedbacks(IntBuffer ib){
+        GL40.glGenTransformFeedbacks(ib);
+        GL.checkError("glGenTransformFeedbacks");
+    }
 
     /**
      * OpenGL 3.0
@@ -980,7 +1004,32 @@ public class GL {
     public static void glBindTransformFeedback(int target, int id){
     	GL40.glBindTransformFeedback(target, id);
     	GL.checkError("glBindTransformFeedback");
-    }  
+    }
+    
+    /**
+     * OpenGL 3.0
+     * @see <a href="http://www.opengl.org/sdk/docs/man4/xhtml/glTransformFeedbackVaryings.xml">glTransformFeedbackVaryings</a>
+     * @param program
+     * @param count
+     * @param varyings
+     * @param bufferMode
+     */
+    public static void glTransformFeedbackVaryings(int program, int count, java.nio.ByteBuffer varyings, int bufferMode) {
+        GL30.glTransformFeedbackVaryings(program, count, varyings, bufferMode);
+        GL.checkError("glTransformFeedbackVaryings");
+    }
+    
+    /**
+     * OpenGL 3.0
+     * @see <a href="http://www.opengl.org/sdk/docs/man4/xhtml/glTransformFeedbackVaryings.xml">glTransformFeedbackVaryings</a>
+     * @param program
+     * @param varyings
+     * @param bufferMode
+     */
+    public static void glTransformFeedbackVaryings(int program, java.lang.CharSequence[] varyings, int bufferMode) {
+        GL30.glTransformFeedbackVaryings(program, varyings, bufferMode);
+        GL.checkError("glTransformFeedbackVaryings");
+    }
     
     /**
      * OpenGL 3.0

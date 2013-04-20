@@ -13,6 +13,7 @@ import static opengl.GL.GL_DYNAMIC_DRAW;
 import static opengl.GL.GL_TRANSFORM_FEEDBACK;
 import static opengl.GL.GL_TRANSFORM_FEEDBACK_BUFFER;
 import static opengl.GL.GL_RASTERIZER_DISCARD;
+import static opengl.GL.GL_INTERLEAVED_ATTRIBS;
 import static opengl.GL.glBindBuffer;
 import static opengl.GL.glBindVertexArray;
 import static opengl.GL.glBufferData;
@@ -29,12 +30,15 @@ import static opengl.GL.glDrawTransformFeedback;
 import static opengl.GL.glBindTransformFeedback;
 import static opengl.GL.glBeginTransformFeedback;
 import static opengl.GL.glDrawArrays;
+import static opengl.GL.glTransformFeedbackVaryings;
 
+import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.Random;
 
 import org.lwjgl.BufferUtils;
+import org.lwjgl.opengl.GL30;
 import org.lwjgl.util.vector.Matrix4f;
 
 /**
@@ -50,7 +54,7 @@ public class Rainstreaks {
     private final Matrix4f viewProj = new Matrix4f();
     
     private int maxParticles;
-
+    
 	private FloatBuffer posBuffer;
 
 	//transform feedback buffers
@@ -75,8 +79,8 @@ public class Rainstreaks {
 		this.currTFB = 1;
 		this.isFirstFrame = true;
 		
+	    this.createShaderProgram();
 		this.createData();
-		this.createShaderProgram();
 	}
 
 	/**
@@ -122,7 +126,8 @@ public class Rainstreaks {
         }
         posBuffer.position(0);
               
-        //transform feedback buffer and particle buffer
+        //transform feedback buffers and particle buffers
+        //TODO ??
         this.tfbid[0] = glGenTransformFeedbacks();      
         this.tfbid[1] = glGenTransformFeedbacks();
         this.pbid[0] = glGenBuffers();
@@ -134,6 +139,25 @@ public class Rainstreaks {
 			glBufferData(GL_ARRAY_BUFFER, this.posBuffer, GL_DYNAMIC_DRAW);
 			glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, pbid[j]);
         }
+        
+//        ByteBuffer varyings = BufferUtils.createByteBuffer(4 * 10);
+//        varyings.putChar('p');
+//        varyings.putChar('o');
+//        varyings.putChar('s');
+//        varyings.putChar('i');
+//        varyings.putChar('t');
+//        varyings.putChar('i');
+//        varyings.putChar('o');
+//        varyings.putChar('n');
+//        varyings.putChar('F');
+//        varyings.putChar('S');
+//        varyings.position(0);
+        
+        CharSequence[] varyings = new CharSequence[1];
+        varyings[0] = "positionFS";
+        
+        glTransformFeedbackVaryings(this.StreakUpdateSP.getID(), varyings, GL_INTERLEAVED_ATTRIBS);
+        glTransformFeedbackVaryings(this.StreakRenderSP.getID(), varyings, GL_INTERLEAVED_ATTRIBS);
 		      
         veloBuffer.position(0);
         indexBuffer.position(0);      
