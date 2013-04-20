@@ -12,6 +12,7 @@ import static opengl.GL.GL_FRONT_AND_BACK;
 import static opengl.GL.GL_LINE;
 import static opengl.GL.GL_ONE;
 import static opengl.GL.GL_ONE_MINUS_SRC_COLOR;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -69,7 +70,7 @@ public class Rain {
     private static Texture normalTex, heightTex;
     
     // 2^20 ~ 1 mio
-    private static int maxParticles = 1 << 6;
+    private static int maxParticles = 1 << 0;
     
     public static void main(String[] argv) {
         try {
@@ -133,18 +134,18 @@ public class Rain {
             
             // clear screen
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+                    
+            //rain streaks          
+            rainstreaks.draw(cam, millis);
             
             //terrain
+            glLinkProgram(terrainSP.getID());
             terrainSP.use();
             terrainSP.setUniform("proj", cam.getProjection());
             terrainSP.setUniform("view", cam.getView());
             terrainSP.setUniform("normalTex", normalTex);
             terrainSP.setUniform("heightTex", heightTex);
             terrain.draw();
-            
-            //rain streaks          
-            //rainstreaks.getShaderProgram().use();
-            rainstreaks.draw(cam, millis);
             
             // present screen
             Display.update();

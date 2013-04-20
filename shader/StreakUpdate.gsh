@@ -16,11 +16,12 @@ out vec3 positionFS;
 
 void main(void)
 {
+
     vec3 worldPos = normalize(gl_in[0].gl_Position.xyz);
-    vec3 velVec = vec3(0, -3.0, 0);
+/*   vec3 velVec = vec3(0, -0.2, 0);
     
     //size of rain streaks
-    float height = 1.0/20.0;
+    float height = 0.5/2.0;
     float width = height/10.0;
     
     velVec = normalize(velVec);
@@ -36,17 +37,36 @@ void main(void)
     outPos[2] = outPos[0] + vec4((velVec  * height), 1.0);
     outPos[3] = outPos[2] + vec4((sideVec * width),  1.0);
 
-    gl_Position = viewProj * outPos[0];
-    positionFS = outPos[0].xyz;
+    positionFS = (viewProj * outPos[0]).xyz;
+    gl_Position = vec4(positionFS, 1.0);
     EmitVertex();
-    gl_Position = viewProj * outPos[1];
-    positionFS = outPos[1].xyz;
+    positionFS = (viewProj * outPos[1]).xyz;
+    gl_Position = vec4(positionFS, 1.0);
     EmitVertex();
-    gl_Position = viewProj * outPos[2];
-    positionFS = outPos[2].xyz;
+    positionFS = (viewProj * outPos[2]).xyz;
+    gl_Position = vec4(positionFS, 1.0);
     EmitVertex();
-    gl_Position = viewProj * outPos[3];
-    positionFS = outPos[3].xyz;
+    positionFS = (viewProj * outPos[3]).xyz;
+    gl_Position = vec4(positionFS, 1.0);
     EmitVertex();
     EndPrimitive();
+*/
+
+    positionFS = worldPos;
+    gl_Position = vec4(worldPos, 1.0);
+    EmitVertex();
+    EndPrimitive();
+    positionFS = worldPos + vec3(0,0,0.1);
+    gl_Position = vec4(worldPos + vec3(0,0,0.1), 1.0);
+    EmitVertex();
+    EndPrimitive();
+    positionFS = worldPos + vec3(0.1,0,0.1);
+    gl_Position = vec4(worldPos + vec3(0,0,0.1), 1.0);
+    EmitVertex();
+    EndPrimitive();
+    positionFS = worldPos + vec3(0.1,0,0);
+    gl_Position = vec4(worldPos + vec3(0,0,0.1), 1.0);
+    EmitVertex();
+    EndPrimitive();
+
 }

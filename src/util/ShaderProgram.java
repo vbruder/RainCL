@@ -155,7 +155,7 @@ public class ShaderProgram {
         glBindAttribLocation(this.id, ATTR_TEX, "vertexTexCoords");
         glBindAttribLocation(this.id, ATTR_INSTANCE, "instancedData");
         
-        glLinkProgram(this.id);        
+//        glLinkProgram(this.id);     
         
         log = glGetProgramInfoLog(this.id, 1024);
         System.out.print(log);

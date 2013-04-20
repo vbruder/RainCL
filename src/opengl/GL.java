@@ -991,15 +991,19 @@ public class GL {
     /**
      * OpenGL 4.0
      * @see <a href="http://www.opengl.org/sdk/docs/man4/xhtml/glDrawTransformFeedback.xml">glDrawTransformFeedback</a>
+     * @param mode
+     * @param id
      */
-    public static void glDrawTransformFeedback(int node, int id){
-    	GL40.glDrawTransformFeedback(node, id);
+    public static void glDrawTransformFeedback(int mode, int id){
+    	GL40.glDrawTransformFeedback(mode, id);
     	GL.checkError("glDrawTransformFeedback");
     }   
     
     /**
      * OpenGL 4.0
      * @see <a href="http://www.opengl.org/sdk/docs/man4/xhtml/glBindTransformFeedback.xml">glBindTransformFeedback</a>
+     * @param target
+     * @param id
      */
     public static void glBindTransformFeedback(int target, int id){
     	GL40.glBindTransformFeedback(target, id);

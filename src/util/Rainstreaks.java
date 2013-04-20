@@ -19,6 +19,7 @@ import static opengl.GL.glBindVertexArray;
 import static opengl.GL.glBufferData;
 import static opengl.GL.glEnableVertexAttribArray;
 import static opengl.GL.glGenBuffers;
+import static opengl.GL.glLinkProgram;
 import static opengl.GL.glVertexAttribPointer;
 import static opengl.GL.glGenTransformFeedbacks;
 import static opengl.GL.glBindBufferBase;
@@ -38,6 +39,8 @@ import java.nio.IntBuffer;
 import java.util.Random;
 
 import org.lwjgl.BufferUtils;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.util.vector.Matrix4f;
 
@@ -99,7 +102,6 @@ public class Rainstreaks {
 
 		this.posBuffer = BufferUtils.createFloatBuffer(4 * maxParticles);
 		FloatBuffer veloBuffer = BufferUtils.createFloatBuffer(4 * maxParticles);
-		IntBuffer indexBuffer = BufferUtils.createIntBuffer(maxParticles);
 		
 		Random r = new Random(4);
 		int clusterScale = 1;
@@ -125,9 +127,18 @@ public class Rainstreaks {
             i++;
         }
         posBuffer.position(0);
+        veloBuffer.position(0);
               
+        //set out variables for transform feedback
+        CharSequence[] varyings = new CharSequence[1];
+        varyings[0] = "positionFS";
+        
+        glTransformFeedbackVaryings(this.StreakUpdateSP.getID(), varyings, GL_INTERLEAVED_ATTRIBS);
+        
+        // link shader program to activate TF varyings
+        glLinkProgram(this.StreakUpdateSP.getID());
+        
         //transform feedback buffers and particle buffers
-        //TODO ??
         this.tfbid[0] = glGenTransformFeedbacks();      
         this.tfbid[1] = glGenTransformFeedbacks();
         this.pbid[0] = glGenBuffers();
@@ -139,28 +150,6 @@ public class Rainstreaks {
 			glBufferData(GL_ARRAY_BUFFER, this.posBuffer, GL_DYNAMIC_DRAW);
 			glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, pbid[j]);
         }
-        
-//        ByteBuffer varyings = BufferUtils.createByteBuffer(4 * 10);
-//        varyings.putChar('p');
-//        varyings.putChar('o');
-//        varyings.putChar('s');
-//        varyings.putChar('i');
-//        varyings.putChar('t');
-//        varyings.putChar('i');
-//        varyings.putChar('o');
-//        varyings.putChar('n');
-//        varyings.putChar('F');
-//        varyings.putChar('S');
-//        varyings.position(0);
-        
-        CharSequence[] varyings = new CharSequence[1];
-        varyings[0] = "positionFS";
-        
-        glTransformFeedbackVaryings(this.StreakUpdateSP.getID(), varyings, GL_INTERLEAVED_ATTRIBS);
-        glTransformFeedbackVaryings(this.StreakRenderSP.getID(), varyings, GL_INTERLEAVED_ATTRIBS);
-		      
-        veloBuffer.position(0);
-        indexBuffer.position(0);      
 	}
 	
     /**
@@ -199,10 +188,10 @@ public class Rainstreaks {
         glEnableVertexAttribArray(ShaderProgram.ATTR_POS);
         glVertexAttribPointer(ShaderProgram.ATTR_POS, 4, GL_FLOAT, false, 16, 0);
         
-        //TODO: GL_INVALID_OPERATION
         glBeginTransformFeedback(GL_POINTS); 
             //initial draw
             if (this.isFirstFrame) {
+                GL11.glPointSize(4);
                 glDrawArrays(GL_POINTS, 0, maxParticles);
                 this.isFirstFrame = false;
             }
@@ -221,6 +210,7 @@ public class Rainstreaks {
      */
     private void renderParticles(Camera cam) {
 
+        glLinkProgram(this.StreakRenderSP.getID());
     	//set uniforms in VS and FS
         StreakRenderSP.use();
         Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);
