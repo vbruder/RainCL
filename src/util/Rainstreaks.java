@@ -103,15 +103,21 @@ public class Rainstreaks {
 		this.posBuffer = BufferUtils.createFloatBuffer(4 * maxParticles);
 		FloatBuffer veloBuffer = BufferUtils.createFloatBuffer(4 * maxParticles);
 		
-		Random r = new Random(4);
+		Random r = new Random(1);
 		int clusterScale = 1;
 		int i = 0;
 		
 		while(i < this.maxParticles) {
 
+		    //TODO: LOD particle distribution
+//		    if (i > (this.maxParticles*2 / 3))
+//		        clusterScale = 2;
+//		    if (i > (this.maxParticles*5 / 6))
+//                clusterScale = 3;
+
             //spawning position
             float x = -0.5f + clusterScale * r.nextFloat();
-            float y =  0.5f + clusterScale * r.nextFloat();
+            float y = -0.5f + clusterScale * r.nextFloat();
             float z = -0.5f + clusterScale * r.nextFloat();
             
             posBuffer.put(x);

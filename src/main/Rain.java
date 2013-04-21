@@ -76,9 +76,9 @@ public class Rain {
         try {
             init();
             OpenCL.init();
-//            glEnable(GL_CULL_FACE);
-//            glFrontFace(GL_CCW);
-//            glCullFace(GL_BACK);
+            glEnable(GL_CULL_FACE);
+            glFrontFace(GL_CCW);
+            glCullFace(GL_BACK);
             glEnable(GL_DEPTH_TEST);
             glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
             
@@ -95,8 +95,8 @@ public class Rain {
             inverseLightDirection.normalise();
             
             // starting position
-            cam.move(0.5f, 0.1f, 0.5f);
-                        
+            cam.move(1.0f, 0.0f, 0.0f);
+            
             render();
             
             //cleanup 
@@ -161,7 +161,7 @@ public class Rain {
      * @param millis milliseconds, passed since last update
      */
     public static void handleInput(long millis) {
-        float moveSpeed = 2e-3f*(Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) ? 2.0f : 1.0f)*(float)millis;
+        float moveSpeed = 2e-4f*(Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) ? 2.0f : 1.0f)*(float)millis;
         float camSpeed = 5e-3f;
         
         while(Keyboard.next()) {
