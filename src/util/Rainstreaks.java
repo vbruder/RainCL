@@ -91,7 +91,7 @@ public class Rainstreaks {
 	 */
 	private void createShaderProgram() {
 		
-        this.StreakRenderSP = new ShaderProgram("./shader/StreakRender.vsh", "./shader/StreakRender.fsh", false);
+        this.StreakRenderSP = new ShaderProgram("./shader/StreakRender.vsh", "./shader/StreakRender.gsh", "./shader/StreakRender.fsh");
         this.StreakUpdateSP = new ShaderProgram("./shader/StreakUpdate.vsh", "./shader/StreakUpdate.gsh", true);
 	}
 
@@ -211,10 +211,11 @@ public class Rainstreaks {
     private void renderParticles(Camera cam) {
 
         glLinkProgram(this.StreakRenderSP.getID());
-    	//set uniforms in VS and FS
+    	//set uniforms in VS, GS and FS
         StreakRenderSP.use();
         Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);
         StreakRenderSP.setUniform("viewProj", viewProj);
+        StreakRenderSP.setUniform("eyePosition", cam.getCamPos());
     	
 		glDisable(GL_RASTERIZER_DISCARD);
 		glBindBuffer(GL_ARRAY_BUFFER, this.pbid[this.currTFB]);

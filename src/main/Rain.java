@@ -70,7 +70,7 @@ public class Rain {
     private static Texture normalTex, heightTex;
     
     // 2^20 ~ 1 mio
-    private static int maxParticles = 1 << 0;
+    private static int maxParticles = 1 << 10;
     
     public static void main(String[] argv) {
         try {
