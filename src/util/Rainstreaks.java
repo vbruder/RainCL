@@ -33,15 +33,11 @@ import static opengl.GL.glBeginTransformFeedback;
 import static opengl.GL.glDrawArrays;
 import static opengl.GL.glTransformFeedbackVaryings;
 
-import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.Random;
 
 import org.lwjgl.BufferUtils;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL12;
-import org.lwjgl.opengl.GL30;
 import org.lwjgl.util.vector.Matrix4f;
 
 /**
@@ -57,8 +53,7 @@ public class Rainstreaks {
     private final Matrix4f viewProj = new Matrix4f();
     
     private int maxParticles;
-    
-	private FloatBuffer posBuffer;
+    private FloatBuffer particleBuffer;
 
 	//transform feedback buffers
 	private int[] tfbid = new int[2];
@@ -70,6 +65,8 @@ public class Rainstreaks {
 	private int currTFB;
 
 	private boolean isFirstFrame;
+    
+    private int clusterScale;
 	
 	/**
 	 * Constructor
@@ -81,6 +78,7 @@ public class Rainstreaks {
 		this.currBuf = 0;
 		this.currTFB = 1;
 		this.isFirstFrame = true;
+		this.clusterScale = 1;
 		
 	    this.createShaderProgram();
 		this.createData();
@@ -91,8 +89,8 @@ public class Rainstreaks {
 	 */
 	private void createShaderProgram() {
 		
+	    this.StreakUpdateSP = new ShaderProgram("./shader/StreakUpdate.vsh", "./shader/StreakUpdate.gsh", true);
         this.StreakRenderSP = new ShaderProgram("./shader/StreakRender.vsh", "./shader/StreakRender.gsh", "./shader/StreakRender.fsh");
-        this.StreakUpdateSP = new ShaderProgram("./shader/StreakUpdate.vsh", "./shader/StreakUpdate.gsh", true);
 	}
 
 	/**
@@ -100,44 +98,78 @@ public class Rainstreaks {
 	 */
 	private void createData() {
 
-		this.posBuffer = BufferUtils.createFloatBuffer(4 * maxParticles);
-		FloatBuffer veloBuffer = BufferUtils.createFloatBuffer(4 * maxParticles);
+	    //init attribute buffer: position, starting position (seed), velocity, random and texture type
+		FloatBuffer posBuffer  = BufferUtils.createFloatBuffer(4 * maxParticles);
+		FloatBuffer seedBuffer = BufferUtils.createFloatBuffer(3 * maxParticles);
+		FloatBuffer veloBuffer = BufferUtils.createFloatBuffer(3 * maxParticles);
+		FloatBuffer randBuffer = BufferUtils.createFloatBuffer(maxParticles);
+		FloatBuffer typeBuffer = BufferUtils.createFloatBuffer(maxParticles);
 		
 		Random r = new Random(1);
-		int clusterScale = 1;
-		int i = 0;
 		
-		while(i < this.maxParticles) {
+		//fill buffers
+		for (int i = 0; i < this.maxParticles; i++) {
 
 		    //TODO: LOD particle distribution
-//		    if (i > (this.maxParticles*2 / 3))
-//		        clusterScale = 2;
-//		    if (i > (this.maxParticles*5 / 6))
-//                clusterScale = 3;
 
             //spawning position
-            float x = -0.5f + clusterScale * r.nextFloat();
-            float y = -0.5f + clusterScale * r.nextFloat();
-            float z = -0.5f + clusterScale * r.nextFloat();
+            float x = (r.nextFloat() - 0.5f) * clusterScale;
+            float y = (r.nextFloat() - 0.5f) * clusterScale;
+            float z = (r.nextFloat() - 0.5f) * clusterScale;
             
+            //add to seed buffer
+            seedBuffer.put(x);
+            seedBuffer.put(y);
+            seedBuffer.put(z);
+            
+            //add to position buffer
             posBuffer.put(x);
             posBuffer.put(y);
             posBuffer.put(z);
             posBuffer.put(1.f);
             
-            //spawning velocity       
-            veloBuffer.put(0.0f);
-            veloBuffer.put(0.1f);
-            veloBuffer.put(0.0f);
-            veloBuffer.put(1.0f);
-            i++;
+            //add spawning velocity (small random velos in x- and z-dir for variety and against AA 
+            veloBuffer.put(40.f*(r.nextFloat() / 20.f));
+            veloBuffer.put(40.f*(r.nextFloat()));
+            veloBuffer.put(40.f*(r.nextFloat() / 20.f));
+
+            //add random number, used to light up random streaks
+            float tmpR = r.nextFloat();
+            if (tmpR > 0.75f) {
+                randBuffer.put(1.f + tmpR);
+            }
+            else {
+                randBuffer.put(1.f);
+            }
+            
+            //add random type to buffer for choosing 1 out of 8 different textures 
+            typeBuffer.put((float) r.nextInt(9));
         }
+		//flip buffers
         posBuffer.position(0);
+        seedBuffer.position(0);
         veloBuffer.position(0);
-              
+        typeBuffer.position(0);
+        randBuffer.position(0);
+        
+        //fill particle buffer
+        particleBuffer = BufferUtils.createFloatBuffer(12 * maxParticles);
+        
+        particleBuffer.put(posBuffer);
+        particleBuffer.put(seedBuffer);
+        particleBuffer.put(veloBuffer);
+        particleBuffer.put(typeBuffer);
+        particleBuffer.put(randBuffer);
+        
+        particleBuffer.position(0);       
+        
         //set out variables for transform feedback
-        CharSequence[] varyings = new CharSequence[1];
-        varyings[0] = "positionFS";
+        CharSequence[] varyings = new CharSequence[5];
+        varyings[0] = "position";
+        varyings[1] = "seed";
+        varyings[2] = "velo";
+        varyings[3] = "rand";
+        varyings[4] = "type";
         
         glTransformFeedbackVaryings(this.StreakUpdateSP.getID(), varyings, GL_INTERLEAVED_ATTRIBS);
         
@@ -153,7 +185,7 @@ public class Rainstreaks {
         for (int j = 0; j < tfbid.length; j++) {
 			glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, tfbid[j]);
 			glBindBuffer(GL_ARRAY_BUFFER, pbid[j]);
-			glBufferData(GL_ARRAY_BUFFER, this.posBuffer, GL_DYNAMIC_DRAW);
+			glBufferData(GL_ARRAY_BUFFER, particleBuffer, GL_DYNAMIC_DRAW);
 			glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, pbid[j]);
         }
 	}
@@ -181,9 +213,9 @@ public class Rainstreaks {
 
     	//set uniforms in GS
     	this.StreakUpdateSP.use();
-    	Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);  
-        StreakUpdateSP.setUniform("viewProj", viewProj);
-        StreakUpdateSP.setUniform("eyePosition", cam.getCamPos());
+//    	  Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);  
+//        StreakUpdateSP.setUniform("viewProj", viewProj);
+//        StreakUpdateSP.setUniform("eyePosition", cam.getCamPos());
     	
     	//disable rest of render pipeline
     	glEnable(GL_RASTERIZER_DISCARD);
@@ -192,12 +224,20 @@ public class Rainstreaks {
     	glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, this.tfbid[this.currTFB]);
     	
         glEnableVertexAttribArray(ShaderProgram.ATTR_POS);
-        glVertexAttribPointer(ShaderProgram.ATTR_POS, 4, GL_FLOAT, false, 16, 0);
+        glEnableVertexAttribArray(ShaderProgram.ATTR_SEED);
+        glEnableVertexAttribArray(ShaderProgram.ATTR_VELO);
+        glEnableVertexAttribArray(ShaderProgram.ATTR_RAND);
+        glEnableVertexAttribArray(ShaderProgram.ATTR_TYPE);
+        
+        glVertexAttribPointer(ShaderProgram.ATTR_POS,  4, GL_FLOAT, false, 48, 0);
+        glVertexAttribPointer(ShaderProgram.ATTR_SEED, 3, GL_FLOAT, false, 48, 16);
+        glVertexAttribPointer(ShaderProgram.ATTR_VELO, 3, GL_FLOAT, false, 48, 28);
+        glVertexAttribPointer(ShaderProgram.ATTR_RAND, 1, GL_FLOAT, false, 48, 40);
+        glVertexAttribPointer(ShaderProgram.ATTR_TYPE, 1, GL_FLOAT, false, 48, 44);
         
         glBeginTransformFeedback(GL_POINTS); 
             //initial draw
             if (this.isFirstFrame) {
-                GL11.glPointSize(4);
                 glDrawArrays(GL_POINTS, 0, maxParticles);
                 this.isFirstFrame = false;
             }
@@ -208,6 +248,10 @@ public class Rainstreaks {
         glEndTransformFeedback();
         
         glDisableVertexAttribArray(ShaderProgram.ATTR_POS);
+        glDisableVertexAttribArray(ShaderProgram.ATTR_SEED);
+        glDisableVertexAttribArray(ShaderProgram.ATTR_VELO);
+        glDisableVertexAttribArray(ShaderProgram.ATTR_RAND);
+        glDisableVertexAttribArray(ShaderProgram.ATTR_TYPE);
     }
     
     /**

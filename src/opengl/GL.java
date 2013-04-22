@@ -139,6 +139,11 @@ public class GL {
     public static final int GL_FLOAT = GL11.GL_FLOAT;
     
     /**
+     * GL11.GL_BYTE
+     */      
+    public static final int GL_INT = GL11.GL_INT;
+    
+    /**
      * GL20.GL_FRAGMENT_SHADER
      */
     public static final int GL_FRAGMENT_SHADER = GL20.GL_FRAGMENT_SHADER;
