@@ -7,6 +7,16 @@ import static opengl.GL.glGetUniformLocation;
 import static opengl.GL.glTexImage2D;
 import static opengl.GL.glUniform1f;
 import static opengl.GL.glUniform3f;
+import static opengl.GL.glGenVertexArrays;
+import static opengl.GL.glBindVertexArray;
+import static opengl.GL.glGenBuffers;
+import static opengl.GL.GL_ARRAY_BUFFER;
+import static opengl.GL.GL_STATIC_DRAW;
+import static opengl.GL.GL_POINTS;
+import static opengl.GL.glVertexAttribPointer;
+import static opengl.GL.glEnableVertexAttribArray;
+import static opengl.GL.glBindBuffer;
+import static opengl.GL.glBufferData;
 import static opengl.OpenCL.CL_MEM_COPY_HOST_PTR;
 import static opengl.OpenCL.CL_MEM_READ_WRITE;
 import static opengl.OpenCL.clBuildProgram;
@@ -50,6 +60,7 @@ import org.lwjgl.opengl.Drawable;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.util.vector.Matrix4f;
+import org.lwjgl.util.vector.Vector3f;
 
 import util.Util.ImageContents;
 
@@ -64,14 +75,14 @@ public class Raindrops {
     private CLProgram program;
     private CLDevice device;
     private CLCommandQueue queue;
-    private CLKernel kernel0;
+    private CLKernel kernelMoveStreaks;
     private CLKernel kernel1;
     
     //data
     private FloatBuffer posBuffer, veloBuffer;
     
     //opencl buffer
-    private CLMem old_pos, new_pos, old_velos, new_velos, heightmap, normalmap;
+    private CLMem old_pos, position, velos, heightmap, normalmap;
     
     //particle settings
     private int maxParticles;
@@ -80,13 +91,13 @@ public class Raindrops {
     
     //kernel settings
     private boolean swap = true;
-    private int localWorkSize = 32;
+    private int localWorkSize = 256;
     private final PointerBuffer gwz = BufferUtils.createPointerBuffer(1);
     private final PointerBuffer lwz = BufferUtils.createPointerBuffer(1);
     
     //raindrop geometry
-    private Geometry raindrops_old;
-    private Geometry raindrops_new;
+//    private Geometry raindrops_old;
+//    private Geometry raindrops_new;
     
     // terrain texture IDs
     private int heightTexId, normalTexId;
@@ -94,21 +105,10 @@ public class Raindrops {
     private Texture hTex;
     
     //shader
-    private ShaderProgram raindropSP;
-    
-    private int diffuseTexture;
-    private int specularTexture;
-    private int viewProjLoc;
-    private int eyeLoc;
-    private int diffTexLoc;
-    private int specTexLoc;
-    private int kaLoc;
-    private int kdLoc;
-    private int ksLoc;
-    private int esLoc;
-    private int caLoc;
+    private ShaderProgram StreakRenderSP;
     
     private final Matrix4f viewProj = new Matrix4f();
+	private int vaid, vbid;
     
     /**
      * particle system
@@ -129,15 +129,12 @@ public class Raindrops {
         this.heightTexId = heightTexId;
         this.normalTexId = normalTexId;
         
-        //openGL context
-        //hTex = Texture.generateTexture("media/map1.png", HEIGHTTEX_UNIT);
-        
         //openCL context
-        this.createCLContext(device_type, Util.getFileContents("./shader/RainSim.cl"), drawable);
-        this.createData();
-        this.createBuffer();
-        this.createKernels();
-        this.createShaderProgram();
+        createCLContext(device_type, Util.getFileContents("./shader/RainSim.cl"), drawable);
+        createData();
+        createBuffer();
+        createKernels();
+        createShaderProgram();
         
         this.gwz.put(0, this.maxParticles);
         this.lwz.put(0, this.localWorkSize);   
@@ -181,7 +178,7 @@ public class Raindrops {
     }
     
     public ShaderProgram getShaderProgram() {
-        return this.raindropSP;
+        return this.StreakRenderSP;
     }
     
     /**
@@ -189,26 +186,11 @@ public class Raindrops {
      */
     private void createShaderProgram() { 
         
-        raindropSP = new ShaderProgram("./shader/Raindrop.vsh", "./shader/Raindrop.fsh", false);
-        viewProjLoc = glGetUniformLocation(raindropSP.getID(), "viewProj");
-        diffTexLoc = glGetUniformLocation(raindropSP.getID(), "diffuseTex");
-        specTexLoc = glGetUniformLocation(raindropSP.getID(), "specularTex");
-        eyeLoc = glGetUniformLocation(raindropSP.getID(), "eyePosition");
-        kaLoc = glGetUniformLocation(raindropSP.getID(), "k_a");
-        kdLoc = glGetUniformLocation(raindropSP.getID(), "k_dif");
-        ksLoc = glGetUniformLocation(raindropSP.getID(), "k_spec");
-        esLoc = glGetUniformLocation(raindropSP.getID(), "es");
-        caLoc = glGetUniformLocation(raindropSP.getID(), "c_a");
-        raindropSP.use();
-        glUniform1f(kaLoc, 0.05f);
-        glUniform1f(kdLoc, 0.6f);
-        glUniform1f(ksLoc, 0.3f);
-        glUniform1f(esLoc, 16.0f);
-        glUniform3f(caLoc, 1.0f, 1.0f, 1.0f);
+        this.StreakRenderSP = new ShaderProgram("./shader/StreakRender.vsh", "./shader/StreakRender.gsh", "./shader/StreakRender.fsh");
         
         //textures on raindrops
-        diffuseTexture = Util.generateTexture("media/raindrop.jpg");
-        specularTexture = Util.generateTexture("media/raindrop_spec.jpg");
+//        diffuseTexture = Util.generateTexture("media/raindrop.jpg");
+//        specularTexture = Util.generateTexture("media/raindrop_spec.jpg");
     }
     
     /**
@@ -218,42 +200,30 @@ public class Raindrops {
      */
     private void createData() {
         
-        this.raindrops_old = GeometryFactory.createSphere(0.01f, 16, 8);
-        this.raindrops_new = GeometryFactory.createSphere(0.01f, 16, 8);
-        
         this.posBuffer = BufferUtils.createFloatBuffer(4*maxParticles);
         this.veloBuffer = BufferUtils.createFloatBuffer(4*maxParticles);
         
         int i = 0;
         Random r = new Random(4);
         
-       //float[][][] ic = Util.getImageContents("media/map1.png");
-        //float length1 = (float)ic.length;
-        //float length2 = (float)ic[0].length;
-        r = new Random(0);
         while(i < this.maxParticles) {
             clusterScale = 1;
             //spawning position
-            float x = -0.5f + this.clusterScale * r.nextFloat();
-            float y =  0.5f + this.clusterScale * r.nextFloat();
-            float z = -0.5f + this.clusterScale * r.nextFloat();
-            // if(x*x + y*y + z*z < this.clusterScale*3/2f || x*x + y*y + z*z > clusterScale*3f) continue;
-            float rand = r.nextFloat() * 0.15f + 0.05f;
+            float x = -0.5f + clusterScale * r.nextFloat();
+            float y =  0.5f + clusterScale * r.nextFloat();
+            float z = -0.5f + clusterScale * r.nextFloat();
             
             this.posBuffer.put(x);
             this.posBuffer.put(y);
             this.posBuffer.put(z);
-            this.posBuffer.put(0.1f);//0.3f*ic[(int)(x*length1)][(int) (z*length2)][0]);
+            this.posBuffer.put(0.1f);
             
             //spawning velocity
-            //TODO influence by wind
-//            float vx = r.nextInt() / (float)Integer.MAX_VALUE * this.veloScale;
-//            float vy = Math.abs(r.nextInt() / (float)Integer.MAX_VALUE * this.veloScale);
-//            float vz = r.nextInt() / (float)Integer.MAX_VALUE * this.veloScale;           
+            //TODO influence by wind          
             this.veloBuffer.put(0.f);
             this.veloBuffer.put(0.1f);
             this.veloBuffer.put(0.f);
-            this.veloBuffer.put((float) (4/3 * Util.PI * Math.pow(rand, 3)));
+            this.veloBuffer.put(0.1f);
             i++;
         }
         
@@ -267,20 +237,14 @@ public class Raindrops {
      */
     public void updateSimulation(long deltaTime) {
         
-        clEnqueueAcquireGLObjects(this.queue, this.new_pos, null, null);
-        clEnqueueAcquireGLObjects(this.queue, this.old_pos, null, null);
+        clEnqueueAcquireGLObjects(this.queue, this.position, null, null);
         clEnqueueAcquireGLObjects(this.queue, this.heightmap, null, null);
         clEnqueueAcquireGLObjects(this.queue, this.normalmap, null, null);
-        
-        if(this.swap) {    
-            this.kernel0.setArg(7, 1e-3f*deltaTime);
-            clEnqueueNDRangeKernel(this.queue, kernel0, 1, null, gwz, lwz, null, null);            
-        } else {
-            this.kernel1.setArg(7, 1e-3f*deltaTime);
-            clEnqueueNDRangeKernel(this.queue, kernel1, 1, null, gwz, lwz, null, null);           
-        }
-        clEnqueueReleaseGLObjects(this.queue, this.new_pos, null, null);
-        clEnqueueReleaseGLObjects(this.queue, this.old_pos, null, null);
+           
+        this.kernelMoveStreaks.setArg(5, 1e-3f*deltaTime);
+        clEnqueueNDRangeKernel(this.queue, kernelMoveStreaks, 1, null, gwz, lwz, null, null);            
+
+        clEnqueueReleaseGLObjects(this.queue, this.position, null, null);
         clEnqueueReleaseGLObjects(this.queue, this.heightmap, null, null);
         clEnqueueReleaseGLObjects(this.queue, this.normalmap, null, null);
         
@@ -294,42 +258,36 @@ public class Raindrops {
      */
     public void draw(Camera cam) {
         
-        raindropSP.use();
+    	StreakRenderSP.use();
         
-        glUniform3f(this.eyeLoc, cam.getCamPos().x, cam.getCamPos().y, cam.getCamPos().z);       
+    	StreakRenderSP.setUniform("eyeposition", new Vector3f(cam.getCamPos().x, cam.getCamPos().y, cam.getCamPos().z));    
         Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);  
-        viewProj.store(Util.MAT_BUFFER);
-        Util.MAT_BUFFER.position(0);
-        GL.glUniformMatrix4(viewProjLoc, false, Util.MAT_BUFFER);
+        StreakRenderSP.setUniform("viewProj", viewProj);
         
-        GL.glActiveTexture(GL.GL_TEXTURE0 + 0);
-        GL.glBindTexture(GL.GL_TEXTURE_2D, this.diffuseTexture);
-        GL.glUniform1i(this.diffTexLoc, 0);
+        glBindVertexArray(vaid);
         
-        GL.glActiveTexture(GL.GL_TEXTURE0 + 1);
-        GL.glBindTexture(GL.GL_TEXTURE_2D, this.specularTexture);
-        GL.glUniform1i(this.specTexLoc, 1);
-        
-        if(this.swap) {
-            this.raindrops_old.draw();
-        } else {
-            this.raindrops_new.draw();
-        }
+        GL11.glDrawArrays(GL_POINTS, 0, maxParticles); 
     }
     
     /**
      * Creates all significant OpenCL buffers
      */
     private void createBuffer() {
-        this.raindrops_old.setInstanceBuffer(this.posBuffer, 4);
-        this.raindrops_old.construct();
-        this.raindrops_new.setInstanceBuffer(this.posBuffer, 4);
-        this.raindrops_new.construct();
+   	
+    	this.posBuffer.position(0);
+    	this.vaid = glGenVertexArrays();
+    	glBindVertexArray(this.vaid);
+    	
+    	this.vbid = glGenBuffers();
+    	glBindBuffer(GL_ARRAY_BUFFER, this.vbid);
+    	glBufferData(GL_ARRAY_BUFFER, this.posBuffer, GL_STATIC_DRAW);
         
-        this.old_velos = clCreateBuffer(this.context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, this.veloBuffer);
-        this.new_velos = clCreateBuffer(this.context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, this.veloBuffer);
-        this.new_pos = clCreateFromGLBuffer(this.context, CL_MEM_READ_WRITE, this.raindrops_new.getInstanceBuffer());
-        this.old_pos = clCreateFromGLBuffer(this.context, CL_MEM_READ_WRITE, this.raindrops_old.getInstanceBuffer());
+        glEnableVertexAttribArray(ShaderProgram.ATTR_POS);
+        glVertexAttribPointer(ShaderProgram.ATTR_POS, 4, GL_FLOAT, false, 16, 0);
+        glBindVertexArray(ShaderProgram.ATTR_POS);  	
+        
+        this.velos = clCreateBuffer(this.context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, this.veloBuffer);
+        this.position = clCreateFromGLBuffer(this.context, CL_MEM_READ_WRITE, vbid);
         
         IntBuffer errorCheck = BufferUtils.createIntBuffer(1);
         
@@ -368,45 +326,28 @@ public class Raindrops {
     private void createKernels() {
                
         //kernel 0
-        this.kernel0 = clCreateKernel(this.program, "rain_sim");
-        this.kernel0.setArg(0, this.old_pos);
-        this.kernel0.setArg(1, this.new_pos);
-        this.kernel0.setArg(2, this.old_velos);
-        this.kernel0.setArg(3, this.new_velos);
-        this.kernel0.setArg(4, this.heightmap);
-        this.kernel0.setArg(5, this.normalmap);
-        this.kernel0.setArg(6, this.maxParticles);
-        this.kernel0.setArg(7, 0.f);
-        
-        //kernel 1
-        this.kernel1 = clCreateKernel(this.program, "rain_sim");
-        this.kernel1.setArg(0, this.new_pos);
-        this.kernel1.setArg(1, this.old_pos);
-        this.kernel1.setArg(2, this.new_velos);
-        this.kernel1.setArg(3, this.old_velos);
-        this.kernel1.setArg(4, this.heightmap);
-        this.kernel1.setArg(5, this.normalmap);
-        this.kernel1.setArg(6, this.maxParticles);
-        this.kernel1.setArg(7, 0.f);
+        this.kernelMoveStreaks = clCreateKernel(this.program, "rain_sim");
+        this.kernelMoveStreaks.setArg(0, this.position);
+        this.kernelMoveStreaks.setArg(1, this.velos);
+        this.kernelMoveStreaks.setArg(2, this.heightmap);
+        this.kernelMoveStreaks.setArg(3, this.normalmap);
+        this.kernelMoveStreaks.setArg(4, this.maxParticles);
+        this.kernelMoveStreaks.setArg(5, 0.f);
     }
       
     /**
      * Frees memory.
      */
     public void destroy() {
-        clReleaseMemObject(this.new_pos);
-        clReleaseMemObject(this.old_pos);
-        clReleaseMemObject(this.new_velos);
-        clReleaseMemObject(this.old_velos);
+        clReleaseMemObject(this.position);
+        clReleaseMemObject(this.velos);
         clReleaseMemObject(this.heightmap);
         clReleaseMemObject(this.normalmap);
-        clReleaseKernel(this.kernel0);
+        clReleaseKernel(this.kernelMoveStreaks);
         clReleaseKernel(this.kernel1);
         clReleaseCommandQueue(this.queue);
         clReleaseProgram(this.program);
         clReleaseContext(this.context);
-        this.raindrops_new.delete();
-        this.raindrops_old.delete();
     }
 }
 

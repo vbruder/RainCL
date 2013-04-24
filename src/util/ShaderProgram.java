@@ -1,6 +1,5 @@
 package util;
 
-import opengl.GL;
 import static opengl.GL.*;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.util.vector.Matrix4f;
@@ -19,20 +18,22 @@ public class ShaderProgram {
     private boolean errFlag = false;
  
     /**
-     * Create a shader program either with or without geometry shader.
+     * Create a shader program <i>without</i> geometry shader.
      * @param vertexShader
-     * @param secondShader can be either geometry or fragment shader
-     * @param isGeomShader indicates weather shader program contains geometry shader
+     * @param fragmentShader
      */
-    public ShaderProgram(String vertexShader, String secondShader, boolean isGeomShader) {
-    	this.isGeomShader = isGeomShader;
-    	if (this.isGeomShader)
-    		this.createShaderProgramGS(vertexShader, secondShader);
-    	else
-    		this.createShaderProgramFS(vertexShader, secondShader);
+    public ShaderProgram(String vertexShader, String fragmentShader) {
+   		this.createShaderProgramFS(vertexShader, fragmentShader);
     }
     
+    /**
+     * Create a shader program <i>with</i> geometry shader.
+     * @param vertexShader
+     * @param geometryShader
+     * @param fragmentShader
+     */
     public ShaderProgram(String vertexShader, String geometryShader, String fragmentShader) {
+    	this.isGeomShader = true;
         this.createShaderProgramVGF(vertexShader, geometryShader, fragmentShader);
     }
 
@@ -63,8 +64,7 @@ public class ShaderProgram {
                 errFlag = true;
                 System.err.println(varName);
             }
-        }
-            
+        }           
     }
     
     /**
@@ -144,55 +144,7 @@ public class ShaderProgram {
      * Attribute type of instance
      */
     public static final int ATTR_TYPE = 9;
-    
-    /**
-     * @brief Creates a shader program from a vertex and a fragment shader.
-     * 
-     * @param vs path of vertex shader
-     * @param gs path of geometry shader
-     * @return ShaderProgram ID
-     */
-    private void createShaderProgramGS(String vs, String gs) {
-        this.id = glCreateProgram();
-        
-        this.vs = glCreateShader(GL_VERTEX_SHADER);
-        this.gs = glCreateShader(GL_GEOMETRY_SHADER);
-        
-        glAttachShader(this.id, this.vs);
-        glAttachShader(this.id, this.gs);
-        
-        String vertexShaderContents = Util.getFileContents(vs);
-        String geometryShaderContents = Util.getFileContents(gs);
-        
-        glShaderSource(this.vs, vertexShaderContents);
-        glShaderSource(this.gs, geometryShaderContents);
-        
-        glCompileShader(this.vs);
-        glCompileShader(this.gs);
-        
-        String log;
-        log = glGetShaderInfoLog(this.vs, 1024);
-        System.out.print(log);
-        log = glGetShaderInfoLog(this.gs, 1024);
-        System.out.print(log);
-        
-        glBindAttribLocation(this.id, ATTR_POS, "positionMC");
-        glBindAttribLocation(this.id, ATTR_NORMAL, "normalMC");        
-        glBindAttribLocation(this.id, ATTR_COLOR, "vertexColor");
-        glBindAttribLocation(this.id, ATTR_COLOR2, "vertexColor2");
-        glBindAttribLocation(this.id, ATTR_TEX, "vertexTexCoords");
-        glBindAttribLocation(this.id, ATTR_INSTANCE, "instancedData");
-        glBindAttribLocation(this.id, ATTR_SEED, "seed");
-        glBindAttribLocation(this.id, ATTR_VELO, "velo");
-        glBindAttribLocation(this.id, ATTR_RAND, "rand");
-        glBindAttribLocation(this.id, ATTR_TYPE, "type");
-        
-//        glLinkProgram(this.id);     
-        
-        log = glGetProgramInfoLog(this.id, 1024);
-        System.out.print(log);
-    }
-    
+      
     /**
      * @brief Creates a shader program from a vertex and a fragment shader.
      * 

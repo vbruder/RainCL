@@ -44,6 +44,7 @@ import util.Texture;
 public class Rain {
     
     private static Rainstreaks rainstreaks;
+    private static Raindrops raindrops;
     
     // shader programs
     private static ShaderProgram terrainSP;
@@ -69,9 +70,18 @@ public class Rain {
     private static Geometry terrain;
     private static Texture normalTex, heightTex;
     
-    // 2^20 ~ 1 mio
+    /*
+     *  2^10 ~    1000
+     *	2^15 ~   32000 
+     *	2^17 ~  130000
+     *	2^20 ~ 1000000
+     */
     private static int maxParticles = 1 << 10;
     
+    /**
+     * main
+     * @param argv
+     */
     public static void main(String[] argv) {
         try {
             init();
@@ -86,10 +96,10 @@ public class Rain {
             terrain = GeometryFactory.createTerrainFromMap("media/map1.png", 0.25f);
             normalTex = terrain.getNormalTex();
             heightTex = terrain.getHeightTex();
-            terrainSP = new ShaderProgram("shader/terrain.vsh", "shader/terrain.fsh", false);
+            terrainSP = new ShaderProgram("shader/terrain.vsh", "shader/terrain.fsh");
             
             //create rain streaks
-            rainstreaks = new Rainstreaks(maxParticles);
+            raindrops = new Raindrops(Device_Type.GPU, Display.getDrawable(), heightTex.getId(), normalTex.getId(), maxParticles);
                        
             inverseLightDirection.set(1.0f, 0.2f, 0.0f);
             inverseLightDirection.normalise();
@@ -107,6 +117,10 @@ public class Rain {
         }
     }
     
+    /**
+     * Render the scene.
+     * @throws LWJGLException
+     */
     public static void render() throws LWJGLException {
         glClearColor(0.2f, 0.2f, 0.2f, 1.0f); // background color: dark grey
         
@@ -135,11 +149,7 @@ public class Rain {
             // clear screen
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                     
-            //rain streaks          
-            rainstreaks.draw(cam, millis);
-            
             //terrain
-            glLinkProgram(terrainSP.getID());
             terrainSP.use();
             terrainSP.setUniform("proj", cam.getProjection());
             terrainSP.setUniform("view", cam.getView());
@@ -147,13 +157,15 @@ public class Rain {
             terrainSP.setUniform("heightTex", heightTex);
             terrain.draw();
             
+            //rain streaks          
+            raindrops.draw(cam);
+            
             // present screen
             Display.update();
             Display.sync(60);
         }
         terrainSP.delete();
-        rainstreaks.getStreakRenderSP().delete();
-        rainstreaks.getStreakUpdateSP().delete();
+        raindrops.getShaderProgram().delete();
     }
     
     /**
@@ -226,8 +238,8 @@ public class Rain {
      * @param millis milliseconds, passed since last update
      */
     private static void animate(long millis) {
-        // update ingame time properly
+        // update time properly
         ingameTime += ingameTimePerSecond * 1e-3f * (float)millis;        
-//        raindrops.updateSimulation(millis);
+        raindrops.updateSimulation(millis);
     }
 }

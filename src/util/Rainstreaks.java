@@ -89,7 +89,7 @@ public class Rainstreaks {
 	 */
 	private void createShaderProgram() {
 		
-	    this.StreakUpdateSP = new ShaderProgram("./shader/StreakUpdate.vsh", "./shader/StreakUpdate.gsh", true);
+//	    this.StreakUpdateSP = new ShaderProgram("./shader/StreakUpdate.vsh", "./shader/StreakUpdate.gsh", true);
         this.StreakRenderSP = new ShaderProgram("./shader/StreakRender.vsh", "./shader/StreakRender.gsh", "./shader/StreakRender.fsh");
 	}
 
