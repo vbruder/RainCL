@@ -99,7 +99,7 @@ public class Rain {
             terrainSP = new ShaderProgram("shader/terrain.vsh", "shader/terrain.fsh");
             
             //create rain streaks
-            raindrops = new Raindrops(Device_Type.GPU, Display.getDrawable(), heightTex.getId(), normalTex.getId(), maxParticles);
+            raindrops = new Raindrops(Device_Type.GPU, Display.getDrawable(), heightTex.getId(), normalTex.getId(), maxParticles, cam);
                        
             inverseLightDirection.set(1.0f, 0.2f, 0.0f);
             inverseLightDirection.normalise();

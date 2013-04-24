@@ -17,6 +17,7 @@ import static opengl.GL.glVertexAttribPointer;
 import static opengl.GL.glEnableVertexAttribArray;
 import static opengl.GL.glBindBuffer;
 import static opengl.GL.glBufferData;
+
 import static opengl.OpenCL.CL_MEM_COPY_HOST_PTR;
 import static opengl.OpenCL.CL_MEM_READ_WRITE;
 import static opengl.OpenCL.CL_MEM_READ_ONLY;
@@ -29,6 +30,7 @@ import static opengl.OpenCL.clCreateProgramWithSource;
 import static opengl.OpenCL.clEnqueueAcquireGLObjects;
 import static opengl.OpenCL.clEnqueueNDRangeKernel;
 import static opengl.OpenCL.clEnqueueReleaseGLObjects;
+import static opengl.OpenCL.clEnqueueWriteBuffer;
 import static opengl.OpenCL.clFinish;
 import static opengl.OpenCL.clReleaseCommandQueue;
 import static opengl.OpenCL.clReleaseContext;
@@ -90,13 +92,9 @@ public class Raindrops {
     private float clusterScale;
     
     //kernel settings
-    private int localWorkSize = 256;
+    private int localWorkSize = 128;
     private final PointerBuffer gwz = BufferUtils.createPointerBuffer(1);
     private final PointerBuffer lwz = BufferUtils.createPointerBuffer(1);
-    
-    //raindrop geometry
-//    private Geometry raindrops_old;
-//    private Geometry raindrops_new;
     
     // terrain texture IDs
     private int heightTexId, normalTexId;
@@ -105,7 +103,7 @@ public class Raindrops {
     
     //shader
     private ShaderProgram StreakRenderSP;
-    
+    private Vector3f eyePos = new Vector3f(0.f, 0.f, 0.f);
     private final Matrix4f viewProj = new Matrix4f();
 	private int vaid, vbid;
     
@@ -122,11 +120,15 @@ public class Raindrops {
      * @param drawable OpenGL drawable.
      * @throws LWJGLException
      */
-    public Raindrops(Device_Type device_type, Drawable drawable, int heightTexId, int normalTexId, int maxParticles) throws LWJGLException {
+    public Raindrops(Device_Type device_type, Drawable drawable, int heightTexId, int normalTexId, int maxParticles, Camera cam) throws LWJGLException {
         
         this.maxParticles = maxParticles;
         this.heightTexId = heightTexId;
         this.normalTexId = normalTexId;
+        this.eyePos = cam.getCamPos();
+        
+        this.gwz.put(0, this.maxParticles);
+        this.lwz.put(0, this.localWorkSize);  
         
         //openCL context
         createCLContext(device_type, Util.getFileContents("./shader/RainSim.cl"), drawable);
@@ -134,9 +136,6 @@ public class Raindrops {
         createBuffer();
         createKernels();
         createShaderProgram();
-        
-        this.gwz.put(0, this.maxParticles);
-        this.lwz.put(0, this.localWorkSize);   
     }
     
     /**
@@ -187,7 +186,7 @@ public class Raindrops {
         
         this.StreakRenderSP = new ShaderProgram("./shader/StreakRender.vsh", "./shader/StreakRender.gsh", "./shader/StreakRender.fsh");
         
-        //textures on raindrops
+        //TODO textures on raindrops
 //        diffuseTexture = Util.generateTexture("media/raindrop.jpg");
 //        specularTexture = Util.generateTexture("media/raindrop_spec.jpg");
     }
@@ -213,7 +212,10 @@ public class Raindrops {
 		    //TODO: LOD particle distribution
             //spawning position
             float x = (r.nextFloat() - 0.5f) * clusterScale;
-            float y = (r.nextFloat() - 0.5f) * clusterScale;
+            float y;
+            do
+                y = (r.nextFloat()       ) * clusterScale;
+            while (y < 0.1f);   
             float z = (r.nextFloat() - 0.5f) * clusterScale;
             
             //add to seed buffer
@@ -228,9 +230,10 @@ public class Raindrops {
             posBuffer.put(1.f);
             
             //add spawning velocity (small random velocity in x- and z-direction for variety and against AA 
-            veloBuffer.put(0.f);//40.f*(r.nextFloat() / 20.f));
-            veloBuffer.put(-0.1f);//40.f*(r.nextFloat()));
-            veloBuffer.put(0.f);//40.f*(r.nextFloat() / 20.f));
+            //TODO ???
+            veloBuffer.put(0.0f);//2.f*((r.nextFloat() - 0.5f) / 20.f));
+            veloBuffer.put(0.2f);
+            veloBuffer.put(0.0f);//2.f*((r.nextFloat() - 0.5f) / 20.f));
 
             //add random number, used to light up random streaks
             float tmpR = r.nextFloat();
@@ -270,8 +273,11 @@ public class Raindrops {
         glBindVertexArray(ShaderProgram.ATTR_POS);  	
 
         this.position = clCreateFromGLBuffer(this.context, CL_MEM_READ_WRITE, vbid);
-        this.velos = clCreateBuffer(this.context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, this.veloBuffer);
+        this.velos = clCreateBuffer(this.context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, this.veloBuffer);
+        clEnqueueWriteBuffer(this.queue, velos, 1, 0, veloBuffer, null, null);
         this.seed = clCreateBuffer(this.context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, this.seedBuffer);
+        clEnqueueWriteBuffer(this.queue, seed, 1, 0, seedBuffer, null, null);       
+
         
         //load hight map
         IntBuffer errorCheck = BufferUtils.createIntBuffer(1);
@@ -301,9 +307,9 @@ public class Raindrops {
         
         OpenCL.checkError(errorCheck.get(0));
         
-        this.posBuffer = null;
-        this.veloBuffer = null;
-        this.seedBuffer = null;
+//        this.posBuffer = null;
+//        this.veloBuffer = null;
+//        this.seedBuffer = null;
     }
     
     /**
@@ -320,7 +326,9 @@ public class Raindrops {
         this.kernelMoveStreaks.setArg(4, this.normalmap);
         this.kernelMoveStreaks.setArg(5, this.maxParticles);
         this.kernelMoveStreaks.setArg(6, 0.f);
-        
+        this.kernelMoveStreaks.setArg(7, 0.f);
+        this.kernelMoveStreaks.setArg(8, 0.f);
+        this.kernelMoveStreaks.setArg(9, 0.f);
     }
     
     /**
@@ -334,6 +342,9 @@ public class Raindrops {
         clEnqueueAcquireGLObjects(this.queue, this.normalmap, null, null);
            
         this.kernelMoveStreaks.setArg(6, 1e-3f*deltaTime);
+        this.kernelMoveStreaks.setArg(7, eyePos.x);
+        this.kernelMoveStreaks.setArg(8, eyePos.y);
+        this.kernelMoveStreaks.setArg(9, eyePos.z);
         clEnqueueNDRangeKernel(this.queue, kernelMoveStreaks, 1, null, gwz, lwz, null, null);            
 
         clEnqueueReleaseGLObjects(this.queue, this.position, null, null);
@@ -351,7 +362,8 @@ public class Raindrops {
         
     	StreakRenderSP.use();
         
-    	StreakRenderSP.setUniform("eyeposition", new Vector3f(cam.getCamPos().x, cam.getCamPos().y, cam.getCamPos().z));    
+    	eyePos = new Vector3f(cam.getCamPos().x, cam.getCamPos().y, cam.getCamPos().z);
+    	StreakRenderSP.setUniform("eyeposition", eyePos);    
         Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);  
         StreakRenderSP.setUniform("viewProj", viewProj);
         

@@ -10,13 +10,18 @@
 constant sampler_t sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_FILTER_LINEAR| CLK_ADDRESS_REPEAT;
 
 kernel void rain_sim(
-global float4* position,
-global float3* velos,
-global float3* seed,
-read_only image2d_t heightmap,
-read_only image2d_t normalmap,
-uint maxParticles,
-float dt)
+	global float4* position,
+	global float3* velos,
+	global float3* seed,
+	
+	read_only image2d_t heightmap,
+	read_only image2d_t normalmap,
+	uint maxParticles,
+	float dt,
+    float eyePosX,
+    float eyePosY,
+    float eyePosZ
+)
 {
     //__local float4 sharedMem[LOCAL_MEM_SIZE];
     
@@ -36,16 +41,20 @@ float dt)
 	// float4 normal = read_imagef(normalmap, sampler, myPos.xz);
 	
 	//pseudo random int
-	int rand = (myId * 0x5DEECE66DL + 0xBL) & ((1L << 48) - 1);
-	
+	// int rand = (myId * 0x5DEECE66DL + 0xBL) & ((1L << 48) - 1);
+    // myPos.y = rand/1000000000;	
+
 	//myPos.y = height.x*0.25f;
+    height.x = 0.2f;
 	
 	//respawn particle
-	if((myPos.y <= height.x*0.25f) || (myPos.x >= maxRadius) || (myPos.z >= maxRadius))
+	if (myPos.y <= height.x*0.25f)
 	{
-		myPos.y = rand/1000000000;
-		//myPos.xyz = seed[myId];
+		myPos.xyz = seed[myId] + (float3)(eyePosX, eyePosY, eyePosZ);
+        myPos.y += 1.f;
 	}
 
-    position[myId].xyz = velos[myId].xyz;//myPos.xyz - velos[myId].xyz * dt; //(float4)(0, 0.1f, 0, 0)*dt;
+    myPos.y -= velos[myId].y * dt;
+
+    position[myId].xyz = velos[myId];//myPos.xyz; //(float4)(0, 0.1f, 0, 0)*dt;
 }

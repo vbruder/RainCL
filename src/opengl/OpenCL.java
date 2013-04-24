@@ -316,6 +316,39 @@ public class OpenCL {
                         event));
         checkError();
     }
+
+    /**
+     * OpenCL 1.0
+     * @see http://www.khronos.org/registry/cl/sdk/1.0/docs/man/xhtml/clEnqueueWriteBuffer.html
+     * @param command_queue
+     * @param buffer
+     * @param blocking_write
+     * @param offset
+     * @param ptr
+     * @param event_wait_list
+     * @param event
+     */
+    public static void clEnqueueWriteBuffer(
+            CLCommandQueue command_queue,
+            CLMem buffer,
+            int blocking_write,
+            long offset,
+            java.nio.FloatBuffer ptr,
+            PointerBuffer event_wait_list,
+            PointerBuffer event
+            )
+    {
+        lastErrorCode.put(0, 
+                CL10.clEnqueueWriteBuffer(
+                        command_queue,
+                        buffer,
+                        blocking_write,
+                        offset,
+                        ptr,
+                        event_wait_list,
+                        event));
+        checkError();        
+    }
     
     /**
      * @see <a href="http://www.khronos.org/registry/cl/sdk/1.0/docs/man/xhtml/clFinish.html">clFinish</a>
