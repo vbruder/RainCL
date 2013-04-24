@@ -5,12 +5,14 @@
 #define GRAVITY 0.7f
 #define TIME_SCALE 1.0f
 #define LOCAL_MEM_SIZE 128
+#define maxRadius 5.0f
 
 constant sampler_t sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_FILTER_LINEAR| CLK_ADDRESS_REPEAT;
 
 kernel void rain_sim(
 global float4* position,
-global float4* velos,
+global float3* velos,
+global float3* seed,
 read_only image2d_t heightmap,
 read_only image2d_t normalmap,
 uint maxParticles,
@@ -39,10 +41,11 @@ float dt)
 	//myPos.y = height.x*0.25f;
 	
 	//respawn particle
-	if(myPos.y <= (height.x*0.25f))
+	if((myPos.y <= height.x*0.25f) || (myPos.x >= maxRadius) || (myPos.z >= maxRadius))
 	{
-		myPos.y = 2.3f + ((float)rand / 1000000000.0f);
+		myPos.y = rand/1000000000;
+		//myPos.xyz = seed[myId];
 	}
 
-    position[myId].xyz = myPos.xyz - velos[myId].xyz * dt;
+    position[myId].xyz = velos[myId].xyz;//myPos.xyz - velos[myId].xyz * dt; //(float4)(0, 0.1f, 0, 0)*dt;
 }

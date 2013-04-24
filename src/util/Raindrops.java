@@ -11,7 +11,7 @@ import static opengl.GL.glGenVertexArrays;
 import static opengl.GL.glBindVertexArray;
 import static opengl.GL.glGenBuffers;
 import static opengl.GL.GL_ARRAY_BUFFER;
-import static opengl.GL.GL_STATIC_DRAW;
+import static opengl.GL.GL_DYNAMIC_DRAW;
 import static opengl.GL.GL_POINTS;
 import static opengl.GL.glVertexAttribPointer;
 import static opengl.GL.glEnableVertexAttribArray;
@@ -19,6 +19,7 @@ import static opengl.GL.glBindBuffer;
 import static opengl.GL.glBufferData;
 import static opengl.OpenCL.CL_MEM_COPY_HOST_PTR;
 import static opengl.OpenCL.CL_MEM_READ_WRITE;
+import static opengl.OpenCL.CL_MEM_READ_ONLY;
 import static opengl.OpenCL.clBuildProgram;
 import static opengl.OpenCL.clCreateBuffer;
 import static opengl.OpenCL.clCreateCommandQueue;
@@ -79,18 +80,16 @@ public class Raindrops {
     private CLKernel kernel1;
     
     //data
-    private FloatBuffer posBuffer, veloBuffer;
+    private FloatBuffer posBuffer, seedBuffer, veloBuffer, randBuffer, typeBuffer;
     
     //opencl buffer
-    private CLMem old_pos, position, velos, heightmap, normalmap;
+    private CLMem position, velos, seed, heightmap, normalmap;
     
     //particle settings
     private int maxParticles;
-    private float clusterScale = 0.5f;
-    //private float veloScale = 1.f;
+    private float clusterScale;
     
     //kernel settings
-    private boolean swap = true;
     private int localWorkSize = 256;
     private final PointerBuffer gwz = BufferUtils.createPointerBuffer(1);
     private final PointerBuffer lwz = BufferUtils.createPointerBuffer(1);
@@ -195,78 +194,62 @@ public class Raindrops {
     
     /**
      * Create initial position and velocity data pseudo randomly.
-     * Positions Layout[x, y, z, radius]
-     * Velocity Layout[v_x, v_y, v_z, _]
      */
-    private void createData() {
+    private void createData() {      
         
-        this.posBuffer = BufferUtils.createFloatBuffer(4*maxParticles);
-        this.veloBuffer = BufferUtils.createFloatBuffer(4*maxParticles);
-        
-        int i = 0;
-        Random r = new Random(4);
-        
-        while(i < this.maxParticles) {
-            clusterScale = 1;
+	    //init attribute buffer: position, starting position (seed), velocity, random and texture type
+		posBuffer  = BufferUtils.createFloatBuffer(4 * maxParticles);
+		seedBuffer = BufferUtils.createFloatBuffer(3 * maxParticles);
+		veloBuffer = BufferUtils.createFloatBuffer(3 * maxParticles);
+		randBuffer = BufferUtils.createFloatBuffer(maxParticles);
+		typeBuffer = BufferUtils.createFloatBuffer(maxParticles);
+		
+		Random r = new Random(1);
+		clusterScale = 1.f;
+		
+		//fill buffers
+		for (int i = 0; i < this.maxParticles; i++) {
+
+		    //TODO: LOD particle distribution
             //spawning position
-            float x = -0.5f + clusterScale * r.nextFloat();
-            float y =  0.5f + clusterScale * r.nextFloat();
-            float z = -0.5f + clusterScale * r.nextFloat();
+            float x = (r.nextFloat() - 0.5f) * clusterScale;
+            float y = (r.nextFloat() - 0.5f) * clusterScale;
+            float z = (r.nextFloat() - 0.5f) * clusterScale;
             
-            this.posBuffer.put(x);
-            this.posBuffer.put(y);
-            this.posBuffer.put(z);
-            this.posBuffer.put(0.1f);
+            //add to seed buffer
+            seedBuffer.put(x);
+            seedBuffer.put(y);
+            seedBuffer.put(z);
             
-            //spawning velocity
-            //TODO influence by wind          
-            this.veloBuffer.put(0.f);
-            this.veloBuffer.put(0.1f);
-            this.veloBuffer.put(0.f);
-            this.veloBuffer.put(0.1f);
-            i++;
+            //add to position buffer
+            posBuffer.put(x);
+            posBuffer.put(y);
+            posBuffer.put(z);
+            posBuffer.put(1.f);
+            
+            //add spawning velocity (small random velocity in x- and z-direction for variety and against AA 
+            veloBuffer.put(0.f);//40.f*(r.nextFloat() / 20.f));
+            veloBuffer.put(-0.1f);//40.f*(r.nextFloat()));
+            veloBuffer.put(0.f);//40.f*(r.nextFloat() / 20.f));
+
+            //add random number, used to light up random streaks
+            float tmpR = r.nextFloat();
+            if (tmpR > 0.75f) {
+                randBuffer.put(1.f + tmpR);
+            }
+            else {
+                randBuffer.put(1.f);
+            }
+            
+            //add random type to buffer for choosing 1 out of 8 different textures 
+            typeBuffer.put((float) r.nextInt(9));
         }
-        
-        this.posBuffer.position(0);
-        this.veloBuffer.position(0);
-    }
-
-    /**
-     * Calls kernel to update into the next time step. Is called once each frame. 
-     * @param deltaTime
-     */
-    public void updateSimulation(long deltaTime) {
-        
-        clEnqueueAcquireGLObjects(this.queue, this.position, null, null);
-        clEnqueueAcquireGLObjects(this.queue, this.heightmap, null, null);
-        clEnqueueAcquireGLObjects(this.queue, this.normalmap, null, null);
-           
-        this.kernelMoveStreaks.setArg(5, 1e-3f*deltaTime);
-        clEnqueueNDRangeKernel(this.queue, kernelMoveStreaks, 1, null, gwz, lwz, null, null);            
-
-        clEnqueueReleaseGLObjects(this.queue, this.position, null, null);
-        clEnqueueReleaseGLObjects(this.queue, this.heightmap, null, null);
-        clEnqueueReleaseGLObjects(this.queue, this.normalmap, null, null);
-        
-        clFinish(this.queue);
-        this.swap = !this.swap;
-    }
-    
-    /**
-     * draws the particles
-     * @param cam Camera
-     */
-    public void draw(Camera cam) {
-        
-    	StreakRenderSP.use();
-        
-    	StreakRenderSP.setUniform("eyeposition", new Vector3f(cam.getCamPos().x, cam.getCamPos().y, cam.getCamPos().z));    
-        Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);  
-        StreakRenderSP.setUniform("viewProj", viewProj);
-        
-        glBindVertexArray(vaid);
-        
-        GL11.glDrawArrays(GL_POINTS, 0, maxParticles); 
+		//flip buffers
+        posBuffer.position(0);
+        seedBuffer.position(0);
+        veloBuffer.position(0);
+        typeBuffer.position(0);
+        randBuffer.position(0);
     }
     
     /**
@@ -280,15 +263,17 @@ public class Raindrops {
     	
     	this.vbid = glGenBuffers();
     	glBindBuffer(GL_ARRAY_BUFFER, this.vbid);
-    	glBufferData(GL_ARRAY_BUFFER, this.posBuffer, GL_STATIC_DRAW);
+    	glBufferData(GL_ARRAY_BUFFER, this.posBuffer, GL_DYNAMIC_DRAW);
         
         glEnableVertexAttribArray(ShaderProgram.ATTR_POS);
         glVertexAttribPointer(ShaderProgram.ATTR_POS, 4, GL_FLOAT, false, 16, 0);
         glBindVertexArray(ShaderProgram.ATTR_POS);  	
-        
-        this.velos = clCreateBuffer(this.context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, this.veloBuffer);
+
         this.position = clCreateFromGLBuffer(this.context, CL_MEM_READ_WRITE, vbid);
+        this.velos = clCreateBuffer(this.context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, this.veloBuffer);
+        this.seed = clCreateBuffer(this.context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, this.seedBuffer);
         
+        //load hight map
         IntBuffer errorCheck = BufferUtils.createIntBuffer(1);
         
         ImageContents content = Util.loadImage("media/map1.png");
@@ -318,6 +303,7 @@ public class Raindrops {
         
         this.posBuffer = null;
         this.veloBuffer = null;
+        this.seedBuffer = null;
     }
     
     /**
@@ -325,14 +311,53 @@ public class Raindrops {
      */
     private void createKernels() {
                
-        //kernel 0
+        //kernel
         this.kernelMoveStreaks = clCreateKernel(this.program, "rain_sim");
         this.kernelMoveStreaks.setArg(0, this.position);
         this.kernelMoveStreaks.setArg(1, this.velos);
-        this.kernelMoveStreaks.setArg(2, this.heightmap);
-        this.kernelMoveStreaks.setArg(3, this.normalmap);
-        this.kernelMoveStreaks.setArg(4, this.maxParticles);
-        this.kernelMoveStreaks.setArg(5, 0.f);
+        this.kernelMoveStreaks.setArg(2, this.seed);
+        this.kernelMoveStreaks.setArg(3, this.heightmap);
+        this.kernelMoveStreaks.setArg(4, this.normalmap);
+        this.kernelMoveStreaks.setArg(5, this.maxParticles);
+        this.kernelMoveStreaks.setArg(6, 0.f);
+        
+    }
+    
+    /**
+     * Calls kernel to update into the next time step. Is called once each frame. 
+     * @param deltaTime
+     */
+    public void updateSimulation(long deltaTime) {
+        
+        clEnqueueAcquireGLObjects(this.queue, this.position, null, null);
+        clEnqueueAcquireGLObjects(this.queue, this.heightmap, null, null);
+        clEnqueueAcquireGLObjects(this.queue, this.normalmap, null, null);
+           
+        this.kernelMoveStreaks.setArg(6, 1e-3f*deltaTime);
+        clEnqueueNDRangeKernel(this.queue, kernelMoveStreaks, 1, null, gwz, lwz, null, null);            
+
+        clEnqueueReleaseGLObjects(this.queue, this.position, null, null);
+        clEnqueueReleaseGLObjects(this.queue, this.heightmap, null, null);
+        clEnqueueReleaseGLObjects(this.queue, this.normalmap, null, null);
+        
+        clFinish(this.queue);
+    }
+    
+    /**
+     * draws the particles
+     * @param cam Camera
+     */
+    public void draw(Camera cam) {
+        
+    	StreakRenderSP.use();
+        
+    	StreakRenderSP.setUniform("eyeposition", new Vector3f(cam.getCamPos().x, cam.getCamPos().y, cam.getCamPos().z));    
+        Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);  
+        StreakRenderSP.setUniform("viewProj", viewProj);
+        
+        glBindVertexArray(vaid);
+        
+        GL11.glDrawArrays(GL_POINTS, 0, maxParticles); 
     }
       
     /**
@@ -341,6 +366,7 @@ public class Raindrops {
     public void destroy() {
         clReleaseMemObject(this.position);
         clReleaseMemObject(this.velos);
+        clReleaseMemObject(this.seed);
         clReleaseMemObject(this.heightmap);
         clReleaseMemObject(this.normalmap);
         clReleaseKernel(this.kernelMoveStreaks);
