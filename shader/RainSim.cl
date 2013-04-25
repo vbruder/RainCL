@@ -7,12 +7,12 @@
 #define LOCAL_MEM_SIZE 128
 #define maxRadius 5.0f
 
-constant sampler_t sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_FILTER_LINEAR| CLK_ADDRESS_REPEAT;
+constant sampler_t sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_FILTER_LINEAR | CLK_ADDRESS_REPEAT;
 
-kernel void rain_sim(
-	global float4* position,
-	global float3* velos,
-	global float3* seed,
+__kernel void rain_sim(
+	__global float4* position,
+	__global float4* velos,
+	__global float4* seed,
 	
 	read_only image2d_t heightmap,
 	read_only image2d_t normalmap,
@@ -50,11 +50,11 @@ kernel void rain_sim(
 	//respawn particle
 	if (myPos.y <= height.x*0.25f)
 	{
-		myPos.xyz = seed[myId] + (float3)(eyePosX, eyePosY, eyePosZ);
+		myPos.xyz = seed[myId].xyz + (float3)(eyePosX, eyePosY, eyePosZ);
         myPos.y += 1.f;
 	}
 
     myPos.y -= velos[myId].y * dt;
 
-    position[myId].xyz = velos[myId];//myPos.xyz; //(float4)(0, 0.1f, 0, 0)*dt;
+    position[myId].xyz = myPos.xyz;//(float4)(0, 0.1f, 0, 0)*dt;
 }

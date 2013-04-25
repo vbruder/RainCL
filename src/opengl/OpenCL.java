@@ -43,6 +43,7 @@ public class OpenCL {
     public static final int CL_MEM_READ_ONLY = CL10.CL_MEM_READ_ONLY;
     public static final int CL_MEM_READ_WRITE = CL10.CL_MEM_READ_WRITE;
     public static final int CL_MEM_COPY_HOST_PTR = CL10.CL_MEM_COPY_HOST_PTR;
+    public static final int CL_MEM_USE_HOST_PTR = CL10.CL_MEM_USE_HOST_PTR;
     public static final int CL_SUCCESS = CL10.CL_SUCCESS;
     
     public enum Device_Type {

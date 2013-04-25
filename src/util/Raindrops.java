@@ -19,6 +19,7 @@ import static opengl.GL.glBindBuffer;
 import static opengl.GL.glBufferData;
 
 import static opengl.OpenCL.CL_MEM_COPY_HOST_PTR;
+import static opengl.OpenCL.CL_MEM_USE_HOST_PTR;
 import static opengl.OpenCL.CL_MEM_READ_WRITE;
 import static opengl.OpenCL.CL_MEM_READ_ONLY;
 import static opengl.OpenCL.clBuildProgram;
@@ -90,6 +91,7 @@ public class Raindrops {
     //particle settings
     private int maxParticles;
     private float clusterScale;
+    private float veloFactor;
     
     //kernel settings
     private int localWorkSize = 128;
@@ -126,6 +128,10 @@ public class Raindrops {
         this.heightTexId = heightTexId;
         this.normalTexId = normalTexId;
         this.eyePos = cam.getCamPos();
+        //range of cylinder around cam
+        clusterScale = 3.f;
+        //velocity factor
+        veloFactor = 20.f;
         
         this.gwz.put(0, this.maxParticles);
         this.lwz.put(0, this.localWorkSize);  
@@ -198,13 +204,12 @@ public class Raindrops {
         
 	    //init attribute buffer: position, starting position (seed), velocity, random and texture type
 		posBuffer  = BufferUtils.createFloatBuffer(4 * maxParticles);
-		seedBuffer = BufferUtils.createFloatBuffer(3 * maxParticles);
-		veloBuffer = BufferUtils.createFloatBuffer(3 * maxParticles);
+		seedBuffer = BufferUtils.createFloatBuffer(4 * maxParticles);
+		veloBuffer = BufferUtils.createFloatBuffer(4 * maxParticles);
 		randBuffer = BufferUtils.createFloatBuffer(maxParticles);
 		typeBuffer = BufferUtils.createFloatBuffer(maxParticles);
 		
 		Random r = new Random(1);
-		clusterScale = 1.f;
 		
 		//fill buffers
 		for (int i = 0; i < this.maxParticles; i++) {
@@ -214,7 +219,7 @@ public class Raindrops {
             float x = (r.nextFloat() - 0.5f) * clusterScale;
             float y;
             do
-                y = (r.nextFloat()       ) * clusterScale;
+                y = (r.nextFloat()) * clusterScale;
             while (y < 0.1f);   
             float z = (r.nextFloat() - 0.5f) * clusterScale;
             
@@ -222,6 +227,7 @@ public class Raindrops {
             seedBuffer.put(x);
             seedBuffer.put(y);
             seedBuffer.put(z);
+            seedBuffer.put(1.f);
             
             //add to position buffer
             posBuffer.put(x);
@@ -230,10 +236,11 @@ public class Raindrops {
             posBuffer.put(1.f);
             
             //add spawning velocity (small random velocity in x- and z-direction for variety and against AA 
-            //TODO ???
-            veloBuffer.put(0.0f);//2.f*((r.nextFloat() - 0.5f) / 20.f));
-            veloBuffer.put(0.2f);
-            veloBuffer.put(0.0f);//2.f*((r.nextFloat() - 0.5f) / 20.f));
+            //TODO geht nicht mit float3 ??
+            veloBuffer.put(veloFactor*(r.nextFloat() / 20.f));
+            veloBuffer.put(veloFactor*((r.nextFloat() + 0.2f) / 10.f));
+            veloBuffer.put(veloFactor*(r.nextFloat() / 20.f));
+            veloBuffer.put(0.0f);
 
             //add random number, used to light up random streaks
             float tmpR = r.nextFloat();
@@ -243,14 +250,13 @@ public class Raindrops {
             else {
                 randBuffer.put(1.f);
             }
-            
             //add random type to buffer for choosing 1 out of 8 different textures 
             typeBuffer.put((float) r.nextInt(9));
         }
 		//flip buffers
         posBuffer.position(0);
         seedBuffer.position(0);
-        veloBuffer.position(0);
+        veloBuffer.position(0);        
         typeBuffer.position(0);
         randBuffer.position(0);
     }
@@ -274,10 +280,7 @@ public class Raindrops {
 
         this.position = clCreateFromGLBuffer(this.context, CL_MEM_READ_WRITE, vbid);
         this.velos = clCreateBuffer(this.context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, this.veloBuffer);
-        clEnqueueWriteBuffer(this.queue, velos, 1, 0, veloBuffer, null, null);
         this.seed = clCreateBuffer(this.context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, this.seedBuffer);
-        clEnqueueWriteBuffer(this.queue, seed, 1, 0, seedBuffer, null, null);       
-
         
         //load hight map
         IntBuffer errorCheck = BufferUtils.createIntBuffer(1);
