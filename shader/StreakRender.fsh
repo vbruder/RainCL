@@ -12,5 +12,5 @@ void main(void)
 //    vec3 specColor = texture(specularTex, fragmentTexCoords).xyz;
 //    vec3 color = calcLighting(positionWC, normalize(normalWC), diffColor, specColor);
 //    finalColor = vec4(0.5*diffColor + color, 1.0);
-	finalColor = vec4(0,1,0,1);
+	finalColor = vec4(0.8, 0.8, 0.8, 1.0);
 }

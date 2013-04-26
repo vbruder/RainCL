@@ -76,7 +76,7 @@ public class Rain {
      *	2^17 ~  130000
      *	2^20 ~ 1000000
      */
-    private static int maxParticles = 1 << 10;
+    private static int maxParticles = 1 << 15;
     
     /**
      * main

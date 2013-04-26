@@ -1,11 +1,5 @@
-#define RADIUS 0.1f
-#define DAMPING 0.005f
-#define SPRING 1.0f
-#define SHEAR 0.12f
-#define GRAVITY 0.7f
-#define TIME_SCALE 1.0f
-#define LOCAL_MEM_SIZE 128
 #define maxRadius 5.0f
+#define heightScale 0.25f
 
 constant sampler_t sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_FILTER_LINEAR | CLK_ADDRESS_REPEAT;
 
@@ -20,8 +14,7 @@ __kernel void rain_sim(
 	float dt,
     float eyePosX,
     float eyePosY,
-    float eyePosZ
-)
+    float eyePosZ)
 {
     //__local float4 sharedMem[LOCAL_MEM_SIZE];
     
@@ -37,18 +30,18 @@ __kernel void rain_sim(
 	// dimf.y = (float)dim.y;
 	
 	float2 tc = (float2)(0.5f, 0.5f) + myPos.xz;
-	float4 height = read_imagef(heightmap, sampler, (float2)(1-tc.x, tc.y));
+	float4 height = heightScale * read_imagef(heightmap, sampler, (float2)(1-tc.x, tc.y));
 	// float4 normal = read_imagef(normalmap, sampler, myPos.xz);
 	
 	//pseudo random int
 	// int rand = (myId * 0x5DEECE66DL + 0xBL) & ((1L << 48) - 1);
     // myPos.y = rand/1000000000;	
 
-	//myPos.y = height.x*0.25f;
-    height.x = 0.2f;
+    //myPos.y = height.x;
+    height.x = -2.0f;
 	
 	//respawn particle
-	if (myPos.y <= height.x*0.25f)
+	if (myPos.y <= height.x)
 	{
 		myPos.xyz = seed[myId].xyz + (float3)(eyePosX, eyePosY, eyePosZ);
         myPos.y += 1.f;

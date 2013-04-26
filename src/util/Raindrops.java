@@ -129,9 +129,9 @@ public class Raindrops {
         this.normalTexId = normalTexId;
         this.eyePos = cam.getCamPos();
         //range of cylinder around cam
-        clusterScale = 3.f;
+        clusterScale = 7.f;
         //velocity factor
-        veloFactor = 20.f;
+        veloFactor = 40.f;
         
         this.gwz.put(0, this.maxParticles);
         this.lwz.put(0, this.localWorkSize);  
