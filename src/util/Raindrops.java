@@ -83,7 +83,7 @@ public class Raindrops {
     private CLKernel kernel1;
     
     //data
-    private FloatBuffer posBuffer, seedBuffer, veloBuffer, randBuffer, typeBuffer;
+    private FloatBuffer posBuffer, seedBuffer, veloBuffer;
     
     //opencl buffer
     private CLMem position, velos, seed, heightmap, normalmap;
@@ -206,8 +206,6 @@ public class Raindrops {
 		posBuffer  = BufferUtils.createFloatBuffer(4 * maxParticles);
 		seedBuffer = BufferUtils.createFloatBuffer(4 * maxParticles);
 		veloBuffer = BufferUtils.createFloatBuffer(4 * maxParticles);
-		randBuffer = BufferUtils.createFloatBuffer(maxParticles);
-		typeBuffer = BufferUtils.createFloatBuffer(maxParticles);
 		
 		Random r = new Random(1);
 		
@@ -227,7 +225,9 @@ public class Raindrops {
             seedBuffer.put(x);
             seedBuffer.put(y);
             seedBuffer.put(z);
-            seedBuffer.put(1.f);
+            //add random type to w coordinate in buffer
+            //type is for choosing 1 out of 8 different textures
+            seedBuffer.put((float) r.nextInt(9));
             
             //add to position buffer
             posBuffer.put(x);
@@ -236,29 +236,22 @@ public class Raindrops {
             posBuffer.put(1.f);
             
             //add spawning velocity (small random velocity in x- and z-direction for variety and against AA 
-            //TODO geht nicht mit float3 ??
             veloBuffer.put(veloFactor*(r.nextFloat() / 20.f));
             veloBuffer.put(veloFactor*((r.nextFloat() + 0.2f) / 10.f));
             veloBuffer.put(veloFactor*(r.nextFloat() / 20.f));
-            veloBuffer.put(0.0f);
-
-            //add random number, used to light up random streaks
+            //add random number in w coordinate, used to light up random streaks
             float tmpR = r.nextFloat();
             if (tmpR > 0.75f) {
-                randBuffer.put(1.f + tmpR);
+                veloBuffer.put(1.f + tmpR);
             }
             else {
-                randBuffer.put(1.f);
+                veloBuffer.put(1.f);
             }
-            //add random type to buffer for choosing 1 out of 8 different textures 
-            typeBuffer.put((float) r.nextInt(9));
         }
 		//flip buffers
         posBuffer.position(0);
         seedBuffer.position(0);
-        veloBuffer.position(0);        
-        typeBuffer.position(0);
-        randBuffer.position(0);
+        veloBuffer.position(0);
     }
     
     /**
