@@ -16,6 +16,7 @@ import static opengl.GL.GL_ONE_MINUS_SRC_COLOR;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import opengl.OpenAL;
 import opengl.OpenCL;
 import opengl.OpenCL.Device_Type;
 
@@ -23,7 +24,6 @@ import org.lwjgl.LWJGLException;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
-import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
 
@@ -31,7 +31,6 @@ import util.Camera;
 import util.Geometry;
 import util.GeometryFactory;
 import util.Raindrops;
-import util.Rainstreaks;
 import util.ShaderProgram;
 import util.Texture;
 
@@ -42,8 +41,7 @@ import util.Texture;
  * @author Valentin Bruder (vbruder@uos.de)
  */
 public class Rain {
-    
-    private static Rainstreaks rainstreaks;
+
     private static Raindrops raindrops;
     
     // shader programs
@@ -86,6 +84,10 @@ public class Rain {
         try {
             init();
             OpenCL.init();
+            
+            OpenAL sound = new OpenAL();
+            sound.init();
+            
             glEnable(GL_CULL_FACE);
             glFrontFace(GL_CCW);
             glCullFace(GL_BACK);
@@ -111,6 +113,7 @@ public class Rain {
             
             //cleanup 
             OpenCL.destroy();
+            sound.destroy();
             destroy();            
         } catch (LWJGLException ex) {
             Logger.getLogger(Rain.class.getName()).log(Level.SEVERE, null, ex);
