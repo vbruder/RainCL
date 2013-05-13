@@ -126,24 +126,14 @@ public class ShaderProgram {
     public static final int ATTR_INSTANCE = 5;
     
     /**
-     * Attribute seed of instance
+     * Attribute index of seed
      */
     public static final int ATTR_SEED = 6;
     
     /**
-     * Attribute velo of instance
+     * Attribute index of velocity
      */
     public static final int ATTR_VELO = 7;
-    
-    /**
-     * Attribute rand of instance
-     */
-    public static final int ATTR_RAND = 8;
-    
-    /**
-     * Attribute type of instance
-     */
-    public static final int ATTR_TYPE = 9;
       
     /**
      * @brief Creates a shader program from a vertex and a fragment shader.
@@ -183,6 +173,8 @@ public class ShaderProgram {
         glBindAttribLocation(this.id, ATTR_COLOR2, "vertexColor2");
         glBindAttribLocation(this.id, ATTR_TEX, "vertexTexCoords");
         glBindAttribLocation(this.id, ATTR_INSTANCE, "instancedData");
+        glBindAttribLocation(this.id, ATTR_VELO, "vertexVelo");
+        glBindAttribLocation(this.id, ATTR_SEED, "vertexSeed");
         
         glLinkProgram(this.id);        
         
@@ -235,6 +227,8 @@ public class ShaderProgram {
         glBindAttribLocation(this.id, ATTR_COLOR2, "vertexColor2");
         glBindAttribLocation(this.id, ATTR_TEX, "vertexTexCoords");
         glBindAttribLocation(this.id, ATTR_INSTANCE, "instancedData");
+        glBindAttribLocation(this.id, ATTR_VELO, "vertexVelo");
+        glBindAttribLocation(this.id, ATTR_SEED, "vertexSeed");
         
         glLinkProgram(this.id);        
         

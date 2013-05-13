@@ -1,8 +1,17 @@
 package util;
 
 import static opengl.GL.GL_FLOAT;
+import static opengl.GL.GL_R8;
+import static opengl.GL.GL_RED;
+import static opengl.GL.GL_RG;
+import static opengl.GL.GL_RG8;
+import static opengl.GL.GL_RGB8;
 import static opengl.GL.GL_RGBA;
+import static opengl.GL.GL_RGB;
+import static opengl.GL.GL_RGBA8;
+import static opengl.GL.GL_STATIC_DRAW;
 import static opengl.GL.GL_TEXTURE_2D;
+import static opengl.GL.GL_TEXTURE_2D_ARRAY;
 import static opengl.GL.glGetUniformLocation;
 import static opengl.GL.glTexImage2D;
 import static opengl.GL.glUniform1f;
@@ -17,6 +26,10 @@ import static opengl.GL.glVertexAttribPointer;
 import static opengl.GL.glEnableVertexAttribArray;
 import static opengl.GL.glBindBuffer;
 import static opengl.GL.glBufferData;
+import static opengl.GL.glTexImage3D;
+import static opengl.GL.glTexSubImage3D;
+import static opengl.GL.glDrawArrays;
+import static opengl.GL.glBindTexture;
 
 import static opengl.OpenCL.CL_MEM_COPY_HOST_PTR;
 import static opengl.OpenCL.CL_MEM_USE_HOST_PTR;
@@ -62,6 +75,8 @@ import org.lwjgl.opencl.CLPlatform;
 import org.lwjgl.opencl.CLProgram;
 import org.lwjgl.opengl.Drawable;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL12;
+import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
@@ -74,6 +89,9 @@ import util.Util.ImageContents;
  */
 public class Raindrops {
     
+    private static final int RAINTEX_UNIT = 6;
+    private static final int HEIGHTTEX_UNIT = 4;
+    
     //opencl pointer
     private CLContext context;
     private CLProgram program;
@@ -83,7 +101,7 @@ public class Raindrops {
     private CLKernel kernel1;
     
     //data
-    private FloatBuffer posBuffer, seedBuffer, veloBuffer;
+    private FloatBuffer posBuffer, seedBuffer, veloBuffer, vertexDataBuffer;
     
     //opencl buffer
     private CLMem position, velos, seed, heightmap, normalmap;
@@ -100,14 +118,16 @@ public class Raindrops {
     
     // terrain texture IDs
     private int heightTexId, normalTexId;
-    private int HEIGHTTEX_UNIT = 4;
-    private Texture hTex;
+    private Texture hTex, rainTex;
     
     //shader
     private ShaderProgram StreakRenderSP;
     private Vector3f eyePos = new Vector3f(0.f, 0.f, 0.f);
     private final Matrix4f viewProj = new Matrix4f();
-	private int vaid, vbid;
+    //array IDs
+	private int vertArrayID, seedArrayID, veloArrayID;
+	//buffer IDs
+    private int vertBufferID, seedBufferID, veloBufferID;
     
     /**
      * particle system
@@ -192,9 +212,36 @@ public class Raindrops {
         
         this.StreakRenderSP = new ShaderProgram("./shader/StreakRender.vsh", "./shader/StreakRender.gsh", "./shader/StreakRender.fsh");
         
-        //TODO textures on raindrops
-//        diffuseTexture = Util.generateTexture("media/raindrop.jpg");
-//        specularTexture = Util.generateTexture("media/raindrop_spec.jpg");
+        //rain texture array, 10 different textures
+        ImageContents content = Util.loadImage("media/rainTex/env/cv40_osc0.png");       
+        rainTex = new Texture(GL_TEXTURE_2D_ARRAY, RAINTEX_UNIT);
+        rainTex.bind();
+        glTexImage3D(   GL_TEXTURE_2D_ARRAY,
+                        0,
+                        GL30.GL_R16F,
+                        content.width,
+                        content.height,
+                        10,
+                        0,
+                        GL_RED,
+                        GL_FLOAT,
+                        null);
+
+        for (int i = 0; i < 10; i++)
+        {
+            content = Util.loadImage("media/rainTex/env/cv40_osc" + i + ".png");
+            glTexSubImage3D(GL_TEXTURE_2D_ARRAY,
+                            0,
+                            0,
+                            0,
+                            i,
+                            content.width,
+                            content.height,
+                            1,
+                            GL_RED,
+                            GL_FLOAT,
+                            content.data);
+        }
     }
     
     /**
@@ -226,8 +273,8 @@ public class Raindrops {
             seedBuffer.put(y);
             seedBuffer.put(z);
             //add random type to w coordinate in buffer
-            //type is for choosing 1 out of 8 different textures
-            seedBuffer.put((float) r.nextInt(9));
+            //type is for choosing 1 out of 10 different textures
+            seedBuffer.put((float) r.nextInt(10));
             
             //add to position buffer
             posBuffer.put(x);
@@ -252,6 +299,31 @@ public class Raindrops {
         posBuffer.position(0);
         seedBuffer.position(0);
         veloBuffer.position(0);
+                
+        //3 buffers * 4 floats * maxParticles
+        vertexDataBuffer = BufferUtils.createFloatBuffer(3 * 4 * maxParticles);
+        for (int i = 0; i < maxParticles; i++)
+        {
+            vertexDataBuffer.put(posBuffer.get(i + 0));
+            vertexDataBuffer.put(posBuffer.get(i + 1));
+            vertexDataBuffer.put(posBuffer.get(i + 2));
+            vertexDataBuffer.put(posBuffer.get(i + 3));
+            
+            vertexDataBuffer.put(seedBuffer.get(i + 0));
+            vertexDataBuffer.put(seedBuffer.get(i + 1));
+            vertexDataBuffer.put(seedBuffer.get(i + 2));
+            vertexDataBuffer.put(seedBuffer.get(i + 3));
+            
+            vertexDataBuffer.put(veloBuffer.get(i + 0));
+            vertexDataBuffer.put(veloBuffer.get(i + 1));
+            vertexDataBuffer.put(veloBuffer.get(i + 2));
+            vertexDataBuffer.put(veloBuffer.get(i + 3));
+        }
+        
+        posBuffer.position(0);
+        seedBuffer.position(0);
+        veloBuffer.position(0);
+        vertexDataBuffer.position(0);
     }
     
     /**
@@ -259,26 +331,33 @@ public class Raindrops {
      */
     private void createBuffer() {
    	
-    	this.posBuffer.position(0);
-    	this.vaid = glGenVertexArrays();
-    	glBindVertexArray(this.vaid);
+    	this.vertexDataBuffer.position(0);
     	
-    	this.vbid = glGenBuffers();
-    	glBindBuffer(GL_ARRAY_BUFFER, this.vbid);
-    	glBufferData(GL_ARRAY_BUFFER, this.posBuffer, GL_DYNAMIC_DRAW);
+    	this.vertArrayID = glGenVertexArrays();
+    	glBindVertexArray(this.vertArrayID);
+    	
+        this.vertBufferID = glGenBuffers();
+        glBindBuffer(GL_ARRAY_BUFFER, this.vertBufferID);
+        glBufferData(GL_ARRAY_BUFFER, this.vertexDataBuffer, GL_DYNAMIC_DRAW);
         
         glEnableVertexAttribArray(ShaderProgram.ATTR_POS);
+        glEnableVertexAttribArray(ShaderProgram.ATTR_SEED);
+        glEnableVertexAttribArray(ShaderProgram.ATTR_VELO);
+        
         glVertexAttribPointer(ShaderProgram.ATTR_POS, 4, GL_FLOAT, false, 16, 0);
-        glBindVertexArray(ShaderProgram.ATTR_POS);  	
-
-        this.position = clCreateFromGLBuffer(this.context, CL_MEM_READ_WRITE, vbid);
+        glVertexAttribPointer(ShaderProgram.ATTR_SEED, 4, GL_FLOAT, false, 16, 16);      
+        glVertexAttribPointer(ShaderProgram.ATTR_VELO, 4, GL_FLOAT, false, 16, 32);
+        
+        glBindVertexArray(0);
+        
+        this.position = clCreateFromGLBuffer(this.context, CL_MEM_READ_WRITE, vertBufferID);
         this.velos = clCreateBuffer(this.context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, this.veloBuffer);
         this.seed = clCreateBuffer(this.context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, this.seedBuffer);
         
         //load hight map
         IntBuffer errorCheck = BufferUtils.createIntBuffer(1);
         
-        ImageContents content = Util.loadImage("media/map1.png");
+        ImageContents content = Util.loadImage("media/highmaps/map1.png");
         FloatBuffer data = BufferUtils.createFloatBuffer(content.height * content.width);
         for(int i = 0; i < content.height * content.width; ++i)
         {
@@ -297,15 +376,11 @@ public class Raindrops {
                 GL11.GL_RED,
                 GL_FLOAT,
                 data);
-        
+
         this.heightmap = CL10GL.clCreateFromGLTexture2D(this.context, CL10.CL_MEM_READ_ONLY, GL11.GL_TEXTURE_2D, 0, hTex.getId(), errorCheck);
         this.normalmap = CL10GL.clCreateFromGLTexture2D(this.context, CL10.CL_MEM_READ_ONLY, GL11.GL_TEXTURE_2D, 0, this.normalTexId, errorCheck);
         
         OpenCL.checkError(errorCheck.get(0));
-        
-//        this.posBuffer = null;
-//        this.veloBuffer = null;
-//        this.seedBuffer = null;
     }
     
     /**
@@ -362,10 +437,10 @@ public class Raindrops {
     	StreakRenderSP.setUniform("eyeposition", eyePos);    
         Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);  
         StreakRenderSP.setUniform("viewProj", viewProj);
+        StreakRenderSP.setUniform("rainTex", rainTex);
         
-        glBindVertexArray(vaid);
-        
-        GL11.glDrawArrays(GL_POINTS, 0, maxParticles); 
+        glBindVertexArray(vertArrayID);        
+        glDrawArrays(GL_POINTS, 0, maxParticles); 
     }
       
     /**

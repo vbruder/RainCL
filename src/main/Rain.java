@@ -51,6 +51,7 @@ public class Rain {
     private static boolean bContinue = true;
     private static boolean culling = true;
     private static boolean wireframe = true;
+    private static boolean audio = false;
     
     // control
     private static final Vector3f moveDir = new Vector3f(0.0f, 0.0f, 0.0f);
@@ -67,6 +68,9 @@ public class Rain {
     // terrain
     private static Geometry terrain;
     private static Texture normalTex, heightTex;
+    
+    // sound
+    private static OpenAL sound;
     
     /*
      *  2^10 ~    1000
@@ -85,9 +89,11 @@ public class Rain {
             init();
             OpenCL.init();
             
-            OpenAL sound = new OpenAL();
-            sound.init();
-            
+            if (audio) {
+                sound = new OpenAL();
+                sound.init();
+            }
+                
             glEnable(GL_CULL_FACE);
             glFrontFace(GL_CCW);
             glCullFace(GL_BACK);
@@ -95,7 +101,7 @@ public class Rain {
             glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
             
             //create terrain
-            terrain = GeometryFactory.createTerrainFromMap("media/map1.png", 0.25f);
+            terrain = GeometryFactory.createTerrainFromMap("media/highmaps/map1.png", 0.25f);
             normalTex = terrain.getNormalTex();
             heightTex = terrain.getHeightTex();
             terrainSP = new ShaderProgram("shader/terrain.vsh", "shader/terrain.fsh");
@@ -113,7 +119,8 @@ public class Rain {
             
             //cleanup 
             OpenCL.destroy();
-            sound.destroy();
+            if (audio)
+                sound.destroy();
             destroy();            
         } catch (LWJGLException ex) {
             Logger.getLogger(Rain.class.getName()).log(Level.SEVERE, null, ex);

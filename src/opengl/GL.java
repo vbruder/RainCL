@@ -334,6 +334,11 @@ public class GL {
     public static final int GL_TEXTURE_3D = GL12.GL_TEXTURE_3D;
     
     /**
+     * GL30.GL_TEXTURE_2D_ARRAY;
+     */
+    public static final int GL_TEXTURE_2D_ARRAY = GL30.GL_TEXTURE_2D_ARRAY;    
+    
+    /**
      * GL11.GL_TEXTURE_MIN_FILTER
      */
     public static final int GL_TEXTURE_MIN_FILTER = GL11.GL_TEXTURE_MIN_FILTER;
@@ -868,6 +873,44 @@ public class GL {
     public static void glTexImage2D(int target, int level, int internalFormat, int width, int height, int border, int format, int type, FloatBuffer pixels) {
         GL11.glTexImage2D(target, level, internalFormat, width, height, border, format, type, pixels);
         GL.checkError("glTexImage2D");
+    }
+    
+    /**
+     * OpenGL 1.2
+     * @see <a href="http://www.opengl.org/sdk/docs/man4/xhtml/glTexImage2D.xml">glTexImage3D</a>
+     * @param target
+     * @param level
+     * @param internalFormat
+     * @param width
+     * @param height
+     * @param depth
+     * @param border
+     * @param format
+     * @param type
+     * @param pixels 
+     */
+    public static void glTexImage3D(int target, int level, int internalFormat, int width, int height, int depth, int border, int format, int type, FloatBuffer pixels) {
+        GL12.glTexImage3D(target, level, internalFormat, width, height, depth, border, format, type, pixels);
+        GL.checkError("glTexImage2D");
+    }
+    
+    /**
+     * @see <a href="http://www.opengl.org/sdk/docs/man4/xhtml/glTexImage2D.xml">glTexSubImage3D</a>
+     * @param target
+     * @param level
+     * @param xoffset
+     * @param yoffset
+     * @param zoffset
+     * @param width
+     * @param height
+     * @param depth
+     * @param format
+     * @param type
+     * @param data
+     */
+    public static void glTexSubImage3D(int target, int level, int xoffset, int yoffset, int zoffset, int width, int height, int depth, int format,int type, FloatBuffer data) {
+        GL12.glTexSubImage3D(target, level, xoffset, yoffset, zoffset, width, height, depth, format, type, data);
+        GL.checkError("glTexSubImage3D");
     }
     
     /**
