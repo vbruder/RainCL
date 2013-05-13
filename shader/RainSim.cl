@@ -38,10 +38,10 @@ __kernel void rain_sim(
     // myPos.y = rand/1000000000;	
 
     //myPos.y = height.x;
-    height.x = -2.0f;
+    //height.x = -2.0f;
 	
 	//respawn particle
-	if (myPos.y <= height.x)
+	if (myPos.y <= (height.x - 2.0f))
 	{
 		myPos.xyz = seed[myId].xyz + (float3)(eyePosX, eyePosY, eyePosZ);
         myPos.y += 1.f;

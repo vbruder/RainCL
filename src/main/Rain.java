@@ -167,8 +167,10 @@ public class Rain {
             terrainSP.setUniform("heightTex", heightTex);
             terrain.draw();
             
-            //rain streaks          
+            //rain streaks  
+            glEnable(GL_BLEND);
             raindrops.draw(cam);
+            glDisable(GL_BLEND);
             
             // present screen
             Display.update();

@@ -139,9 +139,19 @@ public class GL {
     public static final int GL_FLOAT = GL11.GL_FLOAT;
     
     /**
+     * GL11.GL_SHORT
+     */      
+    public static final int GL_SHORT = GL11.GL_SHORT;
+    
+    /**
+     * GL11.GL_UNSIGNED_BYTE
+     */      
+    public static final int GL_UNSIGNED_BYTE = GL11.GL_UNSIGNED_BYTE;
+    
+    /**
      * GL11.GL_BYTE
      */      
-    public static final int GL_INT = GL11.GL_INT;
+    public static final int GL_BYTE = GL11.GL_BYTE;
     
     /**
      * GL20.GL_FRAGMENT_SHADER

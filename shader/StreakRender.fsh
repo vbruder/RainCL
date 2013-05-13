@@ -19,7 +19,10 @@ void main(void)
 //    finalColor = vec4(0.5*diffColor + color, 1.0);
 //    finalColor = vec4(0.8, 0.8, 0.8, 1.0);
 
-    finalColor = texture2DArray(rainTex, fragmentTexCoords.xyz);
+    finalColor = vec4(  texture2DArray(rainTex, fragmentTexCoords.xyz).r,
+                        texture2DArray(rainTex, fragmentTexCoords.xyz).r,
+                        texture2DArray(rainTex, fragmentTexCoords.xyz).r,
+                        0.0 );
 
     //DEBUG ONLY
 //    finalColor = vec4(fragmentTexCoords.z/10.0, fragmentTexCoords.z/10.0, fragmentTexCoords.z/10.0, 1);

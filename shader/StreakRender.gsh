@@ -22,7 +22,7 @@ out float randEnlight;
 void main()                                                                         
 {
     //streak size
-    float height = 0.05;
+    float height = 0.02;
     float width = height/10.0;
                                                                                  
     vec3 pos = gl_in[0].gl_Position.xyz;                                            

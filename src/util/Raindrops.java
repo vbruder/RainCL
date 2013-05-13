@@ -1,6 +1,8 @@
 package util;
 
 import static opengl.GL.GL_FLOAT;
+import static opengl.GL.GL_SHORT;
+import static opengl.GL.GL_UNSIGNED_BYTE;
 import static opengl.GL.GL_R8;
 import static opengl.GL.GL_RED;
 import static opengl.GL.GL_RG;
@@ -12,6 +14,9 @@ import static opengl.GL.GL_RGBA8;
 import static opengl.GL.GL_STATIC_DRAW;
 import static opengl.GL.GL_TEXTURE_2D;
 import static opengl.GL.GL_TEXTURE_2D_ARRAY;
+import static opengl.GL.GL_UNSIGNED_INT;
+import static opengl.GL.glDrawElements;
+import static opengl.GL.glGenerateMipmap;
 import static opengl.GL.glGetUniformLocation;
 import static opengl.GL.glTexImage2D;
 import static opengl.GL.glUniform1f;
@@ -30,6 +35,7 @@ import static opengl.GL.glTexImage3D;
 import static opengl.GL.glTexSubImage3D;
 import static opengl.GL.glDrawArrays;
 import static opengl.GL.glBindTexture;
+import static opengl.GL.glEnable;
 
 import static opengl.OpenCL.CL_MEM_COPY_HOST_PTR;
 import static opengl.OpenCL.CL_MEM_USE_HOST_PTR;
@@ -53,9 +59,14 @@ import static opengl.OpenCL.clReleaseMemObject;
 import static opengl.OpenCL.clReleaseProgram;
 import static opengl.OpenCL.create;
 
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.Random;
+
+import javax.imageio.ImageIO;
 
 import opengl.GL;
 import opengl.OpenCL;
@@ -77,6 +88,7 @@ import org.lwjgl.opengl.Drawable;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL12;
 import org.lwjgl.opengl.GL20;
+import org.lwjgl.opengl.GL21;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
@@ -118,7 +130,7 @@ public class Raindrops {
     
     // terrain texture IDs
     private int heightTexId, normalTexId;
-    private Texture hTex, rainTex;
+    private Texture hTex, rainTex, rainTex2;
     
     //shader
     private ShaderProgram StreakRenderSP;
@@ -213,12 +225,26 @@ public class Raindrops {
         this.StreakRenderSP = new ShaderProgram("./shader/StreakRender.vsh", "./shader/StreakRender.gsh", "./shader/StreakRender.fsh");
         
         //rain texture array, 10 different textures
+        File file = new File("media/rainTex/env/cv40_osc0.png");
+        BufferedImage image = null;
+        try
+        {
+            image = ImageIO.read(file);
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+        }
+        int colormod = image.getColorModel().getNumComponents();
+        int compsize = image.getColorModel().getPixelSize();
+        System.out.println("colormod: " + colormod + " compsize: " + compsize);
+        
         ImageContents content = Util.loadImage("media/rainTex/env/cv40_osc0.png");       
         rainTex = new Texture(GL_TEXTURE_2D_ARRAY, RAINTEX_UNIT);
         rainTex.bind();
         glTexImage3D(   GL_TEXTURE_2D_ARRAY,
                         0,
-                        GL30.GL_R16F,
+                        GL30.GL_R16,
                         content.width,
                         content.height,
                         10,
@@ -230,6 +256,13 @@ public class Raindrops {
         for (int i = 0; i < 10; i++)
         {
             content = Util.loadImage("media/rainTex/env/cv40_osc" + i + ".png");
+            content = Util.loadImage("media/rainTex/env/cv40_osc0.png"); 
+            FloatBuffer data = BufferUtils.createFloatBuffer(content.height * content.width);
+            for(int j = 0; j < content.height * content.width; ++j)
+            {
+                data.put(content.data.get(j));
+            }
+            data.position(0);
             glTexSubImage3D(GL_TEXTURE_2D_ARRAY,
                             0,
                             0,
@@ -240,9 +273,12 @@ public class Raindrops {
                             1,
                             GL_RED,
                             GL_FLOAT,
-                            content.data);
+                            data);
         }
+        glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
     }
+    
+
     
     /**
      * Create initial position and velocity data pseudo randomly.
@@ -376,6 +412,7 @@ public class Raindrops {
                 GL11.GL_RED,
                 GL_FLOAT,
                 data);
+        glGenerateMipmap(GL_TEXTURE_2D);
 
         this.heightmap = CL10GL.clCreateFromGLTexture2D(this.context, CL10.CL_MEM_READ_ONLY, GL11.GL_TEXTURE_2D, 0, hTex.getId(), errorCheck);
         this.normalmap = CL10GL.clCreateFromGLTexture2D(this.context, CL10.CL_MEM_READ_ONLY, GL11.GL_TEXTURE_2D, 0, this.normalTexId, errorCheck);
@@ -439,7 +476,7 @@ public class Raindrops {
         StreakRenderSP.setUniform("viewProj", viewProj);
         StreakRenderSP.setUniform("rainTex", rainTex);
         
-        glBindVertexArray(vertArrayID);        
+        glBindVertexArray(vertArrayID);
         glDrawArrays(GL_POINTS, 0, maxParticles); 
     }
       
