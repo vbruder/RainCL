@@ -1,4 +1,6 @@
-#version 400 core
+#version 420 core
+
+#extension GL_EXT_gpu_shader4 : enable
 
 //in vec4 positionFS;
 //in vec3 normal;
