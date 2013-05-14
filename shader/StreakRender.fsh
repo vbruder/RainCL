@@ -8,6 +8,7 @@ in vec3 fragmentTexCoords;
 in float randEnlight;
 
 uniform sampler2DArray rainTex;
+uniform vec3 eyePosition;
 
 out vec4 finalColor;
 
@@ -20,10 +21,16 @@ void main(void)
 //    finalColor = vec4(0.8, 0.8, 0.8, 1.0);
 
     finalColor = vec4(  texture2DArray(rainTex, fragmentTexCoords.xyz).r,
-                        texture2DArray(rainTex, fragmentTexCoords.xyz).r,
-                        texture2DArray(rainTex, fragmentTexCoords.xyz).r,
-                        0.0 );
-
+                        	 texture2DArray(rainTex, fragmentTexCoords.xyz).r,
+                        	 texture2DArray(rainTex, fragmentTexCoords.xyz).r,
+                        	 0.0 );
+                        
+    vec3 lightDir = vec3(1.0, 1.0, 1.0);                    
+	float dirLightIntensity = 1.0;
+	
+	//finalColor = mix(fragColor, vec4(0.2,0.2,0.2,1),  dot(lightDir, eyePosition));
+	finalColor.a = dirLightIntensity*randEnlight*dot(lightDir, eyePosition);
+	
     //DEBUG ONLY
 //    finalColor = vec4(fragmentTexCoords.z/10.0, fragmentTexCoords.z/10.0, fragmentTexCoords.z/10.0, 1);
 }

@@ -471,7 +471,7 @@ public class Raindrops {
     	StreakRenderSP.use();
         
     	eyePos = new Vector3f(cam.getCamPos().x, cam.getCamPos().y, cam.getCamPos().z);
-    	StreakRenderSP.setUniform("eyeposition", eyePos);    
+    	StreakRenderSP.setUniform("eyePosition", eyePos);
         Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);  
         StreakRenderSP.setUniform("viewProj", viewProj);
         StreakRenderSP.setUniform("rainTex", rainTex);
