@@ -64,6 +64,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.text.DecimalFormat;
 import java.util.Random;
 
 import javax.imageio.ImageIO;
@@ -103,6 +104,8 @@ public class Raindrops {
     
     private static final int RAINTEX_UNIT = 6;
     private static final int HEIGHTTEX_UNIT = 4;
+    
+    private static final int numTextures = 370;
     
     //opencl pointer
     private CLContext context;
@@ -224,22 +227,8 @@ public class Raindrops {
         
         this.StreakRenderSP = new ShaderProgram("./shader/StreakRender.vsh", "./shader/StreakRender.gsh", "./shader/StreakRender.fsh");
         
-        //rain texture array, 10 different textures
-        File file = new File("media/rainTex/env/cv40_osc0.png");
-        BufferedImage image = null;
-        try
-        {
-            image = ImageIO.read(file);
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-        }
-        int colormod = image.getColorModel().getNumComponents();
-        int compsize = image.getColorModel().getPixelSize();
-        System.out.println("colormod: " + colormod + " compsize: " + compsize);
-        
-        ImageContents content = Util.loadImage("media/rainTex/env/cv40_osc0.png");       
+        //load the 370 point light textures into a texture array
+        ImageContents content = Util.loadImage("media/rainTex/point/cv0_vPos_000.png");       
         rainTex = new Texture(GL_TEXTURE_2D_ARRAY, RAINTEX_UNIT);
         rainTex.bind();
         glTexImage3D(   GL_TEXTURE_2D_ARRAY,
@@ -247,22 +236,16 @@ public class Raindrops {
                         GL30.GL_R16,
                         content.width,
                         content.height,
-                        10,
+                        numTextures,
                         0,
                         GL_RED,
                         GL_FLOAT,
                         null);
 
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < numTextures; i++)
         {
-            content = Util.loadImage("media/rainTex/env/cv40_osc" + i + ".png");
-            content = Util.loadImage("media/rainTex/env/cv40_osc0.png"); 
-            FloatBuffer data = BufferUtils.createFloatBuffer(content.height * content.width);
-            for(int j = 0; j < content.height * content.width; ++j)
-            {
-                data.put(content.data.get(j));
-            }
-            data.position(0);
+            DecimalFormat df =   new DecimalFormat  ( "000" );
+            content = Util.loadImage("media/rainTex/point/cv0_vPos_" + df.format(i) + ".png");
             glTexSubImage3D(GL_TEXTURE_2D_ARRAY,
                             0,
                             0,
@@ -273,7 +256,7 @@ public class Raindrops {
                             1,
                             GL_RED,
                             GL_FLOAT,
-                            data);
+                            content.data);
         }
         glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
     }

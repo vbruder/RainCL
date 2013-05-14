@@ -12,6 +12,7 @@ import static opengl.GL.GL_FRONT_AND_BACK;
 import static opengl.GL.GL_LINE;
 import static opengl.GL.GL_ONE;
 import static opengl.GL.GL_ONE_MINUS_SRC_COLOR;
+import static opengl.GL.GL_SRC_ALPHA;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -78,7 +79,7 @@ public class Rain {
      *	2^17 ~  130000
      *	2^20 ~ 1000000
      */
-    private static int maxParticles = 1 << 15;
+    private static int maxParticles = 1 << 17;
     
     /**
      * main
@@ -98,7 +99,7 @@ public class Rain {
             glFrontFace(GL_CCW);
             glCullFace(GL_BACK);
             glEnable(GL_DEPTH_TEST);
-            glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             
             //create terrain
             terrain = GeometryFactory.createTerrainFromMap("media/highmaps/map1.png", 0.25f);
