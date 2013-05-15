@@ -13,6 +13,7 @@ import static opengl.GL.GL_LINE;
 import static opengl.GL.GL_ONE;
 import static opengl.GL.GL_ONE_MINUS_SRC_COLOR;
 import static opengl.GL.GL_SRC_ALPHA;
+import static opengl.GL.GL_ONE_MINUS_DST_ALPHA;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -31,9 +32,11 @@ import org.lwjgl.util.vector.Vector3f;
 import util.Camera;
 import util.Geometry;
 import util.GeometryFactory;
+import util.RadiantOrb;
 import util.Raindrops;
 import util.ShaderProgram;
 import util.Texture;
+import util.Util;
 
 /**
  * main class
@@ -79,7 +82,11 @@ public class Rain {
      *	2^17 ~  130000
      *	2^20 ~ 1000000
      */
-    private static int maxParticles = 1 << 17;
+    private static int maxParticles = 1 << 15;
+
+    private static ShaderProgram orbSP;
+
+    private static RadiantOrb orb;
     
     /**
      * main
@@ -99,7 +106,7 @@ public class Rain {
             glFrontFace(GL_CCW);
             glCullFace(GL_BACK);
             glEnable(GL_DEPTH_TEST);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);   
             
             //create terrain
             terrain = GeometryFactory.createTerrainFromMap("media/highmaps/map1.png", 0.25f);
@@ -109,7 +116,15 @@ public class Rain {
             
             //create rain streaks
             raindrops = new Raindrops(Device_Type.GPU, Display.getDrawable(), heightTex.getId(), normalTex.getId(), maxParticles, cam);
-                       
+            
+            orbSP = new ShaderProgram("./shader/Orb.vsh", "./shader/Orb.fsh");
+            orb = new RadiantOrb();
+            orb.setRadius(0.05f);
+            orb.setOrbitRadius(1.25f + (float)Math.random());
+            orb.setOrbitTilt(Util.PI_DIV4 - (float)Math.random() * Util.PI_DIV2);
+            orb.setSpeed((float)Math.random());
+            orb.setColor(new Vector3f((float)Math.random(), (float)Math.random(), (float)Math.random()));
+            
             inverseLightDirection.set(1.0f, 0.2f, 0.0f);
             inverseLightDirection.normalise();
             
@@ -133,7 +148,7 @@ public class Rain {
      * @throws LWJGLException
      */
     public static void render() throws LWJGLException {
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // background color: dark grey
+        glClearColor(0.2f, 0.2f, 0.2f, 1.0f); // background color: dark grey
         
         long last = System.currentTimeMillis();
         long now, millis;
@@ -159,7 +174,9 @@ public class Rain {
             
             // clear screen
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-                    
+            
+            orb.bindLightInformationToShader(raindrops.getShaderProgram().getID());
+            
             //terrain
             terrainSP.use();
             terrainSP.setUniform("proj", cam.getProjection());
@@ -172,6 +189,13 @@ public class Rain {
             glEnable(GL_BLEND);
             raindrops.draw(cam);
             glDisable(GL_BLEND);
+            
+            //TODO: proper integration
+            glUseProgram(orbSP.getID());
+            Matrix4f viewProj = new Matrix4f();
+            Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);  
+            orbSP.setUniform("viewProj", viewProj);
+            orb.draw(orbSP.getID());
             
             // present screen
             Display.update();
@@ -254,5 +278,6 @@ public class Rain {
         // update time properly
         ingameTime += ingameTimePerSecond * 1e-3f * (float)millis;        
         raindrops.updateSimulation(millis);
+        orb.animate(millis);
     }
 }

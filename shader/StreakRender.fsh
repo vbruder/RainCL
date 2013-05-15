@@ -4,23 +4,32 @@
 #extension GL_EXT_gpu_shader4 : enable
 
 #define PI 3.14159265
+#define MAX_POINT_LIGHTS 2
 
 //in vec4 positionFS;
 //in vec3 normal;
 in vec3 fragmentTexCoords;
 in float randEnlight;
-//TODO:
 in float texArrayID;
 
 uniform sampler2DArray rainTex;
 uniform vec3 eyePosition;
 
-//TODO:
-uniform vec3 lightVector;
+//lighting parameter
+uniform vec3 sunDir;
+uniform vec3 sunColor;
+uniform float sunIntensity;
+
 uniform vec3 pointLightDir;
+uniform vec3 pointLightColor;
+uniform float pointLightIntensity;
+//TODO: multiple point lights
+//uniform vec3 pointLightDir[MAX_POINT_LIGHTS];
+//uniform vec3 pointLightIntensity[MAX_POINT_LIGHTS];
 
 out vec4 finalColor;
 
+//TODO: outsourcen!! (1D-texture??)
 //normalization factors for the rain textures, one per texture
 float rainfactors[370] = 
 {
@@ -69,30 +78,30 @@ float rainfactors[370] =
  * Based on Sarah Tariq's "Rain" demo
  * @see http://developer.download.nvidia.com/SDK/10/direct3d/Source/rain/doc/RainSDKWhitePaper.pdf
  */
-vec4 rainResponse(vec3 lightColor, float lightIntensity, bool fallOffFactor)
+vec4 rainResponse(vec3 lightVec, vec3 lightColor, float lightIntensity, bool fallOffFactor)
 {
     float opacity = 0.0;
     float fallOff = 1.0;
 
     if (fallOffFactor)
     {  
-        float distToLight = length(lightVector);
+        float distToLight = length(sunDir);
         fallOff = 1.0/(distToLight*distToLight);
         fallOff = clamp(fallOff, 0.0, 1.0);   
     }
 
     if ((fallOff > 0.01) && (lightIntensity > 0.01))
     {
-        //uniform??
+        //uniform?? openCL mem-object?
         vec3 dropDirection = vec3(0,-0.25,0);
 
         int maxVIDX = 4;
         int maxHIDX = 8;
 
-        // Inputs: lightVector, eyeVector, dropDir
-        vec3 lightVec = normalize(lightVector);
-        vec3 eyePos = normalize(eyePosition);
-        vec3 dropDir     = normalize(dropDirection);
+        // Inputs: sunDir, eyePosition, dropDir
+        lightVec = normalize(lightVec);
+        vec3 eyePos   = normalize(eyePosition);
+        vec3 dropDir  = normalize(dropDirection);
         
         bool is_EpLp_angle_ccw = true;
         float hangle = 0;
@@ -114,7 +123,7 @@ vec4 rainResponse(vec3 lightColor, float lightIntensity, bool fallOffFactor)
         
         // Outputs:
         // verticalLightIndex[1|2] - two indices in the vertical direction
-        // t - fraction at which the vangle is between these two indices (for lerp)
+        // t - fraction at which the vangle is between these two indices (for mix)
         int verticalLightIndex1 = int(floor(vangle)); // 0 to 5
         int verticalLightIndex2 = int(min(maxVIDX, (verticalLightIndex1 + 1)));
         verticalLightIndex1 = max(0, verticalLightIndex1);
@@ -125,7 +134,7 @@ vec4 rainResponse(vec3 lightColor, float lightIntensity, bool fallOffFactor)
         float textureCoordsH2 = fragmentTexCoords.x;
         
         // horizontalLightIndex[1|2] - two indices in the horizontal direction
-        // s - fraction at which the hangle is between these two indices (for lerp)
+        // s - fraction at which the hangle is between these two indices (for mix)
         int horizontalLightIndex1 = 0;
         int horizontalLightIndex2 = 0;
         float s = 0;
@@ -205,38 +214,24 @@ vec4 rainResponse(vec3 lightColor, float lightIntensity, bool fallOffFactor)
 
 void main(void)
 {
-    //light params cound be turned to uniforms (-> user manipulation)
-    vec3 dirLightColor = vec3(1.0, 1.0, 1.0);
-    float dirLightIntensity = 1.0;
-    float responseDirLight = 1.0;
-    
-    vec3 pointLightColor = vec3(1.0, 1.0, 1.0);
-    float pointLightIntensity = 1.0;
-    float responsePointLight = 1.0;
-
-    //directional lighting
-    vec4 directionalLight = rainResponse(dirLightColor, 2.0*dirLightIntensity*responseDirLight*randEnlight, false);
+    //sun (directional) lighting
+    vec4 sunLight = rainResponse(sunDir, sunColor, 2.0*sunIntensity*randEnlight, false);
 
     //point lighting
-    vec4 pointLight = vec4(0,0,0,0);
-    
+    vec4 pointLight = vec4(0,0,0,0); 
+
     vec3 lightDir = normalize(pointLightDir);
     float angleToSpotLight = dot(-lightDir, vec3(0.0, -1.0, 0.0));
-
     float cosSpotlightAngle = 0.8;
 
     if(angleToSpotLight > cosSpotlightAngle)
-        pointLight = rainResponse(pointLightColor, 2.0*pointLightIntensity*responsePointLight*randEnlight, true);
+        pointLight = rainResponse(pointLightDir, pointLightColor, pointLightIntensity*randEnlight, true);
       
-    float totalOpacity = pointLight.a + directionalLight.a;
-    finalColor = vec4(vec3(pointLight.rgb*pointLight.a/totalOpacity + directionalLight.rgb*directionalLight.a/totalOpacity), totalOpacity);
-
-
-    //finalColor = vec4(  texture2DArray(rainTex, fragmentTexCoords.xyz).r, texture2DArray(rainTex, fragmentTexCoords.xyz).r, texture2DArray(rainTex, fragmentTexCoords.xyz).r, 0.0 );
-                                          	
-	//finalColor = mix(fragColor, vec4(0.2,0.2,0.2,1),  dot(lightDir, eyePosition));
-	//finalColor.a = 0.5*clamp(dirLightIntensity*randEnlight*dot(lightDir, eyePosition), 0.0, 1.0);
-	
+    float totalOpacity = pointLight.a + sunLight.a;
+    finalColor = vec4(vec3(pointLight.rgb*pointLight.a/totalOpacity + sunLight.rgb*sunLight.a/totalOpacity), totalOpacity);
+                 		
     //DEBUG ONLY
 //    finalColor = vec4(fragmentTexCoords.z/10.0, fragmentTexCoords.z/10.0, fragmentTexCoords.z/10.0, 1);
+//    finalColor = vec4(texture2DArray(rainTex, fragmentTexCoords.xyz).r, texture2DArray(rainTex, fragmentTexCoords.xyz).r, texture2DArray(rainTex, fragmentTexCoords.xyz).r, 0.0 );
+
 }

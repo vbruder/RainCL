@@ -16,7 +16,7 @@ public class RadiantOrb {
     private static final Geometry geo = GeometryFactory.createSphere(1.0f, 16, 8);
     
     private final Matrix4f model = new Matrix4f();
-    private final Vector3f position = new Vector3f();
+    private Vector3f position = new Vector3f();
     private final Vector3f color = new Vector3f();
     private float radius = 1.0f;
     private float orbitRadius = 0.0f;
@@ -45,22 +45,23 @@ public class RadiantOrb {
     }
     
     public void animate(long millis) {
-        this.orbitAngle += 1e-3f * (float)millis * this.speed;
+        //this.orbitAngle += 1e-3f * (float)millis * this.speed;
         this.buildModelMatrix();
     }
     
     private void buildModelMatrix() {
         Util.mul(this.model, Util.rotationY(this.orbitAngle, null), Util.rotationX(this.orbitTilt, null), Util.translationZ(this.orbitRadius, null), Util.scale(this.radius, null));
         Util.transformCoord(this.model, new Vector3f(), this.position);
+        this.position = new Vector3f(10.0f, 10.0f, 0.0f);
     }
     
-    public void bindLightInformationToShader(int program, int nr) {
+    public void bindLightInformationToShader(int program) {
         glUseProgram(program);
         
-        int intesityLoc = glGetUniformLocation(program, "plMaxIntensity[" + nr + "]");
+        int intesityLoc = glGetUniformLocation(program, "pointLightColor");
         glUniform3f(intesityLoc, this.color.x, this.color.y, this.color.z);
-        
-        int positionLoc = glGetUniformLocation(program, "plPosition[" + nr + "]");
+
+        int positionLoc = glGetUniformLocation(program, "pointLightDir");
         glUniform3f(positionLoc, this.position.x, this.position.y, this.position.z);
     }
     

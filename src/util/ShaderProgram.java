@@ -68,7 +68,7 @@ public class ShaderProgram {
     }
     
     /**
-     * @brief Helper method to write a texture into a uniform. The related program object has to be active.
+     * Helper method to write a texture into a uniform. The related program object has to be active.
      *
      * @param texture Texture
      * @param varName target variable in shader
@@ -82,7 +82,7 @@ public class ShaderProgram {
     }
     
     /**
-     * @brief Helper method to write a three dimensional float vector into a uniform.
+     * Helper method to write a three dimensional float vector into a uniform.
      * 		  The related program object has to be active.
      *
      * @param vec vector with 3 floats
@@ -92,6 +92,19 @@ public class ShaderProgram {
         int loc = glGetUniformLocation(this.id, varName);
         if(loc != -1) {
             glUniform3f(loc, vec.x, vec.y, vec.z);
+        }
+    }
+    
+    /**
+     * Helper method to write a float into a uniform.
+     *        The related program object has to be active.
+     *
+     * @param val float value
+     */
+    public void setUniform(String varName, float val) {
+        int loc = glGetUniformLocation(this.id, varName);
+        if(loc != -1) {
+            glUniform1f(loc, val);
         }
     }
     

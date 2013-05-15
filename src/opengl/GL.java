@@ -249,7 +249,7 @@ public class GL {
     public static final int GL_ONE_MINUS_SRC_COLOR = GL11.GL_ONE_MINUS_SRC_COLOR;
     
     /**
-     * GL11.GL_ONE_MINUS_SRC_COLOR
+     * GL11.GL_SRC_ALPHA
      */
     public static final int GL_SRC_ALPHA = GL11.GL_SRC_ALPHA;
     

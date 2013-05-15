@@ -133,26 +133,27 @@ public class Raindrops {
     
     // terrain texture IDs
     private int heightTexId, normalTexId;
-    private Texture hTex, rainTex, rainTex2;
+    private Texture hTex, rainTex;
     
     //shader
     private ShaderProgram StreakRenderSP;
     private Vector3f eyePos = new Vector3f(0.f, 0.f, 0.f);
     private final Matrix4f viewProj = new Matrix4f();
     //array IDs
-	private int vertArrayID, seedArrayID, veloArrayID;
+	private int vertArrayID;
 	//buffer IDs
-    private int vertBufferID, seedBufferID, veloBufferID;
+    private int vertBufferID;
+    
+    //lighting parameters (uniforms in StreakRender FS)
+    private Vector3f sunDir = new Vector3f(10.0f, 10.0f, 0.0f);
+    private Vector3f sunColor = new Vector3f(1.0f, 1.0f, 1.0f);
+    private float sunIntensity = 0.025f;
+    private Vector3f pointLightColor = new Vector3f(1.0f, 1.0f, 1.0f);
+    private Vector3f pointLightDir = new Vector3f(1.0f, 1.0f, 1.0f);
+    private float pointLightIntensity = 1.0f;
     
     /**
      * particle system
-     * 
-     * The implementation uses two buffers for each, position and velocity.
-     * Buffers are swapped after each time step.
-     * Swapping is realized with two kernels and two geometries.
-     * In the updateSimulation method the two kernels are called in turn.
-     * In draw() the last modified geometry object is drawn.
-     * Thereby OpenGL instancing is used.
      * @param device_type GPU /CPU
      * @param drawable OpenGL drawable.
      * @throws LWJGLException
@@ -164,9 +165,9 @@ public class Raindrops {
         this.normalTexId = normalTexId;
         this.eyePos = cam.getCamPos();
         //range of cylinder around cam
-        clusterScale = 7.f;
+        clusterScale = 5.0f;
         //velocity factor
-        veloFactor = 40.f;
+        veloFactor = 60.0f;
         
         this.gwz.put(0, this.maxParticles);
         this.lwz.put(0, this.localWorkSize);  
@@ -454,10 +455,17 @@ public class Raindrops {
     	StreakRenderSP.use();
         
     	eyePos = new Vector3f(cam.getCamPos().x, cam.getCamPos().y, cam.getCamPos().z);
-    	StreakRenderSP.setUniform("eyePosition", eyePos);
         Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);  
         StreakRenderSP.setUniform("viewProj", viewProj);
         StreakRenderSP.setUniform("rainTex", rainTex);
+        StreakRenderSP.setUniform("eyePosition", eyePos);
+        //set lighting uniforms
+        StreakRenderSP.setUniform("sunDir", sunDir);
+        StreakRenderSP.setUniform("sunColor", sunColor);
+        StreakRenderSP.setUniform("sunIntensity", sunIntensity);
+//        StreakRenderSP.setUniform("pointLightDir", pointLightDir);
+//        StreakRenderSP.setUniform("pointLightColor", pointLightColor);
+        StreakRenderSP.setUniform("pointLightIntensity", pointLightIntensity);
         
         glBindVertexArray(vertArrayID);
         glDrawArrays(GL_POINTS, 0, maxParticles); 

@@ -16,14 +16,15 @@ uniform vec3 eyePosition;
 
 out vec3 fragmentTexCoords;
 out float randEnlight;
+out float texArrayID;
 
-// GS for billboard technique
+// GS for billboard technique (make two triangles from point).
 // based on http://ogldev.atspace.co.uk/www/tutorial27/tutorial27.html
 void main()                                                                         
 {
     //streak size
-    float height = 0.02;
-    float width = height/10.0;
+    float height = 0.1;
+    float width = height/20.0;
                                                                                  
     vec3 pos = gl_in[0].gl_Position.xyz;                                            
     vec3 toCamera = normalize(eyePosition - pos);                                    
@@ -35,6 +36,7 @@ void main()
     fragmentTexCoords.xy = vec2(0, 0);
     fragmentTexCoords.z = vertex[0].texArrayID;
     randEnlight = vertex[0].randEnlight;
+    texArrayID = vertex[0].texArrayID;
     gl_Position = viewProj * vec4(pos, 1.0);
     EmitVertex();
 
@@ -43,6 +45,7 @@ void main()
     fragmentTexCoords.xy = vec2(0, 1);
     fragmentTexCoords.z = vertex[0].texArrayID;
     randEnlight = vertex[0].randEnlight;
+    texArrayID = vertex[0].texArrayID;
     gl_Position = viewProj * vec4(pos, 1.0);
     EmitVertex();
 
@@ -52,6 +55,7 @@ void main()
     fragmentTexCoords.xy = vec2(1, 0);
     fragmentTexCoords.z = vertex[0].texArrayID;
     randEnlight = vertex[0].randEnlight;
+    texArrayID = vertex[0].texArrayID;
     gl_Position = viewProj * vec4(pos, 1.0);
     EmitVertex();
 
@@ -60,6 +64,7 @@ void main()
     fragmentTexCoords.xy = vec2(1, 1);
     fragmentTexCoords.z = vertex[0].texArrayID;
     randEnlight = vertex[0].randEnlight;
+    texArrayID = vertex[0].texArrayID;
     gl_Position = viewProj * vec4(pos, 1.0);
     EmitVertex();
                                                                                     
