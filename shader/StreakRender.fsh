@@ -134,8 +134,8 @@ vec4 rainResponse(vec3 lightVec, vec3 lightColor, float lightIntensity, bool fal
         
         // Generate the final texture coordinates for each sample
         int type = int(texArrayID);
-        ivec2 texIndicesV1 = ivec2( verticalLightIndex1*90 + horizontalLightIndex1*10 + type, 
-                                    verticalLightIndex1*90 + horizontalLightIndex2*10 + type);
+        ivec2 texIndicesV1 = ivec2((verticalLightIndex1*90 + horizontalLightIndex1*10 + type), 
+                                 (verticalLightIndex1*90 + horizontalLightIndex2*10 + type));
         vec3 tex1 = vec3(textureCoordsH1, fragmentTexCoords.y, texIndicesV1.x);
         vec3 tex2 = vec3(textureCoordsH2, fragmentTexCoords.y, texIndicesV1.y);
         if ((verticalLightIndex1 < 4) && (verticalLightIndex2 >= 4)) 
@@ -147,16 +147,16 @@ vec4 rainResponse(vec3 lightVec, vec3 lightColor, float lightIntensity, bool fal
             textureCoordsH2 = fragmentTexCoords.x;
         }
         
-        ivec2 texIndicesV2 = ivec2( verticalLightIndex2*90 + horizontalLightIndex1*10 + type,
-                                    verticalLightIndex2*90 + horizontalLightIndex2*10 + type);
+        ivec2 texIndicesV2 = ivec2( (verticalLightIndex2*90 + horizontalLightIndex1*10 + type),
+                                  (verticalLightIndex2*90 + horizontalLightIndex2*10 + type));
         vec3 tex3 = vec3(textureCoordsH1, fragmentTexCoords.y, texIndicesV2.x);        
         vec3 tex4 = vec3(textureCoordsH2, fragmentTexCoords.y, texIndicesV2.y);
 
         // Sample opacity from the textures
-        float col1 = texture2DArray(rainTex, tex1).r * texture1D(rainfactors, texIndicesV1.x).r;
-        float col2 = texture2DArray(rainTex, tex2).r * texture1D(rainfactors, texIndicesV1.y).r;
-        float col3 = texture2DArray(rainTex, tex3).r * texture1D(rainfactors, texIndicesV2.x).r;
-        float col4 = texture2DArray(rainTex, tex4).r * texture1D(rainfactors, texIndicesV2.y).r;
+        float col1 = texture2DArray(rainTex, tex1).r * texelFetch(rainfactors, texIndicesV1.x, 0).r;
+        float col2 = texture2DArray(rainTex, tex2).r * texelFetch(rainfactors, texIndicesV1.y, 0).r;
+        float col3 = texture2DArray(rainTex, tex3).r * texelFetch(rainfactors, texIndicesV2.x, 0).r;
+        float col4 = texture2DArray(rainTex, tex4).r * texelFetch(rainfactors, texIndicesV2.y, 0).r;
 
         // Compute interpolated opacity using the s and t factors
         float hOpacity1 = mix(col1, col2, s);
@@ -186,9 +186,7 @@ void main(void)
       
     float totalOpacity = pointLight.a + sunLight.a;
     finalColor = vec4(vec3(pointLight.rgb*pointLight.a/totalOpacity + sunLight.rgb*sunLight.a/totalOpacity), totalOpacity);
-  		
 
-finalColor = vec4(texture1D(rainfactors, 0).r, texture1D(rainfactors, 8).r, texture1D(rainfactors, 5).r,1);
     //DEBUG ONLY
 //    finalColor = vec4(fragmentTexCoords.z/10.0, fragmentTexCoords.z/10.0, fragmentTexCoords.z/10.0, 1);
 //    finalColor = vec4(texture2DArray(rainTex, fragmentTexCoords.xyz).r, texture2DArray(rainTex, fragmentTexCoords.xyz).r, texture2DArray(rainTex, fragmentTexCoords.xyz).r, 0.0 );

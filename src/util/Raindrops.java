@@ -151,7 +151,7 @@ public class Raindrops {
     //lighting parameters (uniforms in StreakRender FS)
     private Vector3f sunDir = new Vector3f(10.0f, 10.0f, 0.0f);
     private Vector3f sunColor = new Vector3f(1.0f, 1.0f, 1.0f);
-    private float sunIntensity = 0.025f;
+    private float sunIntensity = 0.05f;
     private Vector3f pointLightColor = new Vector3f(1.0f, 1.0f, 1.0f);
     private Vector3f pointLightDir = new Vector3f(1.0f, 1.0f, 1.0f);
     private float pointLightIntensity = 1.0f;
@@ -542,7 +542,6 @@ public class Raindrops {
 
         rainfactBuffer.put(rainfactors, 0, numTextures);
         rainfactBuffer.position(0);
-        System.out.println(rainfactBuffer.get(5));
         
         rainfactTex = new Texture(GL_TEXTURE_1D, RAINFACTORS_UNIT);
         rainfactTex.bind();
