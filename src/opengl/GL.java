@@ -891,6 +891,23 @@ public class GL {
     }
     
     /**
+     * OpenGL 1.1
+     * @see <a href="http://www.opengl.org/sdk/docs/man4/xhtml/glTexImage1D.xml">glTexImage1D</a>
+     * @param target
+     * @param level
+     * @param internalFormat
+     * @param width
+     * @param border
+     * @param format
+     * @param type
+     * @param pixels
+     */
+    public static void glTexImage1D(int target, int level, int internalFormat, int width, int border, int format, int type, FloatBuffer pixels) {
+        GL11.glTexImage1D(target, level, internalFormat, width, border, format, type, pixels);
+        GL.checkError("glTexImage2D");
+    }
+    
+    /**
      * OpenGL 1.2
      * @see <a href="http://www.opengl.org/sdk/docs/man4/xhtml/glTexImage2D.xml">glTexImage3D</a>
      * @param target
