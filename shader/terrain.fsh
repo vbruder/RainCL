@@ -8,6 +8,7 @@ out vec4 fragColor;
 
 uniform sampler2D normalTex;
 uniform sampler2D heightTex;
+uniform sampler2D colorTex;
 
 vec3 getNormal(vec2 tc)  {
     float dx = 1.0/512.0;
@@ -38,7 +39,7 @@ vec3 getNormal(vec2 tc)  {
 void main(void)
 {
     //fragColor = vec4(0.5 + 0.5*getNormal(vec2(coords.x,coords.z)),1.0);
-    fragColor = texture(heightTex, vec2(coords.x,coords.z))*3.f;
+    fragColor = texture(colorTex, vec2(coords.x,coords.z));
 
 //    vec3 color = texture(heightTex, vec2(coords.x,coords.z)).xyz + vec3(0.4);
 //    fragColor = vec4(color,1.0);

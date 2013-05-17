@@ -4,5 +4,7 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/LWJGL"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/slick-util"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/org.eclipse.swt"/>
+	<classpathentry kind="lib" path="swing2swt.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

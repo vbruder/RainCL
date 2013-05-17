@@ -149,7 +149,7 @@ public class Raindrops {
     private int vertBufferID;
     
     //lighting parameters (uniforms in StreakRender FS)
-    private Vector3f sunDir = new Vector3f(10.0f, 10.0f, 0.0f);
+    private Vector3f sunDir = new Vector3f(10.0f, 10.0f, 10.0f);
     private Vector3f sunColor = new Vector3f(1.0f, 1.0f, 1.0f);
     private float sunIntensity = 0.05f;
     private Vector3f pointLightColor = new Vector3f(1.0f, 1.0f, 1.0f);

@@ -343,7 +343,7 @@ public class GeometryFactory {
      * @param amplitude scaling factor for height
      * @return the created terrain geometry
      */
-    static public Geometry createTerrainFromMap(String map, float amplitude) {
+    static public Geometry createTerrainFromMap(String map, float amplitude, int scale) {
         // vertex array id
         int vaid = glGenVertexArrays();
         glBindVertexArray(vaid);
@@ -356,7 +356,7 @@ public class GeometryFactory {
         FloatBuffer heightTexBuf = BufferUtils.createFloatBuffer(ic[0].length*ic.length*4);
         for (int h = 0; h < ic.length; h++) {
             for (int w = 0; w < ic[0].length; w++) {
-                vertexData.put(new float[]{-0.5f + w/(float)ic[0].length, amplitude*ic[h][w][0], -0.5f + h/(float)ic.length});
+                vertexData.put(new float[]{scale*(-0.5f + w/(float)ic[0].length), amplitude*ic[h][w][0], scale*(-0.5f + h/(float)ic.length)});
                 heightTexBuf.put(amplitude*ic[h][w][0]);
                 heightTexBuf.put(new float[]{0,0,0});
                 

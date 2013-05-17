@@ -15,6 +15,7 @@ import static opengl.GL.GL_ONE_MINUS_SRC_COLOR;
 import static opengl.GL.GL_SRC_ALPHA;
 import static opengl.GL.GL_ONE_MINUS_DST_ALPHA;
 
+import java.nio.FloatBuffer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -22,10 +23,13 @@ import opengl.OpenAL;
 import opengl.OpenCL;
 import opengl.OpenCL.Device_Type;
 
+import org.lwjgl.BufferUtils;
 import org.lwjgl.LWJGLException;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL30;
 import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
 
@@ -37,6 +41,7 @@ import util.Raindrops;
 import util.ShaderProgram;
 import util.Texture;
 import util.Util;
+import util.Util.ImageContents;
 
 /**
  * main class
@@ -47,15 +52,19 @@ import util.Util;
 public class Rain {
 
     private static Raindrops raindrops;
+    private static RadiantOrb orb;
     
     // shader programs
     private static ShaderProgram terrainSP;
+    private static ShaderProgram orbSP;
     
     // current configurations
     private static boolean bContinue = true;
+
     private static boolean culling = true;
     private static boolean wireframe = true;
     private static boolean audio = false;
+    private static final String heightmapPath = "media/highmaps/street1.png";
     
     // control
     private static final Vector3f moveDir = new Vector3f(0.0f, 0.0f, 0.0f);
@@ -71,7 +80,8 @@ public class Rain {
     
     // terrain
     private static Geometry terrain;
-    private static Texture normalTex, heightTex;
+    private static Texture normalTex, heightTex, colorTex;
+    private static final int COLORTEX_UNIT = 8;
     
     // sound
     private static OpenAL sound;
@@ -84,10 +94,6 @@ public class Rain {
      */
     private static int maxParticles = 1 << 15;
 
-    private static ShaderProgram orbSP;
-
-    private static RadiantOrb orb;
-    
     /**
      * main
      * @param argv
@@ -108,11 +114,8 @@ public class Rain {
             glEnable(GL_DEPTH_TEST);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);   
             
-            //create terrain
-            terrain = GeometryFactory.createTerrainFromMap("media/highmaps/map1.png", 0.25f);
-            normalTex = terrain.getNormalTex();
-            heightTex = terrain.getHeightTex();
-            terrainSP = new ShaderProgram("shader/terrain.vsh", "shader/terrain.fsh");
+            createTerrain();
+
             
             //create rain streaks
             raindrops = new Raindrops(Device_Type.GPU, Display.getDrawable(), heightTex.getId(), normalTex.getId(), maxParticles, cam);
@@ -129,7 +132,7 @@ public class Rain {
             inverseLightDirection.normalise();
             
             // starting position
-            cam.move(1.0f, 0.0f, 0.0f);
+            cam.move(1.0f, 0.0f, 1.0f);
             
             render();
             
@@ -143,6 +146,15 @@ public class Rain {
         }
     }
     
+    private static void createTerrain()
+    {
+        terrain = GeometryFactory.createTerrainFromMap(heightmapPath , 0.8f, 20);
+        normalTex = terrain.getNormalTex();
+        heightTex = terrain.getHeightTex();
+        terrainSP = new ShaderProgram("shader/terrain.vsh", "shader/terrain.fsh");     
+        colorTex = Texture.generateTexture("media/textures/grassTex.jpg", COLORTEX_UNIT);        
+    }
+
     /**
      * Render the scene.
      * @throws LWJGLException
@@ -183,6 +195,7 @@ public class Rain {
             terrainSP.setUniform("view", cam.getView());
             terrainSP.setUniform("normalTex", normalTex);
             terrainSP.setUniform("heightTex", heightTex);
+            terrainSP.setUniform("colorTex", colorTex);
             terrain.draw();
             
             //rain streaks  
@@ -210,7 +223,7 @@ public class Rain {
      * @param millis milliseconds, passed since last update
      */
     public static void handleInput(long millis) {
-        float moveSpeed = 2e-4f*(Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) ? 2.0f : 1.0f)*(float)millis;
+        float moveSpeed = 2e-3f*(Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) ? 2.0f : 1.0f)*(float)millis;
         float camSpeed = 5e-3f;
         
         while(Keyboard.next()) {
@@ -279,5 +292,25 @@ public class Rain {
         ingameTime += ingameTimePerSecond * 1e-3f * (float)millis;        
         raindrops.updateSimulation(millis);
         orb.animate(millis);
+    }
+    
+    public static int getMaxParticles()
+    {
+        return maxParticles;
+    }
+
+    public static void setMaxParticles(int maxParticles)
+    {
+        Rain.maxParticles = maxParticles;
+    }
+    
+    public static boolean isAudio()
+    {
+        return audio;
+    }
+
+    public static void setAudio(boolean audio)
+    {
+        Rain.audio = audio;
     }
 }
