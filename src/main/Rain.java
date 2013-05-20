@@ -42,6 +42,9 @@ import util.ShaderProgram;
 import util.Texture;
 import util.Util;
 import util.Util.ImageContents;
+import window.Settings;
+import window.Settings2;
+import window.TimerCaller;
 
 /**
  * main class
@@ -92,7 +95,12 @@ public class Rain {
      *	2^17 ~  130000
      *	2^20 ~ 1000000
      */
-    private static int maxParticles = 1 << 15;
+    private static int maxParticles = 1 << 17;
+    
+    private static float fps;
+    
+    //settings gui
+    private static TimerCaller tc = new TimerCaller();
 
     /**
      * main
@@ -140,7 +148,9 @@ public class Rain {
             OpenCL.destroy();
             if (audio)
                 sound.destroy();
-            destroy();            
+            tc.stop();
+            Settings.destroyInstance();
+            destroy();         
         } catch (LWJGLException ex) {
             Logger.getLogger(Rain.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -175,7 +185,7 @@ public class Rain {
             frameTimeDelta += millis;
             ++frames;
             if(frameTimeDelta > 1000) {
-                System.out.println(1e3f * (float)frames / (float)frameTimeDelta + " FPS");
+                fps = 1e3f * (float)frames / (float)frameTimeDelta;
                 frameTimeDelta -= 1000;
                 frames = 0;
             }
@@ -247,20 +257,10 @@ public class Rain {
                     case Keyboard.KEY_F1: cam.changeProjection(); break;
                     case Keyboard.KEY_UP: break;
                     case Keyboard.KEY_DOWN: break;
-                    case Keyboard.KEY_LEFT:
-                        if(Keyboard.isKeyDown(Keyboard.KEY_RSHIFT)) {
-                            ingameTimePerSecond = 0.0f;
-                        } else {
-                            ingameTimePerSecond = Math.max(1.0f / 64.0f, 0.5f * ingameTimePerSecond);
-                        }
-                        break;
-                    case Keyboard.KEY_RIGHT:
-                        if(Keyboard.isKeyDown(Keyboard.KEY_RSHIFT)) {
-                            ingameTimePerSecond = 1.0f;
-                        } else {
-                            ingameTimePerSecond = Math.min(64.0f, 2.0f * ingameTimePerSecond);
-                        }
-                        break;
+                    case Keyboard.KEY_M:
+                                        tc.start();
+                                        tc.addTimerListener(Settings.getInstance());
+                                        break;
                     case Keyboard.KEY_F2: glPolygonMode(GL_FRONT_AND_BACK, (wireframe ^= true) ? GL_FILL : GL_LINE); break;
                     case Keyboard.KEY_F3: if(culling ^= true) glEnable(GL_CULL_FACE); else glDisable(GL_CULL_FACE); break;
                 }
@@ -312,5 +312,10 @@ public class Rain {
     public static void setAudio(boolean audio)
     {
         Rain.audio = audio;
+    }
+
+    public static float getFPS()
+    {
+        return fps;
     }
 }

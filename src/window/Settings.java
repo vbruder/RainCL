@@ -1,116 +1,162 @@
 package window;
 
-import org.eclipse.swt.widgets.Composite;
-import swing2swt.layout.BorderLayout;
-import org.eclipse.swt.widgets.TabFolder;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.TabItem;
-import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Scale;
-import swing2swt.layout.FlowLayout;
-import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Text;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.wb.swt.SWTResourceManager;
+import java.awt.BorderLayout;
+import java.awt.FlowLayout;
 
-public class Settings extends Composite
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JDialog;
+import javax.swing.JPanel;
+import javax.swing.KeyStroke;
+import javax.swing.UIManager;
+import javax.swing.border.EmptyBorder;
+
+import java.awt.GridBagLayout;
+import javax.swing.JLabel;
+import java.awt.GridBagConstraints;
+import javax.swing.JTextField;
+
+import main.Rain;
+
+import java.awt.Insets;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+
+public class Settings extends JDialog implements TimerListener
 {
-    private Text text;
-    private Text text_1;
+    private static final long serialVersionUID = 1L;
+
+    private static Settings mDial;
+
+    private final JPanel settingsPanel = new JPanel();
+    private JTextField txtFPS;
 
     /**
-     * Create the composite.
-     * @param parent
-     * @param style
+     * Launch the application.
      */
-    public Settings(Composite parent, int style)
+    public void run()
     {
-        super(parent, style);
-        setLayout(new BorderLayout(0, 0));
-        
-        Composite composite = new Composite(this, SWT.NONE);
-        composite.setLayoutData(BorderLayout.CENTER);
-        composite.setLayout(new GridLayout(13, false));
-        new Label(composite, SWT.NONE);
-        
-        Label lblSettings = new Label(composite, SWT.NONE);
-        lblSettings.setLayoutData(new GridData(SWT.LEFT, SWT.CENTER, false, false, 2, 2));
-        lblSettings.setFont(SWTResourceManager.getFont("Segoe UI", 12, SWT.BOLD));
-        lblSettings.setText("Settings");
-        new Label(composite, SWT.NONE);
-        new Label(composite, SWT.NONE);
-        new Label(composite, SWT.NONE);
-        new Label(composite, SWT.NONE);
-        new Label(composite, SWT.NONE);
-        new Label(composite, SWT.NONE);
-        new Label(composite, SWT.NONE);
-        
-        Label label = new Label(composite, SWT.NONE);
-        label.setText("FPS");
-        new Label(composite, SWT.NONE);
-        
-        text_1 = new Text(composite, SWT.BORDER);
-        text_1.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-        new Label(composite, SWT.NONE);
-        new Label(composite, SWT.NONE);
-        new Label(composite, SWT.NONE);
-        new Label(composite, SWT.NONE);
-        new Label(composite, SWT.NONE);
-        new Label(composite, SWT.NONE);
-        new Label(composite, SWT.NONE);
-        new Label(composite, SWT.NONE);
-        
-        Label label_1 = new Label(composite, SWT.NONE);
-        label_1.setText("Particles");
-        new Label(composite, SWT.NONE);
-        
-        text = new Text(composite, SWT.BORDER);
-        text.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
-        
-        TabFolder tabFolder = new TabFolder(composite, SWT.NONE);
-        GridData gd_tabFolder = new GridData(SWT.LEFT, SWT.BOTTOM, false, false, 13, 1);
-        gd_tabFolder.widthHint = 433;
-        gd_tabFolder.heightHint = 214;
-        tabFolder.setLayoutData(gd_tabFolder);
-        
-        TabItem tbtmNewItem = new TabItem(tabFolder, SWT.NONE);
-        tbtmNewItem.setText("General");
-        
-        Composite composite_1 = new Composite(tabFolder, SWT.NONE);
-        tbtmNewItem.setControl(composite_1);
-        composite_1.setLayout(new GridLayout(4, false));
-        new Label(composite_1, SWT.NONE);
-        new Label(composite_1, SWT.NONE);
-        new Label(composite_1, SWT.NONE);
-        new Label(composite_1, SWT.NONE);
-        new Label(composite_1, SWT.NONE);
-        
-        Label lblParticles = new Label(composite_1, SWT.NONE);
-        lblParticles.setText("Particles");
-        new Label(composite_1, SWT.NONE);
-        
-        Scale scale = new Scale(composite_1, SWT.NONE);
-        GridData gd_scale = new GridData(SWT.LEFT, SWT.CENTER, false, false, 1, 1);
-        gd_scale.widthHint = 270;
-        scale.setLayoutData(gd_scale);
-        
-        TabItem tbtmLighting = new TabItem(tabFolder, SWT.NONE);
-        tbtmLighting.setText("Lighting");
-        
-        Composite composite_2 = new Composite(tabFolder, SWT.NONE);
-        tbtmLighting.setControl(composite_2);
-        
-        TabItem tbtmSystemInfo = new TabItem(tabFolder, SWT.NONE);
-        tbtmSystemInfo.setText("System info");
-        
-        TabItem tbtmAbout = new TabItem(tabFolder, SWT.NONE);
-        tbtmAbout.setText("About");
-
+        try
+        {
+            this.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+            this.setVisible(true);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+        }
     }
 
+    /**
+     * Create the dialog.
+     */
+    public Settings()
+    {
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (Exception e) { }
+        
+        setResizable(false);
+        
+        Action closeAction = new AbstractAction(){
+            private static final long serialVersionUID = 2L;
+            public void actionPerformed(ActionEvent e) {
+                destroyInstance();
+            }
+        };
+        
+        settingsPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "closeAction");
+        settingsPanel.getActionMap().put("closeAction", closeAction);
+        
+        setTitle("Settings");
+        setBounds(100, 100, 500, 500);
+        getContentPane().setLayout(new BorderLayout());
+        settingsPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
+        getContentPane().add(settingsPanel, BorderLayout.CENTER);
+        GridBagLayout gbl_contentPanel = new GridBagLayout();
+        gbl_contentPanel.columnWidths = new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        gbl_contentPanel.rowHeights = new int[]{0, 0, 0};
+        gbl_contentPanel.columnWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, Double.MIN_VALUE};
+        gbl_contentPanel.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
+        settingsPanel.setLayout(gbl_contentPanel);
+        {
+            JLabel lblFps = new JLabel("FPS:");
+            GridBagConstraints gbc_lblFps = new GridBagConstraints();
+            gbc_lblFps.insets = new Insets(0, 0, 0, 5);
+            gbc_lblFps.anchor = GridBagConstraints.EAST;
+            gbc_lblFps.gridx = 13;
+            gbc_lblFps.gridy = 1;
+            settingsPanel.add(lblFps, gbc_lblFps);
+        }
+        {
+            txtFPS = new JTextField();
+            txtFPS.setEditable(false);
+            GridBagConstraints gbc_txtFPS = new GridBagConstraints();
+            gbc_txtFPS.fill = GridBagConstraints.HORIZONTAL;
+            gbc_txtFPS.gridx = 14;
+            gbc_txtFPS.gridy = 1;
+            settingsPanel.add(txtFPS, gbc_txtFPS);
+            txtFPS.setColumns(10);
+        }
+        {
+            JPanel buttonPane = new JPanel();
+            buttonPane.setLayout(new FlowLayout(FlowLayout.RIGHT));
+            getContentPane().add(buttonPane, BorderLayout.SOUTH);
+            {
+                JButton okButton = new JButton("OK");
+                okButton.setActionCommand("OK");
+                buttonPane.add(okButton);
+                getRootPane().setDefaultButton(okButton);
+            }
+            {
+                JButton cancelButton = new JButton("Cancel");
+                cancelButton.setActionCommand("Cancel");
+                buttonPane.add(cancelButton);
+            }
+        }
+        
+        
+        
+        this.run();
+    }
+    
     @Override
-    protected void checkSubclass()
+    public void updateTex()
     {
-        // Disable the check that prevents subclassing of SWT components
+        txtFPS.setText(Float.toString( Rain.getFPS() ));
     }
+    
+    public void close()
+    {
+        this.dispose();
+        mDial = null;
+    }
+    
+    /**
+     * @brief returns instance of the object if not already existing (singleton pattern) 
+     */
+    public static Settings getInstance()
+    {
+        if(mDial != null)
+        {
+            mDial.toFront();
+            return mDial;
+        }
+        else
+        {
+            mDial = new Settings();
+            return mDial;
+        }
+        
+    }
+    public static void destroyInstance()
+    {
+        if(mDial != null)
+        {
+            mDial.close();
+        }
+    }
+
 }
