@@ -117,7 +117,6 @@ public class Raindrops {
     private CLDevice device;
     private CLCommandQueue queue;
     private CLKernel kernelMoveStreaks;
-    private CLKernel kernel1;
     
     //data
     private FloatBuffer posBuffer, seedBuffer, veloBuffer, vertexDataBuffer;
@@ -134,6 +133,10 @@ public class Raindrops {
     private int localWorkSize = 128;
     private final PointerBuffer gwz = BufferUtils.createPointerBuffer(1);
     private final PointerBuffer lwz = BufferUtils.createPointerBuffer(1);
+    
+    private Vector3f windDir[] = new Vector3f[20];
+    private int windPtr = 0;
+    private float windForce = 0.1f;
     
     // terrain texture IDs
     private int heightTexId, normalTexId;
@@ -273,12 +276,21 @@ public class Raindrops {
      */
     private void createData() {      
         
+        Random r = new Random(1);
+        
+        float windRand = r.nextFloat() * windForce;
+        
+        for (int i = 0; i < windDir.length; i++)
+        {
+            windDir[i] = new Vector3f();
+            windDir[i].x = (float) Math.sin((float) i / (float) windDir.length) * windRand;
+            windDir[i].z = (float) Math.sin((float) i / (float) windDir.length) * windRand;
+        }
+        
 	    //init attribute buffer: position, starting position (seed), velocity, random and texture type
 		posBuffer  = BufferUtils.createFloatBuffer(4 * maxParticles);
 		seedBuffer = BufferUtils.createFloatBuffer(4 * maxParticles);
 		veloBuffer = BufferUtils.createFloatBuffer(4 * maxParticles);
-		
-		Random r = new Random(1);
 		
 		//fill buffers
 		for (int i = 0; i < this.maxParticles; i++) {
@@ -422,9 +434,13 @@ public class Raindrops {
         this.kernelMoveStreaks.setArg(4, this.normalmap);
         this.kernelMoveStreaks.setArg(5, this.maxParticles);
         this.kernelMoveStreaks.setArg(6, 0.f);
+        //Eye position
         this.kernelMoveStreaks.setArg(7, 0.f);
         this.kernelMoveStreaks.setArg(8, 0.f);
         this.kernelMoveStreaks.setArg(9, 0.f);
+        //Wind direction
+        this.kernelMoveStreaks.setArg(10, 0.f);
+        this.kernelMoveStreaks.setArg(11, 0.f);
     }
     
     /**
@@ -437,10 +453,12 @@ public class Raindrops {
         clEnqueueAcquireGLObjects(this.queue, this.heightmap, null, null);
         clEnqueueAcquireGLObjects(this.queue, this.normalmap, null, null);
            
-        this.kernelMoveStreaks.setArg(6, 1e-3f*deltaTime);
-        this.kernelMoveStreaks.setArg(7, eyePos.x);
-        this.kernelMoveStreaks.setArg(8, eyePos.y);
-        this.kernelMoveStreaks.setArg(9, eyePos.z);
+        this.kernelMoveStreaks.setArg( 6, 1e-3f*deltaTime);
+        this.kernelMoveStreaks.setArg( 7, eyePos.x);
+        this.kernelMoveStreaks.setArg( 8, eyePos.y);
+        this.kernelMoveStreaks.setArg( 9, eyePos.z);
+        this.kernelMoveStreaks.setArg(10, windDir[windPtr].x);
+        this.kernelMoveStreaks.setArg(11, windDir[windPtr].z);
         clEnqueueNDRangeKernel(this.queue, kernelMoveStreaks, 1, null, gwz, lwz, null, null);            
 
         clEnqueueReleaseGLObjects(this.queue, this.position, null, null);
@@ -448,6 +466,13 @@ public class Raindrops {
         clEnqueueReleaseGLObjects(this.queue, this.normalmap, null, null);
         
         clFinish(this.queue);
+        
+        if (windPtr < windDir.length - 1)
+        {
+            windPtr++;
+        }
+        else
+            windPtr = 0;
     }
     
     /**
@@ -486,7 +511,6 @@ public class Raindrops {
         clReleaseMemObject(this.heightmap);
         clReleaseMemObject(this.normalmap);
         clReleaseKernel(this.kernelMoveStreaks);
-        clReleaseKernel(this.kernel1);
         clReleaseCommandQueue(this.queue);
         clReleaseProgram(this.program);
         clReleaseContext(this.context);

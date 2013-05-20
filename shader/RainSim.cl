@@ -14,7 +14,9 @@ __kernel void rain_sim(
 	float dt,
     float eyePosX,
     float eyePosY,
-    float eyePosZ)
+    float eyePosZ,
+    float windDirX,
+    float windDirZ)
 {
     //__local float4 sharedMem[LOCAL_MEM_SIZE];
     

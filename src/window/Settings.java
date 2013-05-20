@@ -23,6 +23,8 @@ import main.Rain;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import javax.swing.JTabbedPane;
+import javax.swing.JLayeredPane;
 
 public class Settings extends JDialog implements TimerListener
 {
@@ -32,6 +34,7 @@ public class Settings extends JDialog implements TimerListener
 
     private final JPanel settingsPanel = new JPanel();
     private JTextField txtFPS;
+    private JTextField txtParticles;
 
     /**
      * Launch the application.
@@ -71,34 +74,78 @@ public class Settings extends JDialog implements TimerListener
         settingsPanel.getActionMap().put("closeAction", closeAction);
         
         setTitle("Settings");
-        setBounds(100, 100, 500, 500);
+        setBounds(100, 100, 400, 450);
         getContentPane().setLayout(new BorderLayout());
         settingsPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
         getContentPane().add(settingsPanel, BorderLayout.CENTER);
         GridBagLayout gbl_contentPanel = new GridBagLayout();
-        gbl_contentPanel.columnWidths = new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-        gbl_contentPanel.rowHeights = new int[]{0, 0, 0};
-        gbl_contentPanel.columnWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, Double.MIN_VALUE};
-        gbl_contentPanel.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
+        gbl_contentPanel.columnWidths = new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 36, 0, 0, 0, 0};
+        gbl_contentPanel.rowHeights = new int[]{0, 0, 0, 0};
+        gbl_contentPanel.columnWeights = new double[]{0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, Double.MIN_VALUE};
+        gbl_contentPanel.rowWeights = new double[]{0.0, 1.0, 0.0, Double.MIN_VALUE};
         settingsPanel.setLayout(gbl_contentPanel);
         {
-            JLabel lblFps = new JLabel("FPS:");
-            GridBagConstraints gbc_lblFps = new GridBagConstraints();
-            gbc_lblFps.insets = new Insets(0, 0, 0, 5);
-            gbc_lblFps.anchor = GridBagConstraints.EAST;
-            gbc_lblFps.gridx = 13;
-            gbc_lblFps.gridy = 1;
-            settingsPanel.add(lblFps, gbc_lblFps);
+            JLabel lblParticles = new JLabel("Particles:");
+            GridBagConstraints gbc_lblParticles = new GridBagConstraints();
+            gbc_lblParticles.anchor = GridBagConstraints.EAST;
+            gbc_lblParticles.insets = new Insets(0, 0, 5, 5);
+            gbc_lblParticles.gridx = 10;
+            gbc_lblParticles.gridy = 0;
+            settingsPanel.add(lblParticles, gbc_lblParticles);
+        }
+        {
+            txtParticles = new JTextField();
+            txtParticles.setEditable(false);
+            txtParticles.setColumns(10);
+            GridBagConstraints gbc_txtParticles = new GridBagConstraints();
+            gbc_txtParticles.anchor = GridBagConstraints.EAST;
+            gbc_txtParticles.insets = new Insets(0, 0, 5, 5);
+            gbc_txtParticles.gridx = 11;
+            gbc_txtParticles.gridy = 0;
+            settingsPanel.add(txtParticles, gbc_txtParticles);
+        }
+        {
+            JLabel lblFPS = new JLabel("FPS:");
+            GridBagConstraints gbc_lblFPS = new GridBagConstraints();
+            gbc_lblFPS.anchor = GridBagConstraints.EAST;
+            gbc_lblFPS.insets = new Insets(0, 0, 5, 5);
+            gbc_lblFPS.gridx = 12;
+            gbc_lblFPS.gridy = 0;
+            settingsPanel.add(lblFPS, gbc_lblFPS);
         }
         {
             txtFPS = new JTextField();
             txtFPS.setEditable(false);
-            GridBagConstraints gbc_txtFPS = new GridBagConstraints();
-            gbc_txtFPS.fill = GridBagConstraints.HORIZONTAL;
-            gbc_txtFPS.gridx = 14;
-            gbc_txtFPS.gridy = 1;
-            settingsPanel.add(txtFPS, gbc_txtFPS);
             txtFPS.setColumns(10);
+            GridBagConstraints gbc_txtFPS = new GridBagConstraints();
+            gbc_txtFPS.anchor = GridBagConstraints.EAST;
+            gbc_txtFPS.insets = new Insets(0, 0, 5, 5);
+            gbc_txtFPS.gridx = 13;
+            gbc_txtFPS.gridy = 0;
+            settingsPanel.add(txtFPS, gbc_txtFPS);
+        }
+        {
+            JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+            GridBagConstraints gbc_tabbedPane = new GridBagConstraints();
+            gbc_tabbedPane.gridheight = 2;
+            gbc_tabbedPane.gridwidth = 14;
+            gbc_tabbedPane.fill = GridBagConstraints.BOTH;
+            gbc_tabbedPane.gridx = 1;
+            gbc_tabbedPane.gridy = 1;
+            settingsPanel.add(tabbedPane, gbc_tabbedPane);
+            {
+                JLayeredPane layeredPane = new JLayeredPane();
+                tabbedPane.addTab("General", null, layeredPane, null);
+            }
+            
+            JLayeredPane layeredPane = new JLayeredPane();
+            tabbedPane.addTab("Lighting", null, layeredPane, null);
+            
+            JLayeredPane layeredPane_1 = new JLayeredPane();
+            tabbedPane.addTab("System Info", null, layeredPane_1, null);
+            
+            JLayeredPane layeredPane_2 = new JLayeredPane();
+            tabbedPane.addTab("About", null, layeredPane_2, null);
         }
         {
             JPanel buttonPane = new JPanel();
@@ -125,7 +172,7 @@ public class Settings extends JDialog implements TimerListener
     @Override
     public void updateTex()
     {
-        txtFPS.setText(Float.toString( Rain.getFPS() ));
+        txtFPS.setText(Integer.toString( (int)Rain.getFPS() ));
     }
     
     public void close()
@@ -158,5 +205,4 @@ public class Settings extends JDialog implements TimerListener
             mDial.close();
         }
     }
-
 }
