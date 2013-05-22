@@ -25,6 +25,11 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import javax.swing.JTabbedPane;
 import javax.swing.JLayeredPane;
+import java.awt.GridLayout;
+import com.jgoodies.forms.layout.FormLayout;
+import com.jgoodies.forms.layout.ColumnSpec;
+import com.jgoodies.forms.layout.RowSpec;
+import com.jgoodies.forms.factories.FormFactory;
 
 public class Settings extends JDialog implements TimerListener
 {
@@ -35,6 +40,12 @@ public class Settings extends JDialog implements TimerListener
     private final JPanel settingsPanel = new JPanel();
     private JTextField txtFPS;
     private JTextField txtParticles;
+    private JTextField txtRainclA;
+    private JTextField txtGraphics;
+    private JTextField txtDriver;
+    private JTextField txtOpenGL;
+    private JTextField txtShadingLang;
+    private JTextField txtOpenCL;
 
     /**
      * Launch the application.
@@ -74,14 +85,14 @@ public class Settings extends JDialog implements TimerListener
         settingsPanel.getActionMap().put("closeAction", closeAction);
         
         setTitle("Settings");
-        setBounds(100, 100, 400, 450);
+        setBounds(100, 100, 425, 450);
         getContentPane().setLayout(new BorderLayout());
         settingsPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
         getContentPane().add(settingsPanel, BorderLayout.CENTER);
         GridBagLayout gbl_contentPanel = new GridBagLayout();
-        gbl_contentPanel.columnWidths = new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 36, 0, 0, 0, 0};
+        gbl_contentPanel.columnWidths = new int[]{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 36, 0, 0};
         gbl_contentPanel.rowHeights = new int[]{0, 0, 0, 0};
-        gbl_contentPanel.columnWeights = new double[]{0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, Double.MIN_VALUE};
+        gbl_contentPanel.columnWeights = new double[]{0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
         gbl_contentPanel.rowWeights = new double[]{0.0, 1.0, 0.0, Double.MIN_VALUE};
         settingsPanel.setLayout(gbl_contentPanel);
         {
@@ -89,7 +100,7 @@ public class Settings extends JDialog implements TimerListener
             GridBagConstraints gbc_lblParticles = new GridBagConstraints();
             gbc_lblParticles.anchor = GridBagConstraints.EAST;
             gbc_lblParticles.insets = new Insets(0, 0, 5, 5);
-            gbc_lblParticles.gridx = 10;
+            gbc_lblParticles.gridx = 9;
             gbc_lblParticles.gridy = 0;
             settingsPanel.add(lblParticles, gbc_lblParticles);
         }
@@ -100,7 +111,7 @@ public class Settings extends JDialog implements TimerListener
             GridBagConstraints gbc_txtParticles = new GridBagConstraints();
             gbc_txtParticles.anchor = GridBagConstraints.EAST;
             gbc_txtParticles.insets = new Insets(0, 0, 5, 5);
-            gbc_txtParticles.gridx = 11;
+            gbc_txtParticles.gridx = 10;
             gbc_txtParticles.gridy = 0;
             settingsPanel.add(txtParticles, gbc_txtParticles);
         }
@@ -109,7 +120,7 @@ public class Settings extends JDialog implements TimerListener
             GridBagConstraints gbc_lblFPS = new GridBagConstraints();
             gbc_lblFPS.anchor = GridBagConstraints.EAST;
             gbc_lblFPS.insets = new Insets(0, 0, 5, 5);
-            gbc_lblFPS.gridx = 12;
+            gbc_lblFPS.gridx = 11;
             gbc_lblFPS.gridy = 0;
             settingsPanel.add(lblFPS, gbc_lblFPS);
         }
@@ -119,8 +130,8 @@ public class Settings extends JDialog implements TimerListener
             txtFPS.setColumns(10);
             GridBagConstraints gbc_txtFPS = new GridBagConstraints();
             gbc_txtFPS.anchor = GridBagConstraints.EAST;
-            gbc_txtFPS.insets = new Insets(0, 0, 5, 5);
-            gbc_txtFPS.gridx = 13;
+            gbc_txtFPS.insets = new Insets(0, 0, 5, 0);
+            gbc_txtFPS.gridx = 12;
             gbc_txtFPS.gridy = 0;
             settingsPanel.add(txtFPS, gbc_txtFPS);
         }
@@ -128,24 +139,101 @@ public class Settings extends JDialog implements TimerListener
             JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
             GridBagConstraints gbc_tabbedPane = new GridBagConstraints();
             gbc_tabbedPane.gridheight = 2;
-            gbc_tabbedPane.gridwidth = 14;
+            gbc_tabbedPane.gridwidth = 13;
             gbc_tabbedPane.fill = GridBagConstraints.BOTH;
-            gbc_tabbedPane.gridx = 1;
+            gbc_tabbedPane.gridx = 0;
             gbc_tabbedPane.gridy = 1;
             settingsPanel.add(tabbedPane, gbc_tabbedPane);
             {
-                JLayeredPane layeredPane = new JLayeredPane();
-                tabbedPane.addTab("General", null, layeredPane, null);
+                JLayeredPane lpGeneral = new JLayeredPane();
+                tabbedPane.addTab("General", null, lpGeneral, null);
             }
             
-            JLayeredPane layeredPane = new JLayeredPane();
-            tabbedPane.addTab("Lighting", null, layeredPane, null);
+            JLayeredPane lpLighting = new JLayeredPane();
+            tabbedPane.addTab("Lighting", null, lpLighting, null);
             
-            JLayeredPane layeredPane_1 = new JLayeredPane();
-            tabbedPane.addTab("System Info", null, layeredPane_1, null);
+            JLayeredPane lpSysInfo = new JLayeredPane();
+            tabbedPane.addTab("System Info", null, lpSysInfo, null);
+            lpSysInfo.setLayout(new FormLayout(new ColumnSpec[] {
+                    FormFactory.RELATED_GAP_COLSPEC,
+                    FormFactory.DEFAULT_COLSPEC,
+                    FormFactory.RELATED_GAP_COLSPEC,
+                    FormFactory.DEFAULT_COLSPEC,
+                    FormFactory.RELATED_GAP_COLSPEC,
+                    ColumnSpec.decode("default:grow"),},
+                new RowSpec[] {
+                    FormFactory.RELATED_GAP_ROWSPEC,
+                    FormFactory.DEFAULT_ROWSPEC,
+                    FormFactory.RELATED_GAP_ROWSPEC,
+                    FormFactory.DEFAULT_ROWSPEC,
+                    FormFactory.RELATED_GAP_ROWSPEC,
+                    FormFactory.DEFAULT_ROWSPEC,
+                    FormFactory.RELATED_GAP_ROWSPEC,
+                    FormFactory.DEFAULT_ROWSPEC,
+                    FormFactory.RELATED_GAP_ROWSPEC,
+                    FormFactory.DEFAULT_ROWSPEC,
+                    FormFactory.RELATED_GAP_ROWSPEC,
+                    FormFactory.DEFAULT_ROWSPEC,}));
+            {
+                JLabel lblGraphics = new JLabel("Graphics:");
+                lpSysInfo.add(lblGraphics, "4, 4, left, default");
+            }
+            {
+                txtGraphics = new JTextField();
+                txtGraphics.setEditable(false);
+                lpSysInfo.add(txtGraphics, "6, 4, fill, default");
+                txtGraphics.setColumns(10);
+            }
+            {
+                JLabel lblDriver = new JLabel("Driver:");
+                lpSysInfo.add(lblDriver, "4, 6, left, default");
+            }
+            {
+                txtDriver = new JTextField();
+                txtDriver.setEditable(false);
+                lpSysInfo.add(txtDriver, "6, 6, fill, default");
+                txtDriver.setColumns(10);
+            }
+            {
+                JLabel lblOpengl = new JLabel("OpenGL:");
+                lpSysInfo.add(lblOpengl, "4, 8, left, default");
+            }
+            {
+                txtOpenGL = new JTextField();
+                txtOpenGL.setEditable(false);
+                lpSysInfo.add(txtOpenGL, "6, 8, fill, default");
+                txtOpenGL.setColumns(10);
+            }
+            {
+                JLabel lblShadingLanguage = new JLabel("Shading Language:");
+                lpSysInfo.add(lblShadingLanguage, "4, 10, left, default");
+            }
+            {
+                txtShadingLang = new JTextField();
+                txtShadingLang.setEditable(false);
+                lpSysInfo.add(txtShadingLang, "6, 10, fill, default");
+                txtShadingLang.setColumns(10);
+            }
+            {
+                JLabel lblOpencl = new JLabel("OpenCL:");
+                lpSysInfo.add(lblOpencl, "4, 12, left, default");
+            }
+            {
+                txtOpenCL = new JTextField();
+                txtOpenCL.setEditable(false);
+                lpSysInfo.add(txtOpenCL, "6, 12, fill, default");
+                txtOpenCL.setColumns(10);
+            }
             
-            JLayeredPane layeredPane_2 = new JLayeredPane();
-            tabbedPane.addTab("About", null, layeredPane_2, null);
+            JLayeredPane lpAbout = new JLayeredPane();
+            tabbedPane.addTab("About", null, lpAbout, null);
+            
+            txtRainclA = new JTextField();
+            txtRainclA.setEditable(false);
+            txtRainclA.setText("RainCL - A rain simulation framework.\r\n\r\nVersion: 0.1\r\n\r\n(c) Valentin Bruder, Universit\u00E4t Osnabr\u00FCck, 2013\r\n\r\nThis framework uses LWJGL (www.lwjgl.org) and slick-util libraries.");
+            txtRainclA.setBounds(10, 11, 384, 303);
+            lpAbout.add(txtRainclA);
+            txtRainclA.setColumns(10);
         }
         {
             JPanel buttonPane = new JPanel();
