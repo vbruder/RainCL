@@ -13,6 +13,8 @@ in VertexData
 
 uniform mat4 viewProj;
 uniform vec3 eyePosition;
+uniform vec3 windDir;
+uniform float dt;
 
 out vec3 fragmentTexCoords;
 out float randEnlight;
@@ -37,7 +39,7 @@ void main()
     fragmentTexCoords.z = vertex[0].texArrayID;
     randEnlight = vertex[0].randEnlight;
     texArrayID = vertex[0].texArrayID;
-    gl_Position = viewProj * vec4(pos, 1.0);
+    gl_Position = viewProj * vec4(pos + (windDir*dt), 1.0);
     EmitVertex();
 
     //top left
@@ -56,7 +58,7 @@ void main()
     fragmentTexCoords.z = vertex[0].texArrayID;
     randEnlight = vertex[0].randEnlight;
     texArrayID = vertex[0].texArrayID;
-    gl_Position = viewProj * vec4(pos, 1.0);
+    gl_Position = viewProj * vec4(pos + (windDir*dt), 1.0);
     EmitVertex();
 
     //top right

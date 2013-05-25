@@ -134,9 +134,9 @@ public class Raindrops {
     private final PointerBuffer gwz = BufferUtils.createPointerBuffer(1);
     private final PointerBuffer lwz = BufferUtils.createPointerBuffer(1);
     
-    private Vector3f windDir[] = new Vector3f[20];
+    private Vector3f windDir[] = new Vector3f[500];
     private int windPtr = 0;
-    private float windForce = 0.1f;
+    private float windForce = 3.f;
     
     // terrain texture IDs
     private int heightTexId, normalTexId;
@@ -155,9 +155,10 @@ public class Raindrops {
     private Vector3f sunDir = new Vector3f(10.0f, 10.0f, 10.0f);
     private Vector3f sunColor = new Vector3f(1.0f, 1.0f, 1.0f);
     private float sunIntensity = 0.05f;
-    private Vector3f pointLightColor = new Vector3f(1.0f, 1.0f, 1.0f);
-    private Vector3f pointLightDir = new Vector3f(1.0f, 1.0f, 1.0f);
+    //private Vector3f pointLightColor = new Vector3f(1.0f, 1.0f, 1.0f);
+    //private Vector3f pointLightDir = new Vector3f(1.0f, 1.0f, 1.0f);
     private float pointLightIntensity = 1.0f;
+    private float dt;
     
     /**
      * particle system
@@ -280,11 +281,15 @@ public class Raindrops {
         
         float windRand = r.nextFloat() * windForce;
         
-        for (int i = 0; i < windDir.length; i++)
+        for (int i = 0; i < (windDir.length / 2); i++)
         {
             windDir[i] = new Vector3f();
+            windDir[windDir.length - i - 1] = new Vector3f();
+            
             windDir[i].x = (float) Math.sin((float) i / (float) windDir.length) * windRand;
+            windDir[windDir.length - i - 1].x = (float) Math.sin((float) i / (float) windDir.length) * windRand;
             windDir[i].z = (float) Math.sin((float) i / (float) windDir.length) * windRand;
+            windDir[windDir.length - i - 1].z = (float) Math.sin((float) i / (float) windDir.length) * windRand;
         }
         
 	    //init attribute buffer: position, starting position (seed), velocity, random and texture type
@@ -449,11 +454,13 @@ public class Raindrops {
      */
     public void updateSimulation(long deltaTime) {
         
+        this.dt = 1e-3f*deltaTime;
+        
         clEnqueueAcquireGLObjects(this.queue, this.position, null, null);
         clEnqueueAcquireGLObjects(this.queue, this.heightmap, null, null);
         clEnqueueAcquireGLObjects(this.queue, this.normalmap, null, null);
-           
-        this.kernelMoveStreaks.setArg( 6, 1e-3f*deltaTime);
+        
+        this.kernelMoveStreaks.setArg( 6, dt);
         this.kernelMoveStreaks.setArg( 7, eyePos.x);
         this.kernelMoveStreaks.setArg( 8, eyePos.y);
         this.kernelMoveStreaks.setArg( 9, eyePos.z);
@@ -489,6 +496,8 @@ public class Raindrops {
         StreakRenderSP.setUniform("rainTex", rainTex);
         StreakRenderSP.setUniform("rainfactors", rainfactTex);
         StreakRenderSP.setUniform("eyePosition", eyePos);
+        StreakRenderSP.setUniform("windDir", windDir[windPtr]);
+        StreakRenderSP.setUniform("dt", dt);
         //set lighting uniforms
         StreakRenderSP.setUniform("sunDir", sunDir);
         StreakRenderSP.setUniform("sunColor", sunColor);

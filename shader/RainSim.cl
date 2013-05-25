@@ -49,7 +49,9 @@ __kernel void rain_sim(
         myPos.y += 1.f;
 	}
 
+    myPos.x += windDirX * dt;
     myPos.y -= velos[myId].y * dt;
+    myPos.z += windDirZ * dt;
 
     position[myId].xyz = myPos.xyz;//(float4)(0, 0.1f, 0, 0)*dt;
 }

@@ -9,8 +9,8 @@ import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL33;
 
 /**
- *
- * @author nico3000
+ * @author Valentin Bruder
+ * based on code created by Nico Marniok
  */
 public class Texture {
     private int id;
