@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package util;
 
 import static opengl.GL.*;
@@ -9,10 +5,10 @@ import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
 
 /**
- *
- * @author NMARNIOK
+ * @author Valentin Bruder
+ * Based on code of Nico Marniok (Computergrafik 2012)
  */
-public class RadiantOrb {
+public class PointLightOrb {
     private static final Geometry geo = GeometryFactory.createSphere(1.0f, 16, 8);
     
     private final Matrix4f model = new Matrix4f();
@@ -78,6 +74,16 @@ public class RadiantOrb {
         int colorLoc = glGetUniformLocation(program, "color");
         glUniform3f(colorLoc, this.color.x, this.color.y, this.color.z);
         
-        RadiantOrb.geo.draw();
+        PointLightOrb.geo.draw();
+    }
+
+    public Vector3f getPosition()
+    {
+        return position;
+    }
+
+    public Vector3f getColor()
+    {
+        return color;
     }
 }

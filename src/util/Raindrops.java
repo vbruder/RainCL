@@ -151,14 +151,17 @@ public class Raindrops {
 	//buffer IDs
     private int vertBufferID;
     
+    private float dt;
+    
     //lighting parameters (uniforms in StreakRender FS)
     private Vector3f sunDir = new Vector3f(10.0f, 10.0f, 10.0f);
     private Vector3f sunColor = new Vector3f(1.0f, 1.0f, 1.0f);
     private float sunIntensity = 0.05f;
     //private Vector3f pointLightColor = new Vector3f(1.0f, 1.0f, 1.0f);
     //private Vector3f pointLightDir = new Vector3f(1.0f, 1.0f, 1.0f);
+    private PointLightOrb orb;
     private float pointLightIntensity = 1.0f;
-    private float dt;
+    
     
     /**
      * particle system
@@ -166,12 +169,13 @@ public class Raindrops {
      * @param drawable OpenGL drawable.
      * @throws LWJGLException
      */
-    public Raindrops(Device_Type device_type, Drawable drawable, int heightTexId, int normalTexId, int maxParticles, Camera cam) throws LWJGLException {
+    public Raindrops(Device_Type device_type, Drawable drawable, int heightTexId, int normalTexId, int maxParticles, Camera cam, PointLightOrb orb) throws LWJGLException {
         
         this.maxParticles = maxParticles;
         this.heightTexId = heightTexId;
         this.normalTexId = normalTexId;
         this.eyePos = cam.getCamPos();
+        this.orb = orb;
         //range of cylinder around cam
         clusterScale = 5.0f;
         //velocity factor
@@ -502,8 +506,8 @@ public class Raindrops {
         StreakRenderSP.setUniform("sunDir", sunDir);
         StreakRenderSP.setUniform("sunColor", sunColor);
         StreakRenderSP.setUniform("sunIntensity", sunIntensity);
-//        StreakRenderSP.setUniform("pointLightDir", pointLightDir);
-//        StreakRenderSP.setUniform("pointLightColor", pointLightColor);
+        StreakRenderSP.setUniform("pointLightDir", orb.getPosition());
+        StreakRenderSP.setUniform("pointLightColor", orb.getColor());
         StreakRenderSP.setUniform("pointLightIntensity", pointLightIntensity);
         
         glBindVertexArray(vertArrayID);

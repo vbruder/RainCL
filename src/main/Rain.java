@@ -36,7 +36,7 @@ import org.lwjgl.util.vector.Vector3f;
 import util.Camera;
 import util.Geometry;
 import util.GeometryFactory;
-import util.RadiantOrb;
+import util.PointLightOrb;
 import util.Raindrops;
 import util.ShaderProgram;
 import util.Texture;
@@ -55,7 +55,7 @@ import window.TimerCaller;
 public class Rain {
 
     private static Raindrops raindrops;
-    private static RadiantOrb orb;
+    private static PointLightOrb orb;
     
     // shader programs
     private static ShaderProgram terrainSP;
@@ -124,18 +124,18 @@ public class Rain {
             
             createTerrain();
 
-            
-            //create rain streaks
-            raindrops = new Raindrops(Device_Type.GPU, Display.getDrawable(), heightTex.getId(), normalTex.getId(), maxParticles, cam);
-            
+            //create point light(s)
             orbSP = new ShaderProgram("./shader/Orb.vsh", "./shader/Orb.fsh");
-            orb = new RadiantOrb();
+            orb = new PointLightOrb();
             orb.setRadius(0.05f);
             orb.setOrbitRadius(1.25f + (float)Math.random());
             orb.setOrbitTilt(Util.PI_DIV4 - (float)Math.random() * Util.PI_DIV2);
             orb.setSpeed((float)Math.random());
             orb.setColor(new Vector3f((float)Math.random(), (float)Math.random(), (float)Math.random()));
             
+            //create rain streaks
+            raindrops = new Raindrops(Device_Type.GPU, Display.getDrawable(), heightTex.getId(), normalTex.getId(), maxParticles, cam, orb);
+                        
             inverseLightDirection.set(1.0f, 0.2f, 0.0f);
             inverseLightDirection.normalise();
             

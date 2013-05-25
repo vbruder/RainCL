@@ -1,4 +1,3 @@
-//TODO: use less temp registers!! 
 #version 420 core
 
 #extension GL_EXT_gpu_shader4 : enable
@@ -49,13 +48,13 @@ vec4 rainResponse(vec3 lightVec, vec3 lightColor, float lightIntensity, bool fal
 
     if ((fallOff > 0.01) && (lightIntensity > 0.01))
     {
-        //uniform?? openCL mem-object?
+        //TODO: uniform?? openCL mem-object?
         vec3 dropDirection = vec3(0,-0.25,0);
 
         int maxVIDX = 4;
         int maxHIDX = 8;
 
-        // Inputs: sunDir, eyePosition, dropDir
+        // Inputs: lightDir, eyePosition, dropDir
         lightVec = normalize(lightVec);
         vec3 eyePos   = normalize(eyePosition);
         vec3 dropDir  = normalize(dropDirection);
@@ -182,7 +181,7 @@ void main(void)
     float cosSpotlightAngle = 0.8;
 
     if(angleToSpotLight > cosSpotlightAngle)
-        pointLight = rainResponse(pointLightDir, pointLightColor, pointLightIntensity*randEnlight, true);
+        pointLight = rainResponse(pointLightDir, pointLightColor, 2*pointLightIntensity*randEnlight, true);
       
     float totalOpacity = pointLight.a + sunLight.a;
     finalColor = vec4(vec3(pointLight.rgb*pointLight.a/totalOpacity + sunLight.rgb*sunLight.a/totalOpacity), totalOpacity);
@@ -190,5 +189,5 @@ void main(void)
     //DEBUG ONLY
 //    finalColor = vec4(fragmentTexCoords.z/10.0, fragmentTexCoords.z/10.0, fragmentTexCoords.z/10.0, 1);
 //    finalColor = vec4(texture2DArray(rainTex, fragmentTexCoords.xyz).r, texture2DArray(rainTex, fragmentTexCoords.xyz).r, texture2DArray(rainTex, fragmentTexCoords.xyz).r, 0.0 );
-
+//    finalColor = pointLight;
 }
