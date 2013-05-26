@@ -67,7 +67,7 @@ public class Rain {
     private static boolean culling = true;
     private static boolean wireframe = true;
     private static boolean audio = false;
-    private static final String heightmapPath = "media/highmaps/street1.png";
+    private static final String heightmapPath = "media/terrain/terrainHeight01.png";
     
     // control
     private static final Vector3f moveDir = new Vector3f(0.0f, 0.0f, 0.0f);
@@ -95,7 +95,7 @@ public class Rain {
      *	2^17 ~  130000
      *	2^20 ~ 1000000
      */
-    private static int maxParticles = 1 << 15;
+    private static int maxParticles = 1 << 18;
     
     private static float fps;
     
@@ -158,11 +158,11 @@ public class Rain {
     
     private static void createTerrain()
     {
-        terrain = GeometryFactory.createTerrainFromMap(heightmapPath , 0.8f, 20);
+        terrain = GeometryFactory.createTerrainFromMap(heightmapPath , 5.0f, 16);
         normalTex = terrain.getNormalTex();
         heightTex = terrain.getHeightTex();
-        terrainSP = new ShaderProgram("shader/terrain.vsh", "shader/terrain.fsh");     
-        colorTex = Texture.generateTexture("media/textures/grassTex.jpg", COLORTEX_UNIT);        
+        terrainSP = new ShaderProgram("shader/terrain.vsh", "shader/terrain.fsh");
+        colorTex = Texture.generateTexture("media/terrain/terrainTex01.png", COLORTEX_UNIT);        
     }
 
     /**
@@ -170,7 +170,7 @@ public class Rain {
      * @throws LWJGLException
      */
     public static void render() throws LWJGLException {
-        glClearColor(0.2f, 0.2f, 0.2f, 1.0f); // background color: dark grey
+        glClearColor(0.5f, 0.5f, 0.5f, 1.0f); // background color: grey
         
         long last = System.currentTimeMillis();
         long now, millis;

@@ -379,6 +379,26 @@ public class GL {
     public static final int GL_TEXTURE_WRAP_T = GL11.GL_TEXTURE_WRAP_T;
     
     /**
+     * GL11.GL_CLAMP
+     */
+    public static final int GL_CLAMP = GL11.GL_CLAMP;
+    
+    /**
+     * GL11.GL_CLAMP_TO_EDGE
+     */
+    public static final int GL_CLAMP_TO_EDGE = GL12.GL_CLAMP_TO_EDGE;
+    
+    /**
+     * GL11.GL_REPEAT
+     */
+    public static final int GL_REPEAT = GL11.GL_REPEAT;
+    
+    /**
+     * GL11.GL_CLAMP_TO_BORDER
+     */
+    public static final int GL_CLAMP_TO_BORDER = GL13.GL_CLAMP_TO_BORDER;
+    
+    /**
      * GL13.GL_TEXTURE0
      */
     public static final int GL_TEXTURE0 = GL13.GL_TEXTURE0; 

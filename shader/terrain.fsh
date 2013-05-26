@@ -1,6 +1,6 @@
 #version 330
 
-in vec3 coords;
+in vec2 texCoords;
 in vec3 normal;
 in vec3 positionFS;
 
@@ -39,7 +39,7 @@ vec3 getNormal(vec2 tc)  {
 void main(void)
 {
     //fragColor = vec4(0.5 + 0.5*getNormal(vec2(coords.x,coords.z)),1.0);
-    fragColor = texture(colorTex, vec2(coords.x,coords.z));
+    fragColor = texture(colorTex, vec2(texCoords.s, texCoords.t));
 
 //    vec3 color = texture(heightTex, vec2(coords.x,coords.z)).xyz + vec3(0.4);
 //    fragColor = vec4(color,1.0);
