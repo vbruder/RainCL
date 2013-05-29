@@ -1,65 +1,65 @@
-package util;
+package environment;
 
-import static opengl.GL.GL_FLOAT;
-import static opengl.GL.GL_SHORT;
-import static opengl.GL.GL_UNSIGNED_BYTE;
-import static opengl.GL.GL_R8;
-import static opengl.GL.GL_RED;
-import static opengl.GL.GL_RG;
-import static opengl.GL.GL_RG8;
-import static opengl.GL.GL_RGB8;
-import static opengl.GL.GL_RGBA;
-import static opengl.GL.GL_RGB;
-import static opengl.GL.GL_RGBA8;
-import static opengl.GL.GL_STATIC_DRAW;
-import static opengl.GL.GL_TEXTURE_1D;
-import static opengl.GL.GL_TEXTURE_2D;
-import static opengl.GL.GL_TEXTURE_2D_ARRAY;
-import static opengl.GL.GL_UNSIGNED_INT;
-import static opengl.GL.glDrawElements;
-import static opengl.GL.glGenerateMipmap;
-import static opengl.GL.glGetUniformLocation;
-import static opengl.GL.glTexImage1D;
-import static opengl.GL.glTexImage2D;
-import static opengl.GL.glUniform1f;
-import static opengl.GL.glUniform3f;
-import static opengl.GL.glGenVertexArrays;
-import static opengl.GL.glBindVertexArray;
-import static opengl.GL.glGenBuffers;
-import static opengl.GL.GL_ARRAY_BUFFER;
-import static opengl.GL.GL_DYNAMIC_DRAW;
-import static opengl.GL.GL_POINTS;
-import static opengl.GL.glVertexAttribPointer;
-import static opengl.GL.glEnableVertexAttribArray;
-import static opengl.GL.glBindBuffer;
-import static opengl.GL.glBufferData;
-import static opengl.GL.glTexImage3D;
-import static opengl.GL.glTexSubImage3D;
-import static opengl.GL.glDrawArrays;
-import static opengl.GL.glBindTexture;
-import static opengl.GL.glEnable;
+import static apiWrapper.GL.GL_ARRAY_BUFFER;
+import static apiWrapper.GL.GL_DYNAMIC_DRAW;
+import static apiWrapper.GL.GL_FLOAT;
+import static apiWrapper.GL.GL_POINTS;
+import static apiWrapper.GL.GL_R8;
+import static apiWrapper.GL.GL_RED;
+import static apiWrapper.GL.GL_RG;
+import static apiWrapper.GL.GL_RG8;
+import static apiWrapper.GL.GL_RGB;
+import static apiWrapper.GL.GL_RGB8;
+import static apiWrapper.GL.GL_RGBA;
+import static apiWrapper.GL.GL_RGBA8;
+import static apiWrapper.GL.GL_SHORT;
+import static apiWrapper.GL.GL_STATIC_DRAW;
+import static apiWrapper.GL.GL_TEXTURE_1D;
+import static apiWrapper.GL.GL_TEXTURE_2D;
+import static apiWrapper.GL.GL_TEXTURE_2D_ARRAY;
+import static apiWrapper.GL.GL_UNSIGNED_BYTE;
+import static apiWrapper.GL.GL_UNSIGNED_INT;
+import static apiWrapper.GL.glBindBuffer;
+import static apiWrapper.GL.glBindTexture;
+import static apiWrapper.GL.glBindVertexArray;
+import static apiWrapper.GL.glBufferData;
+import static apiWrapper.GL.glDrawArrays;
+import static apiWrapper.GL.glDrawElements;
+import static apiWrapper.GL.glEnable;
+import static apiWrapper.GL.glEnableVertexAttribArray;
+import static apiWrapper.GL.glGenBuffers;
+import static apiWrapper.GL.glGenVertexArrays;
+import static apiWrapper.GL.glGenerateMipmap;
+import static apiWrapper.GL.glGetUniformLocation;
+import static apiWrapper.GL.glTexImage1D;
+import static apiWrapper.GL.glTexImage2D;
+import static apiWrapper.GL.glTexImage3D;
+import static apiWrapper.GL.glTexSubImage3D;
+import static apiWrapper.GL.glUniform1f;
+import static apiWrapper.GL.glUniform3f;
+import static apiWrapper.GL.glVertexAttribPointer;
+import static apiWrapper.OpenCL.CL_MEM_COPY_HOST_PTR;
+import static apiWrapper.OpenCL.CL_MEM_READ_ONLY;
+import static apiWrapper.OpenCL.CL_MEM_READ_WRITE;
+import static apiWrapper.OpenCL.CL_MEM_USE_HOST_PTR;
+import static apiWrapper.OpenCL.clBuildProgram;
+import static apiWrapper.OpenCL.clCreateBuffer;
+import static apiWrapper.OpenCL.clCreateCommandQueue;
+import static apiWrapper.OpenCL.clCreateFromGLBuffer;
+import static apiWrapper.OpenCL.clCreateKernel;
+import static apiWrapper.OpenCL.clCreateProgramWithSource;
+import static apiWrapper.OpenCL.clEnqueueAcquireGLObjects;
+import static apiWrapper.OpenCL.clEnqueueNDRangeKernel;
+import static apiWrapper.OpenCL.clEnqueueReleaseGLObjects;
+import static apiWrapper.OpenCL.clEnqueueWriteBuffer;
+import static apiWrapper.OpenCL.clFinish;
+import static apiWrapper.OpenCL.clReleaseCommandQueue;
+import static apiWrapper.OpenCL.clReleaseContext;
+import static apiWrapper.OpenCL.clReleaseKernel;
+import static apiWrapper.OpenCL.clReleaseMemObject;
+import static apiWrapper.OpenCL.clReleaseProgram;
+import static apiWrapper.OpenCL.create;
 
-import static opengl.OpenCL.CL_MEM_COPY_HOST_PTR;
-import static opengl.OpenCL.CL_MEM_USE_HOST_PTR;
-import static opengl.OpenCL.CL_MEM_READ_WRITE;
-import static opengl.OpenCL.CL_MEM_READ_ONLY;
-import static opengl.OpenCL.clBuildProgram;
-import static opengl.OpenCL.clCreateBuffer;
-import static opengl.OpenCL.clCreateCommandQueue;
-import static opengl.OpenCL.clCreateFromGLBuffer;
-import static opengl.OpenCL.clCreateKernel;
-import static opengl.OpenCL.clCreateProgramWithSource;
-import static opengl.OpenCL.clEnqueueAcquireGLObjects;
-import static opengl.OpenCL.clEnqueueNDRangeKernel;
-import static opengl.OpenCL.clEnqueueReleaseGLObjects;
-import static opengl.OpenCL.clEnqueueWriteBuffer;
-import static opengl.OpenCL.clFinish;
-import static opengl.OpenCL.clReleaseCommandQueue;
-import static opengl.OpenCL.clReleaseContext;
-import static opengl.OpenCL.clReleaseKernel;
-import static opengl.OpenCL.clReleaseMemObject;
-import static opengl.OpenCL.clReleaseProgram;
-import static opengl.OpenCL.create;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -71,9 +71,6 @@ import java.util.Random;
 
 import javax.imageio.ImageIO;
 
-import opengl.GL;
-import opengl.OpenCL;
-import opengl.OpenCL.Device_Type;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.LWJGLException;
@@ -96,13 +93,21 @@ import org.lwjgl.opengl.GL30;
 import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
 
+import apiWrapper.GL;
+import apiWrapper.OpenCL;
+import apiWrapper.OpenCL.Device_Type;
+
+import util.Camera;
+import util.ShaderProgram;
+import util.Texture;
+import util.Util;
 import util.Util.ImageContents;
 
 /**
- * Raindrop particle system
+ * Rainstreaks particle system
  * @author Valentin Bruder (vbruder@uos.de)
  */
-public class Raindrops {
+public class Rainstreaks {
     
     //TODO: implement proper unit count
     private static final int HEIGHTTEX_UNIT = 4;
@@ -125,21 +130,20 @@ public class Raindrops {
     private CLMem position, velos, seed, heightmap, normalmap;
     
     //particle settings
-    private int maxParticles;
+    private static int maxParticles;
     private float clusterScale;
     private float veloFactor;
     
     //kernel settings
-    private int localWorkSize = 128;
+    private int localWorkSize = 256;
     private final PointerBuffer gwz = BufferUtils.createPointerBuffer(1);
     private final PointerBuffer lwz = BufferUtils.createPointerBuffer(1);
     
-    private Vector3f windDir[] = new Vector3f[500];
-    private int windPtr = 0;
-    private float windForce = 3.f;
+    private static Vector3f windDir[] = new Vector3f[500];
+    private static int windPtr = 0;
+    private static float windForce = 3.f;
     
     // terrain texture IDs
-    private int heightTexId, normalTexId;
     private Texture hTex, rainTex, rainfactTex;
     
     //shader
@@ -151,16 +155,17 @@ public class Raindrops {
 	//buffer IDs
     private int vertBufferID;
     
+    //delta time for animations
     private float dt;
     
     //lighting parameters (uniforms in StreakRender FS)
-    private Vector3f sunDir = new Vector3f(10.0f, 10.0f, 10.0f);
-    private Vector3f sunColor = new Vector3f(1.0f, 1.0f, 1.0f);
-    private float sunIntensity = 0.05f;
+    private Sun sun;
     //private Vector3f pointLightColor = new Vector3f(1.0f, 1.0f, 1.0f);
     //private Vector3f pointLightDir = new Vector3f(1.0f, 1.0f, 1.0f);
     private PointLightOrb orb;
     private float pointLightIntensity = 1.0f;
+    
+    private static Random r = new Random(42);
     
     
     /**
@@ -169,17 +174,16 @@ public class Raindrops {
      * @param drawable OpenGL drawable.
      * @throws LWJGLException
      */
-    public Raindrops(Device_Type device_type, Drawable drawable, int heightTexId, int normalTexId, int maxParticles, Camera cam, PointLightOrb orb) throws LWJGLException {
+    public Rainstreaks(Device_Type device_type, Drawable drawable, Camera cam, PointLightOrb orb, Sun sun) throws LWJGLException {
         
-        this.maxParticles = maxParticles;
-        this.heightTexId = heightTexId;
-        this.normalTexId = normalTexId;
+        this.maxParticles = 1 << 15;
         this.eyePos = cam.getCamPos();
         this.orb = orb;
+        this.sun = sun;
         //range of cylinder around cam
         clusterScale = 5.0f;
         //velocity factor
-        veloFactor = 60.0f;
+        veloFactor = 64.0f;
         
         this.gwz.put(0, this.maxParticles);
         this.lwz.put(0, this.localWorkSize);  
@@ -281,21 +285,9 @@ public class Raindrops {
      */
     private void createData() {      
         
-        Random r = new Random(1);
-        
-        float windRand = r.nextFloat() * windForce;
-        
-        for (int i = 0; i < (windDir.length / 2); i++)
-        {
-            windDir[i] = new Vector3f();
-            windDir[windDir.length - i - 1] = new Vector3f();
-            
-            windDir[i].x = (float) Math.sin((float) i / (float) windDir.length) * windRand;
-            windDir[windDir.length - i - 1].x = (float) Math.sin((float) i / (float) windDir.length) * windRand;
-            windDir[i].z = (float) Math.sin((float) i / (float) windDir.length) * windRand;
-            windDir[windDir.length - i - 1].z = (float) Math.sin((float) i / (float) windDir.length) * windRand;
-        }
-        
+        System.out.println("Generating data...");
+        createWindData();
+ 
 	    //init attribute buffer: position, starting position (seed), velocity, random and texture type
 		posBuffer  = BufferUtils.createFloatBuffer(4 * maxParticles);
 		seedBuffer = BufferUtils.createFloatBuffer(4 * maxParticles);
@@ -306,12 +298,15 @@ public class Raindrops {
 
 		    //TODO: LOD particle distribution
             //spawning position
-            float x = (r.nextFloat() - 0.5f) * clusterScale;
-            float y;
-            do
-                y = (r.nextFloat()) * clusterScale;
-            while (y < 0.1f);   
-            float z = (r.nextFloat() - 0.5f) * clusterScale;
+		    float x, y, z;
+		    do
+		    {
+		        x = (r.nextFloat() - 0.5f) * clusterScale;
+                y = (r.nextFloat() + 0.1f) * clusterScale;  
+                z = (r.nextFloat() - 0.5f) * clusterScale;
+		    }
+            while ((z < 0.5f && z > -0.5f) && (x < 0.5f && x > -0.5f));
+		    // ^^respawn if particle is too close to viewer
             
             //add to seed buffer
             seedBuffer.put(x);
@@ -329,7 +324,7 @@ public class Raindrops {
             
             //add spawning velocity (small random velocity in x- and z-direction for variety and against AA 
             veloBuffer.put(veloFactor*(r.nextFloat() / 20.f));
-            veloBuffer.put(veloFactor*((r.nextFloat() + 0.2f) / 10.f));
+            veloBuffer.put(veloFactor*((r.nextFloat() + 0.75f) / 20.f));
             veloBuffer.put(veloFactor*(r.nextFloat() / 20.f));
             //add random number in w coordinate, used to light up random streaks
             float tmpR = r.nextFloat();
@@ -365,12 +360,33 @@ public class Raindrops {
             vertexDataBuffer.put(veloBuffer.get(i + 3));
         }
         
-        posBuffer.position(0);
-        seedBuffer.position(0);
-        veloBuffer.position(0);
-        vertexDataBuffer.position(0);
+        posBuffer.rewind();
+        seedBuffer.rewind();
+        veloBuffer.rewind();
+        vertexDataBuffer.rewind();
+        
+        System.out.println("done.");
     }
     
+    /**
+     * Create data for wind animations.
+     */
+    private static void createWindData()
+    {               
+        float windRand = r.nextFloat() * windForce;
+        
+        for (int i = 0; i < (windDir.length / 2); i++)
+        {
+            windDir[i] = new Vector3f();
+            windDir[windDir.length - i - 1] = new Vector3f();
+            
+            windDir[i].x = (float) Math.sin((float) i / (float) windDir.length) * windRand;
+            windDir[windDir.length - i - 1].x = (float) Math.sin((float) i / (float) windDir.length) * windRand;
+            windDir[i].z = (float) Math.sin((float) i / (float) windDir.length) * windRand;
+            windDir[windDir.length - i - 1].z = (float) Math.sin((float) i / (float) windDir.length) * windRand;
+        }
+    }
+
     /**
      * Creates all significant OpenCL buffers
      */
@@ -424,7 +440,8 @@ public class Raindrops {
         glGenerateMipmap(GL_TEXTURE_2D);
 
         this.heightmap = CL10GL.clCreateFromGLTexture2D(this.context, CL10.CL_MEM_READ_ONLY, GL11.GL_TEXTURE_2D, 0, hTex.getId(), errorCheck);
-        this.normalmap = CL10GL.clCreateFromGLTexture2D(this.context, CL10.CL_MEM_READ_ONLY, GL11.GL_TEXTURE_2D, 0, this.normalTexId, errorCheck);
+        //TODO: normal map (place holder)
+        this.normalmap = CL10GL.clCreateFromGLTexture2D(this.context, CL10.CL_MEM_READ_ONLY, GL11.GL_TEXTURE_2D, 0, hTex.getId(), errorCheck);
         
         OpenCL.checkError(errorCheck.get(0));
     }
@@ -503,9 +520,9 @@ public class Raindrops {
         StreakRenderSP.setUniform("windDir", windDir[windPtr]);
         StreakRenderSP.setUniform("dt", dt);
         //set lighting uniforms
-        StreakRenderSP.setUniform("sunDir", sunDir);
-        StreakRenderSP.setUniform("sunColor", sunColor);
-        StreakRenderSP.setUniform("sunIntensity", sunIntensity);
+        StreakRenderSP.setUniform("sunDir", sun.getDirection());
+        StreakRenderSP.setUniform("sunColor", sun.getColor());
+        StreakRenderSP.setUniform("sunIntensity", sun.getIntensity());
         StreakRenderSP.setUniform("pointLightDir", orb.getPosition());
         StreakRenderSP.setUniform("pointLightColor", orb.getColor());
         StreakRenderSP.setUniform("pointLightIntensity", pointLightIntensity);
@@ -591,7 +608,55 @@ public class Raindrops {
                         GL_FLOAT,
                         rainfactBuffer);
         glGenerateMipmap(GL_TEXTURE_1D);
-        
+    }
+
+    /**
+     * @return the windForce
+     */
+    public float getWindForce()
+    {
+        return windForce;
+    }
+
+    /**
+     * @param windForce the wind force to set
+     */
+    public static void setWindForce(float windForce)
+    {
+        Rainstreaks.windForce = windForce;
+        createWindData();
+    }
+
+    /**
+     * @return the pointLightIntensity
+     */
+    public float getPointLightIntensity()
+    {
+        return pointLightIntensity;
+    }
+
+    /**
+     * @param pointLightIntensity the pointLightIntensity to set
+     */
+    public void setPointLightIntensity(float pointLightIntensity)
+    {
+        this.pointLightIntensity = pointLightIntensity;
+    }
+    
+    /**
+     * @return the maxParticles
+     */
+    public static int getMaxParticles()
+    {
+        return maxParticles;
+    }
+
+    /**
+     * @param maxParticles the maxParticles to set
+     */
+    public static void setMaxParticles(int maxParticles)
+    {
+        Rainstreaks.maxParticles = maxParticles;
     }
 }
 

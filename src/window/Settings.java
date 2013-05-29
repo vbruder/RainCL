@@ -12,6 +12,8 @@ import javax.swing.JPanel;
 import javax.swing.KeyStroke;
 import javax.swing.UIManager;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import java.awt.GridBagLayout;
 import javax.swing.JLabel;
@@ -22,14 +24,29 @@ import main.Rain;
 
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
 import javax.swing.JTabbedPane;
 import javax.swing.JLayeredPane;
 import java.awt.GridLayout;
+
+import apiWrapper.GL;
+import apiWrapper.OpenCL;
+
 import com.jgoodies.forms.layout.FormLayout;
 import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.layout.RowSpec;
 import com.jgoodies.forms.factories.FormFactory;
+
+import environment.Rainstreaks;
+
+import java.awt.Font;
+import javax.swing.JSlider;
+import java.awt.Color;
+import java.text.NumberFormat;
+
+import javax.swing.JCheckBox;
 
 public class Settings extends JDialog implements TimerListener
 {
@@ -40,12 +57,17 @@ public class Settings extends JDialog implements TimerListener
     private final JPanel settingsPanel = new JPanel();
     private JTextField txtFPS;
     private JTextField txtParticles;
-    private JTextField txtRainclA;
     private JTextField txtGraphics;
     private JTextField txtDriver;
     private JTextField txtOpenGL;
     private JTextField txtShadingLang;
     private JTextField txtOpenCL;
+    
+    private String sysGraphics;
+    private String sysDriver;
+    private String sysOpenGL;
+    private String sysShadingLang;
+    private String sysOpenCL;
 
     /**
      * Launch the application.
@@ -81,11 +103,17 @@ public class Settings extends JDialog implements TimerListener
             }
         };
         
+        sysGraphics     = GL.getRenderer();
+        sysDriver       = GL.getDriverversion();
+        sysOpenGL       = GL.getVersion();
+        sysShadingLang  = GL.getShadinglang();
+        sysOpenCL       = OpenCL.getVersion();
+        
         settingsPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "closeAction");
         settingsPanel.getActionMap().put("closeAction", closeAction);
         
         setTitle("Settings");
-        setBounds(100, 100, 425, 450);
+        setBounds(100, 100, 427, 399);
         getContentPane().setLayout(new BorderLayout());
         settingsPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
         getContentPane().add(settingsPanel, BorderLayout.CENTER);
@@ -147,6 +175,71 @@ public class Settings extends JDialog implements TimerListener
             {
                 JLayeredPane lpGeneral = new JLayeredPane();
                 tabbedPane.addTab("General", null, lpGeneral, null);
+                
+                JLabel lblParticles = new JLabel("Rain:");
+                lblParticles.setBounds(10, 28, 46, 26);
+                lpGeneral.add(lblParticles);
+                
+                final JSlider slrParticles = new JSlider();
+                slrParticles.setValue(15);
+                slrParticles.setMinimum(10);
+                slrParticles.setMaximum(20);
+                slrParticles.setMinorTickSpacing(1);
+                slrParticles.setBackground(Color.WHITE);
+                slrParticles.setSnapToTicks(true);
+                slrParticles.setPaintTicks(true);
+                slrParticles.setBounds(66, 28, 328, 26);
+                lpGeneral.add(slrParticles);
+                slrParticles.addChangeListener(new ChangeListener(){
+                    public void stateChanged(ChangeEvent e) {
+                        int newValue = (1 << slrParticles.getValue());
+                        environment.Rainstreaks.setMaxParticles(newValue);                 
+                    }
+                });
+                
+                JLabel lblWind = new JLabel("Wind:");
+                lblWind.setBounds(10, 83, 46, 26);
+                lpGeneral.add(lblWind);
+                
+                final JSlider slrWind = new JSlider();
+                slrWind.setMinorTickSpacing(10);
+                slrWind.setPaintTicks(true);
+                slrWind.setBackground(Color.WHITE);
+                slrWind.setBounds(66, 83, 328, 26);
+                lpGeneral.add(slrWind);
+                slrWind.addChangeListener(new ChangeListener(){
+                    public void stateChanged(ChangeEvent e) {
+                        float newValue = ((float) slrWind.getValue()) / 16.0f;
+                        environment.Rainstreaks.setWindForce(newValue);                 
+                    }
+                });
+                
+                JCheckBox cbxSound = new JCheckBox("Sound");
+                cbxSound.setBackground(Color.WHITE);
+                cbxSound.setBounds(10, 174, 91, 23);
+                lpGeneral.add(cbxSound);
+                cbxSound.addItemListener(new ItemListener() {
+                    public void itemStateChanged(ItemEvent e) {
+                        boolean temp;
+                        if (e.getStateChange() == 1)
+                            temp = true;
+                        else
+                            temp = false;
+                        main.Rain.setAudio(temp);
+                    }
+                });
+                cbxSound.setSelected(main.Rain.isAudio());
+                
+                JCheckBox cbxSPH = new JCheckBox("SPH");
+                cbxSPH.setBackground(Color.WHITE);
+                cbxSPH.setBounds(10, 200, 160, 23);
+                lpGeneral.add(cbxSPH);
+                {
+                    JCheckBox cbxFog = new JCheckBox("Fog");
+                    cbxFog.setBackground(Color.WHITE);
+                    cbxFog.setBounds(10, 148, 91, 23);
+                    lpGeneral.add(cbxFog);
+                }
             }
             
             JLayeredPane lpLighting = new JLayeredPane();
@@ -175,65 +268,85 @@ public class Settings extends JDialog implements TimerListener
                     FormFactory.RELATED_GAP_ROWSPEC,
                     FormFactory.DEFAULT_ROWSPEC,}));
             {
-                JLabel lblGraphics = new JLabel("Graphics:");
-                lpSysInfo.add(lblGraphics, "4, 4, left, default");
+                JLabel lblGraphics = new JLabel("Graphics Hardware:");
+                lpSysInfo.add(lblGraphics, "2, 4, left, default");
             }
             {
                 txtGraphics = new JTextField();
+                txtGraphics.setBackground(Color.WHITE);
                 txtGraphics.setEditable(false);
-                lpSysInfo.add(txtGraphics, "6, 4, fill, default");
-                txtGraphics.setColumns(10);
+                lpSysInfo.add(txtGraphics, "4, 4, fill, default");
+                txtGraphics.setColumns(30);
+                txtGraphics.setText(sysGraphics);
             }
             {
-                JLabel lblDriver = new JLabel("Driver:");
-                lpSysInfo.add(lblDriver, "4, 6, left, default");
+                JLabel lblDriver = new JLabel("Driver Version:");
+                lpSysInfo.add(lblDriver, "2, 6, left, default");
             }
             {
                 txtDriver = new JTextField();
+                txtDriver.setBackground(Color.WHITE);
                 txtDriver.setEditable(false);
-                lpSysInfo.add(txtDriver, "6, 6, fill, default");
-                txtDriver.setColumns(10);
+                lpSysInfo.add(txtDriver, "4, 6, fill, default");
+                txtDriver.setColumns(30);
+                txtDriver.setText(sysDriver);
             }
             {
-                JLabel lblOpengl = new JLabel("OpenGL:");
-                lpSysInfo.add(lblOpengl, "4, 8, left, default");
+                JLabel lblOpengl = new JLabel("OpenGL Version:");
+                lpSysInfo.add(lblOpengl, "2, 8, left, default");
             }
             {
                 txtOpenGL = new JTextField();
+                txtOpenGL.setBackground(Color.WHITE);
                 txtOpenGL.setEditable(false);
-                lpSysInfo.add(txtOpenGL, "6, 8, fill, default");
-                txtOpenGL.setColumns(10);
+                lpSysInfo.add(txtOpenGL, "4, 8, fill, default");
+                txtOpenGL.setColumns(30);
+                txtOpenGL.setText(sysOpenGL);
             }
             {
                 JLabel lblShadingLanguage = new JLabel("Shading Language:");
-                lpSysInfo.add(lblShadingLanguage, "4, 10, left, default");
+                lpSysInfo.add(lblShadingLanguage, "2, 10, left, default");
             }
             {
                 txtShadingLang = new JTextField();
+                txtShadingLang.setBackground(Color.WHITE);
                 txtShadingLang.setEditable(false);
-                lpSysInfo.add(txtShadingLang, "6, 10, fill, default");
-                txtShadingLang.setColumns(10);
+                lpSysInfo.add(txtShadingLang, "4, 10, fill, default");
+                txtShadingLang.setColumns(30);
+                txtShadingLang.setText(sysShadingLang);
             }
             {
-                JLabel lblOpencl = new JLabel("OpenCL:");
-                lpSysInfo.add(lblOpencl, "4, 12, left, default");
+                JLabel lblOpencl = new JLabel("OpenCL Version:");
+                lpSysInfo.add(lblOpencl, "2, 12, left, default");
             }
             {
                 txtOpenCL = new JTextField();
+                txtOpenCL.setBackground(Color.WHITE);
                 txtOpenCL.setEditable(false);
-                lpSysInfo.add(txtOpenCL, "6, 12, fill, default");
-                txtOpenCL.setColumns(10);
+                lpSysInfo.add(txtOpenCL, "4, 12");
+                txtOpenCL.setColumns(30);
+                txtOpenCL.setText(sysOpenCL);
             }
             
             JLayeredPane lpAbout = new JLayeredPane();
             tabbedPane.addTab("About", null, lpAbout, null);
             
-            txtRainclA = new JTextField();
-            txtRainclA.setEditable(false);
-            txtRainclA.setText("RainCL - A rain simulation framework.\r\n\r\nVersion: 0.1\r\n\r\n(c) Valentin Bruder, Universit\u00E4t Osnabr\u00FCck, 2013\r\n\r\nThis framework uses LWJGL (www.lwjgl.org) and slick-util libraries.");
-            txtRainclA.setBounds(10, 11, 384, 303);
-            lpAbout.add(txtRainclA);
-            txtRainclA.setColumns(10);
+            JLabel lblNewLabel = new JLabel("RainCL - A rain simulation framework.");
+            lblNewLabel.setFont(new Font("Tahoma", Font.BOLD, 11));
+            lblNewLabel.setBounds(10, 11, 384, 20);
+            lpAbout.add(lblNewLabel);
+            
+            JLabel lblVersionprealpha = new JLabel("Version: 0.1 (Pre-Alpha)");
+            lblVersionprealpha.setBounds(10, 42, 384, 14);
+            lpAbout.add(lblVersionprealpha);
+            
+            JLabel lblNewLabel_1 = new JLabel("(c) Valentin Bruder, Universit\u00E4t Osnabr\u00FCck, 2013");
+            lblNewLabel_1.setBounds(10, 67, 384, 14);
+            lpAbout.add(lblNewLabel_1);
+            
+            JLabel lblNewLabel_2 = new JLabel("This framework uses LWJGL (www.lwjgl.org) and slick-util libraries.");
+            lblNewLabel_2.setBounds(10, 92, 384, 14);
+            lpAbout.add(lblNewLabel_2);
         }
         {
             JPanel buttonPane = new JPanel();
@@ -253,20 +366,22 @@ public class Settings extends JDialog implements TimerListener
         }
         
         
-        
         this.run();
     }
     
     @Override
     public void updateTex()
     {
-        txtFPS.setText(Integer.toString( (int)Rain.getFPS() ));
+        txtFPS.setText( NumberFormat.getInstance().format(Rain.getFPS()) );
+        //TODO: add sph particles
+        txtParticles.setText( NumberFormat.getInstance().format(Rainstreaks.getMaxParticles()) );
     }
     
     public void close()
     {
         this.dispose();
         mDial = null;
+        System.exit(0);
     }
     
     /**

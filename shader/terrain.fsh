@@ -1,50 +1,52 @@
 #version 330
 
 in vec2 texCoords;
-in vec3 normal;
 in vec3 positionFS;
 
 out vec4 fragColor;
 
 uniform sampler2D normalTex;
-uniform sampler2D heightTex;
+uniform sampler2D lightTex;
+uniform sampler2D specularTex;
 uniform sampler2D colorTex;
 
-vec3 getNormal(vec2 tc)  {
-    float dx = 1.0/512.0;
-    float dy = 1.0/512.0;
+uniform float sunIntensity, k_diff, k_spec, k_ambi;
+uniform vec3 sunDir;
+uniform vec3 eyePosition;
+
+vec3 calcLighting(vec3 normal, vec3 diff, vec3 spec, vec3 ambi)
+{
+    vec3 d;
+    vec3 s;
+    vec3 a;
+    vec3 ref;
+    vec3 v;
+    vec3 erg = vec3(0, 0, 0);
+
+    //diffuse
+    d = sunIntensity * k_diff * diff * max(dot(-normalize(positionFS - sunDir), normal), 0.0);
+        
+    //specular
+    ref = reflect(normalize(positionFS - sunDir), normal);
+    v = normalize(eyePosition - positionFS);
+    s = k_spec * spec * max(dot(ref, v), 0.0);
+        
+    erg += (d + s);
+
+    //ambient
+    a = k_ambi * ambi;
+    erg += a;
     
-    float here = texture(heightTex, tc).x;
-
-    float v01 = texture(heightTex, tc + vec2(-dx, 0.0)).x;
-    float v10 = texture(heightTex, tc + vec2(0.0, -dy)).x;
-    float v12 = texture(heightTex, tc + vec2(0.0, dy)).x;
-    float v21 = texture(heightTex, tc + vec2(+dx, 0.0)).x;
-    
-    vec3 hvec = vec3(tc.x,here,tc.y);
-
-    vec3 v1 = vec3( -dx,    v01, 0.0)-hvec; 
-    vec3 v4 = vec3( 0.0,    v10, -dy)-hvec; 
-    vec3 v2 = vec3( 0.0,     v12, dy)-hvec; 
-    vec3 v3 = vec3( dx,    v21,  0.0)-hvec; 
-
-    vec3 c1 = cross(v1,v2);
-    vec3 c2 = cross(v2,v3);
-    vec3 c3 = cross(v3,v4);
-    vec3 c4 = cross(v4,v1);
-
-    return normalize(c1+c2+c3+c4);
+    return erg;
 }
 
 void main(void)
 {
-    //fragColor = vec4(0.5 + 0.5*getNormal(vec2(coords.x,coords.z)),1.0);
-    fragColor = texture(colorTex, vec2(texCoords.s, texCoords.t));
+    vec4 normal = normalize(texture(normalTex, texCoords.st));
+    vec3 diff   = texture(colorTex, texCoords.st).rgb;
+    vec3 spec   = texture(specularTex, texCoords.st).rgb;
+    vec3 ambi   = texture(lightTex, texCoords.st).rgb;
 
-//    vec3 color = texture(heightTex, vec2(coords.x,coords.z)).xyz + vec3(0.4);
-//    fragColor = vec4(color,1.0);
-
-//    vec3 color = texture(normalTex, vec2(coords.x,coords.z)).xyz;
-//    fragColor = vec4(0.5+0.5*color,1.0);
-
+    fragColor = vec4(calcLighting(normal.xyz, diff, spec, ambi), 1.0);
+    //fragColor = vec4(vec3(k_diff), 1.0);
 }

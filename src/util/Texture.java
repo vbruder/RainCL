@@ -1,6 +1,6 @@
 package util;
 
-import static opengl.GL.*;
+import static apiWrapper.GL.*;
 
 import org.lwjgl.Sys;
 import org.lwjgl.opengl.GL11;

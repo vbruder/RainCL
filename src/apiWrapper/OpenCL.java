@@ -1,4 +1,4 @@
-package opengl;
+package apiWrapper;
 
 import static org.lwjgl.opencl.CL10.CL_DEVICE_TYPE_CPU;
 import static org.lwjgl.opencl.CL10.CL_DEVICE_TYPE_GPU;
@@ -31,13 +31,16 @@ import org.lwjgl.opencl.CLProgram;
 import org.lwjgl.opengl.Drawable;
 
 /**
- * @author Sascha Kolodzey, Nico Marniok
+ * Wrapper class for OpenCL
+ * @author Valentin Bruder
+ * Based on code of Sascha Kolodzey and Nico Marniok (Computergrafik 2012).
  */
 public class OpenCL {
     
     private static boolean initialized = false;
     private static final IntBuffer lastErrorCode = BufferUtils.createIntBuffer(1);
     public static boolean checkError = true;
+    private static String version;
     
     public static final int CL_MEM_WRITE_ONLY = CL10.CL_MEM_WRITE_ONLY;
     public static final int CL_MEM_READ_ONLY = CL10.CL_MEM_READ_ONLY;
@@ -69,6 +72,7 @@ public class OpenCL {
             for(int i = 0; i < platformCount; ++i) {
                 lines[i] = getPlatformInfo(CLPlatform.getPlatforms().get(i));
             }
+            version = (String) lines[0][0].subSequence(9, 19);
         } else {
             lines = new String[1][1];
             lines[0][0] = "####No Platform####";
@@ -425,7 +429,8 @@ public class OpenCL {
     public static String[] getPlatformInfo(CLPlatform platform) {
         String[] lines = new String[3];
         //lines.add(String.format("ID: %d", platform.getPointer()));
-        lines[0] = String.format("Version: %s", platform.getInfoString(CL_PLATFORM_VERSION)) 
+        version = platform.getInfoString(CL_PLATFORM_VERSION);
+        lines[0] = String.format("Version: %s", version) 
                 + String.format(", Name: %s", platform.getInfoString(CL_PLATFORM_NAME));
         lines[1] = String.format(String.format("Vendor: %s", platform.getInfoString(CL_PLATFORM_VENDOR)) 
                 + String.format(", Profile: %s", platform.getInfoString(CL_PLATFORM_PROFILE)));
@@ -435,6 +440,14 @@ public class OpenCL {
         d = platform.getDevices(CL_DEVICE_TYPE_CPU);
         lines[2] = s+String.format(", CPU Devices: %s", d != null ? d.size() : 0);
         return lines;
+    }
+    
+    public static String getVersion()
+    {
+        if (version != null)
+            return version;
+        else
+            return "unknown";
     }
     
     /**

@@ -1,11 +1,12 @@
 package util;
 
-import static opengl.GL.*;
+import static apiWrapper.GL.*;
 
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import org.lwjgl.BufferUtils;
 import org.lwjgl.util.vector.Vector3f;
+
 
 /**
  * Factory for generating geometries.
@@ -14,8 +15,8 @@ import org.lwjgl.util.vector.Vector3f;
  */
 public class GeometryFactory {
     
-    final static public int NORMALTEX_UNIT = 2;
-    final static public int HEIGHTTEX_UNIT = 3;
+    // uses Texture units 10, 11, 12, 13
+    final static public int TERRAIN_TEX_UNIT = 10;
     
     /**
      * Erzeugt eine Kugel.
@@ -143,53 +144,27 @@ public class GeometryFactory {
 
     /**
      * @brief Creates a terrain out of a height map.
-     * @param map path of height map
+     * @param path path of terrain data pictures
      * @param amplitude scaling factor for height
      * @param scale scaling factor for size
      * @return the created terrain geometry
      */
-    static public Geometry createTerrainFromMap(String map, float amplitude, int scale) {
+    static public Geometry createTerrainFromMap(String path, float amplitude, int scale) {
         // vertex array id
         int vaid = glGenVertexArrays();
         glBindVertexArray(vaid);
 
         // load height map
-        float[][][] ic = Util.getImageContents(map);
-        float[][] env = new float[3][3];
+        float[][][] ic = Util.getImageContents(path + "terrainHeight01.png");
         FloatBuffer vertexData = BufferUtils.createFloatBuffer(ic[0].length*ic.length*3);
-        FloatBuffer normalTexBuf = BufferUtils.createFloatBuffer(ic[0].length*ic.length*4);
-        FloatBuffer heightTexBuf = BufferUtils.createFloatBuffer(ic[0].length*ic.length*4);
         for (int h = 0; h < ic.length; h++) {
-            for (int w = 0; w < ic[0].length; w++) {
-                vertexData.put(new float[]{scale*(w/(float)ic[0].length), amplitude*ic[h][w][0], scale*(h/(float)ic.length)});
-                heightTexBuf.put(amplitude*ic[h][w][0]);
-                heightTexBuf.put(new float[]{0,0,0});
-                
-                // set environment
-                env[0][0] = ic[h-1 >= 0 ? h-1 : h][w-1 >= 0 ? w-1 : w][0];
-                env[0][1] = ic[h][w-1 >= 0 ? w-1 : w][0];
-                env[0][2] = ic[h+1 < ic.length ? h+1 : h][w-1 >= 0 ? w-1 : w][0];
-                env[1][0] = ic[h-1 >= 0 ? h-1 : h][w][0];
-                env[1][1] = ic[h][w][0];
-                env[1][2] = ic[h+1 < ic.length ? h+1 : h][w][0];
-                env[2][0] = ic[h-1 >= 0 ? h-1 : h][w+1 < ic[0].length ? w+1 : w][0];
-                env[2][1] = ic[h][w+1 < ic[0].length ? w+1 : w][0];
-                env[2][2] = ic[h+1 < ic.length ? h+1 : h][w+1 < ic[0].length ? w+1 : w][0];
-
-                float gx = env[0][0] + 2*env[0][1] + env[0][2] - env[2][0] - 2*env[2][1] - env[2][2];
-                float gz = env[0][0] + 2*env[1][0] + env[2][0] - env[0][2] - 2*env[1][2] - env[2][2];
-                
-                // put normals to normalTexBuffer
-                Vector3f norm = new Vector3f(2.0f * gx, 0.5f * (float)Math.sqrt(1.0f - gx*gx - gz*gz), 2.0f * gz);
-                normalTexBuf.put(norm.x);
-                normalTexBuf.put(norm.y);
-                normalTexBuf.put(norm.z);
-                normalTexBuf.put(0);
+            for (int w = 0; w < ic[0].length; w++) {                
+                vertexData.put(scale     *(w/(float)ic[0].length));
+                vertexData.put(amplitude *ic[h][w][0]);
+                vertexData.put(scale     *(h/(float)ic.length));
             }
         }
-        vertexData.position(0);
-        normalTexBuf.position(0);
-        heightTexBuf.position(0);
+        vertexData.rewind();
         
         // indexbuffer
         IntBuffer indexData = BufferUtils.createIntBuffer((ic.length-1)*2*ic[0].length+(ic.length-2));
@@ -202,44 +177,24 @@ public class GeometryFactory {
             if (y < ic.length-2)
                 indexData.put(-1);
         }
-        indexData.position(0);
+        indexData.position(0);      
         
-        // create normal texture from normaltexturebuffer
-        Texture nTex = new Texture(GL_TEXTURE_2D, NORMALTEX_UNIT);
-        nTex.bind();
-        glTexImage2D(GL_TEXTURE_2D,
-                0,
-                GL_RGBA8,
-                ic[0].length,
-                ic.length,
-                0,
-                GL_RGBA,
-                GL_FLOAT,
-                normalTexBuf);
-        glGenerateMipmap(GL_TEXTURE_2D);        
-        
-        // create height texture
-        Texture hTex = new Texture(GL_TEXTURE_2D, HEIGHTTEX_UNIT);
-        hTex.bind();
-        glTexImage2D(GL_TEXTURE_2D,
-                0,
-                GL_RGBA8,
-                ic[0].length,
-                ic.length,
-                0,
-                GL_RGBA,
-                GL_FLOAT,
-                heightTexBuf);
-        glGenerateMipmap(GL_TEXTURE_2D);        
-        
+        // create textures
+        Texture normalTex = Texture.generateTexture(path   + "terrainNormal01.png",   TERRAIN_TEX_UNIT);
+        Texture lightTex = Texture.generateTexture(path    + "terrainLight01.png",    TERRAIN_TEX_UNIT + 1);
+        Texture specularTex = Texture.generateTexture(path + "terrainSpecular01.png", TERRAIN_TEX_UNIT + 2);
+        Texture colorTex = Texture.generateTexture(path    + "terrainTex01.png",      TERRAIN_TEX_UNIT + 3);
+             
         // create geometry
         Geometry geo = new Geometry();
         geo.setIndices(indexData, GL_TRIANGLE_STRIP);
         geo.setVertices(vertexData);
         geo.addVertexAttribute(ShaderProgram.ATTR_POS, 3, 0);
-        geo.setNormalTex(nTex);
-        geo.setHeightTex(hTex);
-//        geo.addVertexAttribute(ShaderProgram.ATTR_NORMAL, 3, 12);
+        
+        geo.setNormalTex(normalTex);
+        geo.setLightTex(lightTex);
+        geo.setSpecularTex(specularTex);
+        geo.setColorTex(colorTex);
 
         return geo;
     }

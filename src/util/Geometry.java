@@ -1,6 +1,7 @@
 package util;
 
-import static opengl.GL.*;
+import static apiWrapper.GL.*;
+
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.LinkedList;
@@ -9,6 +10,7 @@ import java.util.List;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL31;
 import org.lwjgl.opengl.GL33;
+
 
 /**
  * Kapselt ein Vertexarray Object.
@@ -29,8 +31,7 @@ public class Geometry {
     private int instanceAttributeSize;
     private final List<VertexAttribute> attributes = new LinkedList<VertexAttribute>();
     
-    private Texture heightTex;
-    private Texture normalTex;
+    private Texture normalTex, lightTex, specularTex, colorTex;
 
     /**
      * Set normal texture.
@@ -38,6 +39,30 @@ public class Geometry {
      */
     public void setNormalTex(Texture normalTex) {
         this.normalTex = normalTex;
+    }
+    
+    /**
+     * Set light texture.
+     * @param lightTex texture containing light information
+     */
+    public void setLightTex(Texture lightTex) {
+        this.lightTex = lightTex;
+    }
+    
+    /**
+     * Set specular texture.
+     * @param specularTex texture containing specular lighting information
+     */
+    public void setSpecularTex(Texture specularTex) {
+        this.specularTex = specularTex;
+    }
+    
+    /**
+     * Set color texture.
+     * @param colorTex texture containing normal information
+     */
+    public void setColorTex(Texture colorTex) {
+        this.colorTex = colorTex;
     }
   
     /**
@@ -47,23 +72,34 @@ public class Geometry {
     public Texture getNormalTex() {
         return normalTex;
     }
-    
+
     /**
-     * Set height texture.
-     * @param heightTex texture containing height information
+     * Returns the light texture.
+     * @return light texture
      */
-    public void setHeightTex(Texture heightTex) {
-        this.heightTex = heightTex;
+    public Texture getLightTex()
+    {
+        return lightTex;
     }
     
     /**
-     * Returns the height texture.
-     * @return height texture
+     * Returns the specular texture.
+     * @return specular texture
      */
-    public Texture getHeightTex() {
-        return heightTex;
+    public Texture getSpecularTex()
+    {
+        return specularTex;
     }
-    
+
+    /**
+     * Returns color texture.
+     * @return color texture
+     */
+    public Texture getColorTex()
+    {
+        return colorTex;
+    }
+
     /**
      * Setzt den IntBuffer, der die Indexdaten dieser Geometrie beinhaltet und
      * die zugehoerige Topologie.

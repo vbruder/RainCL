@@ -1,49 +1,32 @@
 package main;
 
-import static opengl.GL.*;
-import static opengl.GL.GL_BACK;
-import static opengl.GL.GL_CCW;
-import static opengl.GL.GL_COLOR_BUFFER_BIT;
-import static opengl.GL.GL_CULL_FACE;
-import static opengl.GL.GL_DEPTH_BUFFER_BIT;
-import static opengl.GL.GL_DEPTH_TEST;
-import static opengl.GL.GL_FILL;
-import static opengl.GL.GL_FRONT_AND_BACK;
-import static opengl.GL.GL_LINE;
-import static opengl.GL.GL_ONE;
-import static opengl.GL.GL_ONE_MINUS_SRC_COLOR;
-import static opengl.GL.GL_SRC_ALPHA;
-import static opengl.GL.GL_ONE_MINUS_DST_ALPHA;
+import static apiWrapper.GL.*;
 
-import java.nio.FloatBuffer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import opengl.OpenAL;
-import opengl.OpenCL;
-import opengl.OpenCL.Device_Type;
 
-import org.lwjgl.BufferUtils;
 import org.lwjgl.LWJGLException;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.Display;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL30;
 import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
+
+import apiWrapper.OpenAL;
+import apiWrapper.OpenCL;
+import apiWrapper.OpenCL.Device_Type;
+
+import environment.PointLightOrb;
+import environment.Rainstreaks;
+import environment.Sun;
 
 import util.Camera;
 import util.Geometry;
 import util.GeometryFactory;
-import util.PointLightOrb;
-import util.Raindrops;
 import util.ShaderProgram;
-import util.Texture;
 import util.Util;
-import util.Util.ImageContents;
 import window.Settings;
-import window.Settings2;
 import window.TimerCaller;
 
 /**
@@ -53,10 +36,7 @@ import window.TimerCaller;
  * @author Valentin Bruder (vbruder@uos.de)
  */
 public class Rain {
-
-    private static Raindrops raindrops;
-    private static PointLightOrb orb;
-    
+   
     // shader programs
     private static ShaderProgram terrainSP;
     private static ShaderProgram orbSP;
@@ -67,7 +47,6 @@ public class Rain {
     private static boolean culling = true;
     private static boolean wireframe = true;
     private static boolean audio = false;
-    private static final String heightmapPath = "media/terrain/terrainHeight01.png";
     
     // control
     private static final Vector3f moveDir = new Vector3f(0.0f, 0.0f, 0.0f);
@@ -81,26 +60,28 @@ public class Rain {
     private static final Matrix4f viewProjMatrix = new Matrix4f();
     private static final Vector3f inverseLightDirection = new Vector3f();
     
-    // terrain
+    //environment
+    private static Rainstreaks raindrops;
+    private static PointLightOrb orb;
+    private static Sun sun;
+    //terrain
     private static Geometry terrain;
-    private static Texture normalTex, heightTex, colorTex;
-    private static final int COLORTEX_UNIT = 8;
+    private static String terrainDataPath = "media/terrain/";
+    private static int scaleTerrain = 32;
+
+    //lighting
+    private static float k_diff =  10.0f;
+    private static float k_spec =  0.3f;
+    private static float k_ambi =  0.1f;
     
-    // sound
+    //sound
     private static OpenAL sound;
-    
-    /*
-     *  2^10 ~    1000
-     *	2^15 ~   32000 
-     *	2^17 ~  130000
-     *	2^20 ~ 1000000
-     */
-    private static int maxParticles = 1 << 18;
-    
-    private static float fps;
-    
-    //settings gui
+          
+    //GUI
+    //settings
     private static TimerCaller tc = new TimerCaller();
+    //view
+    private static float fps;
 
     /**
      * main
@@ -110,9 +91,9 @@ public class Rain {
         try {
             init();
             OpenCL.init();
+            sound = new OpenAL();
             
             if (audio) {
-                sound = new OpenAL();
                 sound.init();
             }
                 
@@ -124,7 +105,10 @@ public class Rain {
             
             createTerrain();
 
-            //create point light(s)
+            //create light sources
+            //sun
+            sun = new Sun(new Vector3f(1.0f, 1.0f, 1.0f), new Vector3f(50.0f, 50.0f, 50.0f), 0.1f);
+            //point light(s)
             orbSP = new ShaderProgram("./shader/Orb.vsh", "./shader/Orb.fsh");
             orb = new PointLightOrb();
             orb.setRadius(0.05f);
@@ -134,7 +118,7 @@ public class Rain {
             orb.setColor(new Vector3f((float)Math.random(), (float)Math.random(), (float)Math.random()));
             
             //create rain streaks
-            raindrops = new Raindrops(Device_Type.GPU, Display.getDrawable(), heightTex.getId(), normalTex.getId(), maxParticles, cam, orb);
+            raindrops = new Rainstreaks(Device_Type.GPU, Display.getDrawable(), cam, orb, sun);
                         
             inverseLightDirection.set(1.0f, 0.2f, 0.0f);
             inverseLightDirection.normalise();
@@ -146,8 +130,7 @@ public class Rain {
             
             //cleanup 
             OpenCL.destroy();
-            if (audio)
-                sound.destroy();
+            sound.destroy();
             tc.stop();
             Settings.destroyInstance();
             destroy();         
@@ -158,11 +141,8 @@ public class Rain {
     
     private static void createTerrain()
     {
-        terrain = GeometryFactory.createTerrainFromMap(heightmapPath , 5.0f, 16);
-        normalTex = terrain.getNormalTex();
-        heightTex = terrain.getHeightTex();
-        terrainSP = new ShaderProgram("shader/terrain.vsh", "shader/terrain.fsh");
-        colorTex = Texture.generateTexture("media/terrain/terrainTex01.png", COLORTEX_UNIT);        
+        terrain = GeometryFactory.createTerrainFromMap(terrainDataPath, 5.0f, scaleTerrain);
+        terrainSP = new ShaderProgram("shader/terrain.vsh", "shader/terrain.fsh");      
     }
 
     /**
@@ -201,11 +181,21 @@ public class Rain {
             
             //terrain
             terrainSP.use();
+            //VS
             terrainSP.setUniform("proj", cam.getProjection());
             terrainSP.setUniform("view", cam.getView());
-            terrainSP.setUniform("normalTex", normalTex);
-            terrainSP.setUniform("heightTex", heightTex);
-            terrainSP.setUniform("colorTex", colorTex);
+            terrainSP.setUniform("scale", scaleTerrain);
+            //FS
+            terrainSP.setUniform("normalTex", terrain.getNormalTex());
+            terrainSP.setUniform("lightTex", terrain.getLightTex());
+            terrainSP.setUniform("specularTex", terrain.getSpecularTex());
+            terrainSP.setUniform("colorTex", terrain.getColorTex());
+            terrainSP.setUniform("sunIntensity", sun.getIntensity());
+            terrainSP.setUniform("sunDir", sun.getDirection());
+            terrainSP.setUniform("k_diff", k_diff);
+            terrainSP.setUniform("k_spec", k_spec);
+            terrainSP.setUniform("k_ambi", k_ambi);
+            terrainSP.setUniform("eyePosition", cam.getCamPos());
             terrain.draw();
             
             //rain streaks  
@@ -294,16 +284,6 @@ public class Rain {
         orb.animate(millis);
     }
     
-    public static int getMaxParticles()
-    {
-        return maxParticles;
-    }
-
-    public static void setMaxParticles(int maxParticles)
-    {
-        Rain.maxParticles = maxParticles;
-    }
-    
     public static boolean isAudio()
     {
         return audio;
@@ -312,6 +292,10 @@ public class Rain {
     public static void setAudio(boolean audio)
     {
         Rain.audio = audio;
+        if (audio)
+            sound.init();
+        else
+            sound.stopSound();
     }
 
     public static float getFPS()

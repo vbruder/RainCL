@@ -1,8 +1,13 @@
-package util;
+package environment;
 
-import static opengl.GL.*;
+import static apiWrapper.GL.*;
+
 import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
+
+import util.Geometry;
+import util.GeometryFactory;
+import util.Util;
 
 /**
  * @author Valentin Bruder

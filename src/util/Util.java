@@ -1,6 +1,6 @@
 package util;
 
-import static opengl.GL.*;
+import static apiWrapper.GL.*;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
@@ -13,7 +13,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 
-import opengl.GL;
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
@@ -21,6 +20,8 @@ import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector2f;
 import org.lwjgl.util.vector.Vector3f;
 import org.lwjgl.util.vector.Vector4f;
+
+import apiWrapper.GL;
 
 /**
  *

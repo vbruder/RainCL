@@ -1,4 +1,4 @@
-package opengl;
+package apiWrapper;
 
 import org.lwjgl.opengl.*;
 
@@ -30,6 +30,14 @@ public class GL {
     private static boolean initialized = false;
     private static boolean checkForErrors = true;
 
+    private static String version;
+
+    private static String renderer;
+
+    private static String shadinglang;
+
+    private static String driverversion;
+
     public static void init() throws LWJGLException {
         if(!GL.initialized) {
             Display.setDisplayMode(new DisplayMode(WIDTH, HEIGHT));
@@ -46,10 +54,10 @@ public class GL {
             Keyboard.create();  
             
             String vendor = GL.glGetString(GL.GL_VENDOR);
-            String version = GL.glGetString(GL.GL_VERSION);
-            String renderer = GL.glGetString(GL.GL_RENDERER);
-            String shadinglang = GL.glGetString(GL.GL_SHADING_LANGUAGE_VERSION);
-            String driverversion = Display.getVersion();
+            version = GL.glGetString(GL.GL_VERSION);
+            renderer = GL.glGetString(GL.GL_RENDERER);
+            shadinglang = GL.glGetString(GL.GL_SHADING_LANGUAGE_VERSION);
+            driverversion = Display.getVersion();
             String os = System.getProperty("os.name") + " (" + System.getProperty("os.version") + "), " + System.getProperty("os.arch");
             String java = System.getProperty("java.vm.name") + ", runtime version: " + System.getProperty("java.runtime.version");
 
@@ -1199,5 +1207,37 @@ public class GL {
             info += String.format("| %-" + maxLength + "s |\n", line);
         }
         return header + info + footer;
-    }    
+    }
+
+    /**
+     * @return the version
+     */
+    public static String getVersion()
+    {
+        return version;
+    }
+
+    /**
+     * @return the renderer
+     */
+    public static String getRenderer()
+    {
+        return renderer;
+    }
+
+    /**
+     * @return the shading language
+     */
+    public static String getShadinglang()
+    {
+        return shadinglang;
+    }
+
+    /**
+     * @return the driver version
+     */
+    public static String getDriverversion()
+    {
+        return driverversion;
+    }
 }

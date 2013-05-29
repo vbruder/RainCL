@@ -1,6 +1,7 @@
 package util;
 
-import static opengl.GL.*;
+import static apiWrapper.GL.*;
+
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;

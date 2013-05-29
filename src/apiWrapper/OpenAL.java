@@ -1,7 +1,7 @@
 /**
  * 
  */
-package opengl;
+package apiWrapper;
 
 import java.io.IOException;
 
@@ -16,13 +16,12 @@ import org.newdawn.slick.util.ResourceLoader;
  * @date 12.05.2013
  *
  * Class for audio handling.
- * This class uses the Slick-Util Library for sound playback.
+ * This class uses the slick-util Library for sound play back.
  */
 public class OpenAL
 {
     private static boolean initialized;
-    private static Audio background;
-    
+    private static Audio background;    
     private static String bgFile = "media/sounds/background.ogg";
     
     /**
@@ -46,6 +45,20 @@ public class OpenAL
             background.playAsSoundEffect(1.0f, 0.3f, true);
             SoundStore.get().poll(0);
         }
+        else
+        {
+            background.playAsSoundEffect(1.0f, 0.3f, true);
+            SoundStore.get().poll(0);
+        }
+    }
+    
+    /**
+     * Stop sound play back.
+     */
+    public void stopSound()
+    {
+        if (initialized && background.isPlaying())
+            background.stop();
     }
     
     /**
@@ -53,7 +66,8 @@ public class OpenAL
      */
     public void destroy()
     {
-        background.stop();
+        if (initialized && background.isPlaying())
+            background.stop();
         AL.destroy();
     }
 }
