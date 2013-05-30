@@ -31,7 +31,7 @@ void main()
     vec3 pos = gl_in[0].gl_Position.xyz;                                            
     vec3 toCamera = normalize(eyePosition - pos);                                    
     vec3 up = vec3(0.0, 1.0, 0.0);                                                  
-    vec3 right = cross(toCamera, up) * width;                              
+    vec3 right = cross(toCamera, up) * width * length(eyePosition - pos);                              
                                                                                     
     //bottom left
     pos -= right;

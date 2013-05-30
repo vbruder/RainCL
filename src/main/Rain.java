@@ -58,7 +58,6 @@ public class Rain {
     
     // uniform data
     private static final Matrix4f viewProjMatrix = new Matrix4f();
-    private static final Vector3f inverseLightDirection = new Vector3f();
     
     //environment
     private static Rainstreaks raindrops;
@@ -107,7 +106,7 @@ public class Rain {
 
             //create light sources
             //sun
-            sun = new Sun(new Vector3f(1.0f, 1.0f, 1.0f), new Vector3f(50.0f, 50.0f, 50.0f), 0.1f);
+            sun = new Sun(new Vector3f(1.0f, 1.0f, 1.0f), new Vector3f(20.0f, 50.0f, 20.0f), 0.1f);
             //point light(s)
             orbSP = new ShaderProgram("./shader/Orb.vsh", "./shader/Orb.fsh");
             orb = new PointLightOrb();
@@ -119,12 +118,9 @@ public class Rain {
             
             //create rain streaks
             raindrops = new Rainstreaks(Device_Type.GPU, Display.getDrawable(), cam, orb, sun);
-                        
-            inverseLightDirection.set(1.0f, 0.2f, 0.0f);
-            inverseLightDirection.normalise();
-            
+
             // starting position
-            cam.move(1.0f, 0.0f, 1.0f);
+            cam.move(5.0f, 7.0f, 5.0f);
             
             render();
             

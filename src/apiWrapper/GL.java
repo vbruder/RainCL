@@ -68,7 +68,7 @@ public class GL {
                 "Java: " + java
             };
             String info = GL.pack("OpenGL info", infoLines);
-            System.out.println(info);          
+//            System.out.println(info);          
             
             if(!supported) {
                 throw new RuntimeException("Your hardware does not support the required OpenGL version 4.2.");

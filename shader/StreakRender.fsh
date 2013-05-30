@@ -49,7 +49,7 @@ vec4 rainResponse(vec3 lightVec, vec3 lightColor, float lightIntensity, bool fal
     if ((fallOff > 0.01) && (lightIntensity > 0.01))
     {
         //TODO: uniform?? openCL mem-object?
-        vec3 dropDirection = vec3(0,-0.25,0);
+        vec3 dropDirection = vec3(0.01,-0.25,0.01);
 
         int maxVIDX = 4;
         int maxHIDX = 8;
@@ -62,7 +62,7 @@ vec4 rainResponse(vec3 lightVec, vec3 lightColor, float lightIntensity, bool fal
         bool is_EpLp_angle_ccw = true;
         float hangle = 0;
         float vangle = abs((acos(dot(lightVec, dropDir))*180/PI) - 90); // 0 to 90
-        
+        //TODO: eyePosition weird (-x, -z)
         vec3 Lp = normalize(lightVec - dot(lightVec, dropDir)*dropDir);
         vec3 Ep = normalize(eyePos - dot(eyePos, dropDir)*dropDir);
         hangle = acos(dot(Ep,Lp)) * 180/PI;             // 0 to 180
@@ -159,8 +159,9 @@ vec4 rainResponse(vec3 lightVec, vec3 lightColor, float lightIntensity, bool fal
         float hOpacity1 = mix(col1, col2, s);
         float hOpacity2 = mix(col3, col4, s);
         opacity = mix(hOpacity1, hOpacity2, t);
-        opacity = pow(opacity, 0.7);            // inverse gamma correction (expand dynamic range)
-        opacity = 2.0 * lightIntensity * opacity * fallOff;
+        // inverse gamma correction (expand dynamic range)
+        opacity = pow(opacity, 0.7);            
+        opacity = 4.0 * lightIntensity * opacity * fallOff;
     }
          
    return vec4(lightColor, opacity);

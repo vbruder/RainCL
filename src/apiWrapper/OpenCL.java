@@ -115,7 +115,7 @@ public class OpenCL {
         }
         info += "+";
         
-        System.out.println(info);
+//        System.out.println(info);
     }
 
 

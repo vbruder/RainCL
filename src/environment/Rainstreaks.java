@@ -98,6 +98,7 @@ import apiWrapper.OpenCL;
 import apiWrapper.OpenCL.Device_Type;
 
 import util.Camera;
+import util.Geometry;
 import util.ShaderProgram;
 import util.Texture;
 import util.Util;
@@ -110,6 +111,7 @@ import util.Util.ImageContents;
 public class Rainstreaks {
     
     //TODO: implement proper unit count
+    private static final int NORMALTEX_UNIT = 3;
     private static final int HEIGHTTEX_UNIT = 4;
     private static final int RAINTEX_UNIT = 6;
     private static final int RAINFACTORS_UNIT = 7;
@@ -167,10 +169,8 @@ public class Rainstreaks {
     //delta time for animations
     private float dt;
     
-    //lighting parameters (uniforms in StreakRender FS)
+    //environment
     private Sun sun;
-    //private Vector3f pointLightColor = new Vector3f(1.0f, 1.0f, 1.0f);
-    //private Vector3f pointLightDir = new Vector3f(1.0f, 1.0f, 1.0f);
     private PointLightOrb orb;
     private float pointLightIntensity = 1.0f;
     
@@ -185,12 +185,12 @@ public class Rainstreaks {
      */
     public Rainstreaks(Device_Type device_type, Drawable drawable, Camera cam, PointLightOrb orb, Sun sun) throws LWJGLException {
         
-        maxParticles = 1 << 15;
+        maxParticles = 1 << 17;
         this.eyePos = cam.getCamPos();
         this.orb = orb;
         this.sun = sun;
         //range of cylinder around cam
-        clusterScale = 5.0f;
+        clusterScale = 2.0f;
         //velocity factor
         veloFactor = 64.0f;
         
@@ -218,19 +218,23 @@ public class Rainstreaks {
         
         int device_type;
         
-        switch(type) {
-        case CPU: device_type = CL10.CL_DEVICE_TYPE_CPU; break;
-        case GPU: device_type = CL10.CL_DEVICE_TYPE_GPU; break;
-        default: throw new IllegalArgumentException("Wrong device type!");
+        switch(type)
+        {
+            case CPU: device_type = CL10.CL_DEVICE_TYPE_CPU; break;
+            case GPU: device_type = CL10.CL_DEVICE_TYPE_GPU; break;
+            default: throw new IllegalArgumentException("Wrong device type!");
         }
         
         CLPlatform platform = null;
         
-        for(CLPlatform plf : CLPlatform.getPlatforms()) {
-            if(plf.getDevices(device_type) != null) {
+        for(CLPlatform plf : CLPlatform.getPlatforms())
+        {
+            if(plf.getDevices(device_type) != null)
+            {
                 this.device = plf.getDevices(device_type).get(0);
                 platform = plf;
-                if(this.device != null) {
+                if(this.device != null)
+                {
                     break;
                 }
             }
@@ -293,8 +297,8 @@ public class Rainstreaks {
     /**
      * Create initial position and velocity data pseudo randomly.
      */
-    private static void createRainData() {      
-        
+    private static void createRainData()
+    {
         System.out.println("Generating data...");
  
 	    //init attribute buffer: position, starting position (seed), velocity, random and texture type
@@ -302,52 +306,56 @@ public class Rainstreaks {
 		seedBuffer = BufferUtils.createFloatBuffer(4 * maxParticles);
 		veloBuffer = BufferUtils.createFloatBuffer(4 * maxParticles);
 		
+		//must be 2^x
+		int numLodLvl = 1 << 2;
 		//fill buffers
-		for (int i = 0; i < maxParticles; i++) {
-
-		    //TODO: LOD particle distribution
-            //spawning position
-		    float x, y, z;
-		    do
-		    {
-		        x = (r.nextFloat() - 0.5f) * clusterScale;
-                y = (r.nextFloat() + 0.1f) * clusterScale;  
-                z = (r.nextFloat() - 0.5f) * clusterScale;
-		    }
-            while ((z < 0.5f && z > -0.5f) && (x < 0.5f && x > -0.5f));
-		    // ^^respawn if particle is too close to viewer
-            
-            //add to seed buffer
-            seedBuffer.put(x);
-            seedBuffer.put(y);
-            seedBuffer.put(z);
-            //add random type to w coordinate in buffer
-            //type is for choosing 1 out of 10 different textures
-            seedBuffer.put((float) r.nextInt(10));
-            
-            //add to position buffer
-            posBuffer.put(x);
-            posBuffer.put(y);
-            posBuffer.put(z);
-            posBuffer.put(1.f);
-            
-            //add spawning velocity (small random velocity in x- and z-direction for variety and against AA 
-            veloBuffer.put(veloFactor*(r.nextFloat() / 20.f));
-            veloBuffer.put(veloFactor*((r.nextFloat() + 0.75f) / 20.f));
-            veloBuffer.put(veloFactor*(r.nextFloat() / 20.f));
-            //add random number in w coordinate, used to light up random streaks
-            float tmpR = r.nextFloat();
-            if (tmpR > 0.75f) {
-                veloBuffer.put(1.f + tmpR);
-            }
-            else {
-                veloBuffer.put(1.f);
+		for (int lodLvl = 0; lodLvl < numLodLvl; lodLvl++)
+        {   
+    		for (int i = 0; i < (maxParticles/numLodLvl); i++)
+    		{
+    		    //spawning position
+    		    float x, y, z;
+    		    do
+    		    {
+    		        x = (r.nextFloat() - 0.5f) * (clusterScale + lodLvl);
+                    y = (r.nextFloat() + 0.1f) * (clusterScale + lodLvl);  
+                    z = (r.nextFloat() - 0.5f) * (clusterScale + lodLvl);
+    		    }
+                while ((z < 0.1f && z > -0.1f) && (x < 0.1f && x > -0.1f));
+    		    //^^respawn if particle is too close to viewer
+                
+                //add to seed buffer
+                seedBuffer.put(x);
+                seedBuffer.put(y);
+                seedBuffer.put(z);
+                //add random type to w coordinate in buffer
+                //type is for choosing 1 out of 10 different textures
+                seedBuffer.put((float) r.nextInt(10));
+                
+                //add to position buffer
+                posBuffer.put(x);
+                posBuffer.put(y);
+                posBuffer.put(z);
+                posBuffer.put(1.f);
+                
+                //add spawning velocity (small random velocity in x- and z-direction for variety and against AA 
+                veloBuffer.put(veloFactor*(r.nextFloat() / 20.f));
+                veloBuffer.put(veloFactor*((r.nextFloat() + 0.75f) / 20.f));
+                veloBuffer.put(veloFactor*(r.nextFloat() / 20.f));
+                //add random number in w coordinate, used to light up random streaks
+                float tmpR = r.nextFloat();
+                if (tmpR > 0.75f) {
+                    veloBuffer.put(1.f + tmpR);
+                }
+                else {
+                    veloBuffer.put(1.f);
+                }
             }
         }
 		//flip buffers
-        posBuffer.position(0);
-        seedBuffer.position(0);
-        veloBuffer.position(0);
+        posBuffer.rewind();
+        seedBuffer.rewind();
+        veloBuffer.rewind();
                 
         //3 buffers * 4 floats * maxParticles
         vertexDataBuffer = BufferUtils.createFloatBuffer(3 * 4 * maxParticles);
@@ -399,10 +407,8 @@ public class Rainstreaks {
     /**
      * Creates all significant OpenCL buffers
      */
-    private static void createBuffer() {
-   	
-    	vertexDataBuffer.rewind();
-    	
+    private static void createBuffer()
+    {
     	vertArrayID = glGenVertexArrays();
     	glBindVertexArray(vertArrayID);
     	
@@ -415,47 +421,76 @@ public class Rainstreaks {
         glEnableVertexAttribArray(ShaderProgram.ATTR_SEED);
         glEnableVertexAttribArray(ShaderProgram.ATTR_VELO);
         
-        glVertexAttribPointer(ShaderProgram.ATTR_POS, 4, GL_FLOAT, false, 16, 0);
+        glVertexAttribPointer(ShaderProgram.ATTR_POS,  4, GL_FLOAT, false, 16,  0);
         glVertexAttribPointer(ShaderProgram.ATTR_SEED, 4, GL_FLOAT, false, 16, 16);      
         glVertexAttribPointer(ShaderProgram.ATTR_VELO, 4, GL_FLOAT, false, 16, 32);
         
         glBindVertexArray(0);
         
         position = clCreateFromGLBuffer(context, CL_MEM_READ_WRITE, vertBufferID);
+        seed  = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, seedBuffer); 
         velos = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, veloBuffer);
-        seed = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, seedBuffer); 
 
-        //load hight map
+        loadTexturesCL();
+    }
+    
+    private static void loadTexturesCL()
+    {
         IntBuffer errorCheck = BufferUtils.createIntBuffer(1);
-        
-        ImageContents content = Util.loadImage("media/highmaps/map1.png");
-        FloatBuffer data = BufferUtils.createFloatBuffer(content.height * content.width);
-        for(int i = 0; i < content.height * content.width; ++i)
+        //load hight map
+        ImageContents contentHeight = Util.loadImage("media/terrain/terrainHeight01.png");
+        FloatBuffer dataH = BufferUtils.createFloatBuffer(contentHeight.height * contentHeight.width);
+        for(int i = 0; i < dataH.capacity(); ++i)
         {
-        	data.put(content.data.get(4 * i));
+            dataH.put(contentHeight.data.get(i));
         }
-        data.position(0);
+        dataH.rewind();
         
         hTex = new Texture(GL_TEXTURE_2D, HEIGHTTEX_UNIT);
         hTex.bind();
-        glTexImage2D(GL_TEXTURE_2D,
-                0,
-                GL30.GL_R16F,
-                content.width,
-                content.height,
-                0,
-                GL11.GL_RED,
-                GL_FLOAT,
-                data);
+        glTexImage2D(   GL_TEXTURE_2D,
+                        0,
+                        GL30.GL_R16F,
+                        contentHeight.width,
+                        contentHeight.height,
+                        0,
+                        GL11.GL_RED,
+                        GL_FLOAT,
+                        dataH);
         glGenerateMipmap(GL_TEXTURE_2D);
 
         heightmap = CL10GL.clCreateFromGLTexture2D(context, CL10.CL_MEM_READ_ONLY, GL11.GL_TEXTURE_2D, 0, hTex.getId(), errorCheck);
-        //TODO: normal map (place holder)
-        normalmap = CL10GL.clCreateFromGLTexture2D(context, CL10.CL_MEM_READ_ONLY, GL11.GL_TEXTURE_2D, 0, hTex.getId(), errorCheck);
+        
+        //normal map
+        ImageContents contentNorm = Util.loadImage("media/terrain/terrainNormal01.png");
+        FloatBuffer dataN = BufferUtils.createFloatBuffer(contentNorm.height * contentNorm.width * 4);
+        for(int i = 0; i < (dataN.capacity()/4); ++i)
+        {
+            dataN.put(contentNorm.data.get(i));
+            dataN.put(contentNorm.data.get(i + 1));
+            dataN.put(contentNorm.data.get(i + 2));
+            dataN.put(1.0f);
+        }
+        dataN.rewind();
+        Texture nTex = new Texture(GL_TEXTURE_2D, NORMALTEX_UNIT);
+        nTex.bind();
+        glTexImage2D(   GL_TEXTURE_2D,
+                        0,
+                        GL_RGBA,
+                        contentNorm.width,
+                        contentNorm.height,
+                        0,
+                        GL_RGBA,
+                        GL_FLOAT,
+                        dataN);
+        glGenerateMipmap(GL_TEXTURE_2D);
+        
+        normalmap = CL10GL.clCreateFromGLTexture2D(context, CL10.CL_MEM_READ_ONLY, GL11.GL_TEXTURE_2D, 0, nTex.getId(), errorCheck);
         
         OpenCL.checkError(errorCheck.get(0));
+        
     }
-    
+
     /**
      * Creates two OpenCL kernels.
      */
