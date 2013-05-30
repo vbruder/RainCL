@@ -171,7 +171,7 @@ void main(void)
     //sun (directional) lighting
     vec4 sunLight = rainResponse(sunDir, sunColor, sunIntensity*randEnlight, false);
 
-    //point lighting
+    //TODO: point lighting
     vec4 pointLight = vec4(0,0,0,0); 
 /*
     vec3 lightDir = normalize(pointLightDir);

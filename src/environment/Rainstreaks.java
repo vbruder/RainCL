@@ -117,22 +117,29 @@ public class Rainstreaks {
     private static final int numTextures = 370;
     
     //opencl pointer
-    private CLContext context;
+    private static CLContext context;
     private CLProgram program;
     private CLDevice device;
     private CLCommandQueue queue;
     private CLKernel kernelMoveStreaks;
     
     //data
-    private FloatBuffer posBuffer, seedBuffer, veloBuffer, vertexDataBuffer;
+    private static FloatBuffer posBuffer;
+    private static FloatBuffer seedBuffer;
+    private static FloatBuffer veloBuffer;
+    private static FloatBuffer vertexDataBuffer;
     
     //opencl buffer
-    private CLMem position, velos, seed, heightmap, normalmap;
+    private static CLMem position;
+    private static CLMem velos;
+    private static CLMem seed;
+    private static CLMem heightmap;
+    private static CLMem normalmap;
     
     //particle settings
     private static int maxParticles;
-    private float clusterScale;
-    private float veloFactor;
+    private static float clusterScale;
+    private static float veloFactor;
     
     //kernel settings
     private int localWorkSize = 256;
@@ -144,16 +151,18 @@ public class Rainstreaks {
     private static float windForce = 3.f;
     
     // terrain texture IDs
-    private Texture hTex, rainTex, rainfactTex;
+    private static Texture hTex;
+    private Texture rainTex;
+    private Texture rainfactTex;
     
     //shader
     private ShaderProgram StreakRenderSP;
     private Vector3f eyePos = new Vector3f(0.f, 0.f, 0.f);
     private final Matrix4f viewProj = new Matrix4f();
     //array IDs
-	private int vertArrayID;
+	private static int vertArrayID;
 	//buffer IDs
-    private int vertBufferID;
+    private static int vertBufferID;
     
     //delta time for animations
     private float dt;
@@ -176,7 +185,7 @@ public class Rainstreaks {
      */
     public Rainstreaks(Device_Type device_type, Drawable drawable, Camera cam, PointLightOrb orb, Sun sun) throws LWJGLException {
         
-        this.maxParticles = 1 << 15;
+        maxParticles = 1 << 15;
         this.eyePos = cam.getCamPos();
         this.orb = orb;
         this.sun = sun;
@@ -185,12 +194,13 @@ public class Rainstreaks {
         //velocity factor
         veloFactor = 64.0f;
         
-        this.gwz.put(0, this.maxParticles);
+        this.gwz.put(0, maxParticles);
         this.lwz.put(0, this.localWorkSize);  
         
         //openCL context
         createCLContext(device_type, Util.getFileContents("./shader/RainSim.cl"), drawable);
-        createData();
+        createWindData();
+        createRainData();
         createBuffer();
         createKernels();
         createShaderProgram();
@@ -226,9 +236,9 @@ public class Rainstreaks {
             }
         }             
         
-        this.context = create(platform, platform.getDevices(device_type), null, drawable);      
-        this.queue = clCreateCommandQueue(this.context, this.device, 0);       
-        this.program = clCreateProgramWithSource(this.context, source);
+        context = create(platform, platform.getDevices(device_type), null, drawable);      
+        queue = clCreateCommandQueue(context, this.device, 0);       
+        program = clCreateProgramWithSource(context, source);
 
         clBuildProgram(this.program, this.device, "", null);
     }
@@ -283,10 +293,9 @@ public class Rainstreaks {
     /**
      * Create initial position and velocity data pseudo randomly.
      */
-    private void createData() {      
+    private static void createRainData() {      
         
         System.out.println("Generating data...");
-        createWindData();
  
 	    //init attribute buffer: position, starting position (seed), velocity, random and texture type
 		posBuffer  = BufferUtils.createFloatBuffer(4 * maxParticles);
@@ -294,7 +303,7 @@ public class Rainstreaks {
 		veloBuffer = BufferUtils.createFloatBuffer(4 * maxParticles);
 		
 		//fill buffers
-		for (int i = 0; i < this.maxParticles; i++) {
+		for (int i = 0; i < maxParticles; i++) {
 
 		    //TODO: LOD particle distribution
             //spawning position
@@ -390,17 +399,18 @@ public class Rainstreaks {
     /**
      * Creates all significant OpenCL buffers
      */
-    private void createBuffer() {
+    private static void createBuffer() {
    	
-    	this.vertexDataBuffer.position(0);
+    	vertexDataBuffer.rewind();
     	
-    	this.vertArrayID = glGenVertexArrays();
-    	glBindVertexArray(this.vertArrayID);
+    	vertArrayID = glGenVertexArrays();
+    	glBindVertexArray(vertArrayID);
     	
-        this.vertBufferID = glGenBuffers();
-        glBindBuffer(GL_ARRAY_BUFFER, this.vertBufferID);
-        glBufferData(GL_ARRAY_BUFFER, this.vertexDataBuffer, GL_DYNAMIC_DRAW);
+        vertBufferID = glGenBuffers();
         
+        glBindBuffer(GL_ARRAY_BUFFER, vertBufferID);        
+        glBufferData(GL_ARRAY_BUFFER, vertexDataBuffer, GL_DYNAMIC_DRAW);
+
         glEnableVertexAttribArray(ShaderProgram.ATTR_POS);
         glEnableVertexAttribArray(ShaderProgram.ATTR_SEED);
         glEnableVertexAttribArray(ShaderProgram.ATTR_VELO);
@@ -411,10 +421,10 @@ public class Rainstreaks {
         
         glBindVertexArray(0);
         
-        this.position = clCreateFromGLBuffer(this.context, CL_MEM_READ_WRITE, vertBufferID);
-        this.velos = clCreateBuffer(this.context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, this.veloBuffer);
-        this.seed = clCreateBuffer(this.context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, this.seedBuffer);
-        
+        position = clCreateFromGLBuffer(context, CL_MEM_READ_WRITE, vertBufferID);
+        velos = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, veloBuffer);
+        seed = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, seedBuffer); 
+
         //load hight map
         IntBuffer errorCheck = BufferUtils.createIntBuffer(1);
         
@@ -439,9 +449,9 @@ public class Rainstreaks {
                 data);
         glGenerateMipmap(GL_TEXTURE_2D);
 
-        this.heightmap = CL10GL.clCreateFromGLTexture2D(this.context, CL10.CL_MEM_READ_ONLY, GL11.GL_TEXTURE_2D, 0, hTex.getId(), errorCheck);
+        heightmap = CL10GL.clCreateFromGLTexture2D(context, CL10.CL_MEM_READ_ONLY, GL11.GL_TEXTURE_2D, 0, hTex.getId(), errorCheck);
         //TODO: normal map (place holder)
-        this.normalmap = CL10GL.clCreateFromGLTexture2D(this.context, CL10.CL_MEM_READ_ONLY, GL11.GL_TEXTURE_2D, 0, hTex.getId(), errorCheck);
+        normalmap = CL10GL.clCreateFromGLTexture2D(context, CL10.CL_MEM_READ_ONLY, GL11.GL_TEXTURE_2D, 0, hTex.getId(), errorCheck);
         
         OpenCL.checkError(errorCheck.get(0));
     }
@@ -452,13 +462,13 @@ public class Rainstreaks {
     private void createKernels() {
                
         //kernel
-        this.kernelMoveStreaks = clCreateKernel(this.program, "rain_sim");
-        this.kernelMoveStreaks.setArg(0, this.position);
-        this.kernelMoveStreaks.setArg(1, this.velos);
-        this.kernelMoveStreaks.setArg(2, this.seed);
-        this.kernelMoveStreaks.setArg(3, this.heightmap);
-        this.kernelMoveStreaks.setArg(4, this.normalmap);
-        this.kernelMoveStreaks.setArg(5, this.maxParticles);
+        this.kernelMoveStreaks = clCreateKernel(program, "rain_sim");
+        this.kernelMoveStreaks.setArg(0, position);
+        this.kernelMoveStreaks.setArg(1, velos);
+        this.kernelMoveStreaks.setArg(2, seed);
+        this.kernelMoveStreaks.setArg(3, heightmap);
+        this.kernelMoveStreaks.setArg(4, normalmap);
+        this.kernelMoveStreaks.setArg(5, maxParticles);
         this.kernelMoveStreaks.setArg(6, 0.f);
         //Eye position
         this.kernelMoveStreaks.setArg(7, 0.f);
@@ -477,9 +487,9 @@ public class Rainstreaks {
         
         this.dt = 1e-3f*deltaTime;
         
-        clEnqueueAcquireGLObjects(this.queue, this.position, null, null);
-        clEnqueueAcquireGLObjects(this.queue, this.heightmap, null, null);
-        clEnqueueAcquireGLObjects(this.queue, this.normalmap, null, null);
+        clEnqueueAcquireGLObjects(queue, position, null, null);
+        clEnqueueAcquireGLObjects(queue, heightmap, null, null);
+        clEnqueueAcquireGLObjects(queue, normalmap, null, null);
         
         this.kernelMoveStreaks.setArg( 6, dt);
         this.kernelMoveStreaks.setArg( 7, eyePos.x);
@@ -487,11 +497,11 @@ public class Rainstreaks {
         this.kernelMoveStreaks.setArg( 9, eyePos.z);
         this.kernelMoveStreaks.setArg(10, windDir[windPtr].x);
         this.kernelMoveStreaks.setArg(11, windDir[windPtr].z);
-        clEnqueueNDRangeKernel(this.queue, kernelMoveStreaks, 1, null, gwz, lwz, null, null);            
+        clEnqueueNDRangeKernel(queue, kernelMoveStreaks, 1, null, gwz, lwz, null, null);            
 
-        clEnqueueReleaseGLObjects(this.queue, this.position, null, null);
-        clEnqueueReleaseGLObjects(this.queue, this.heightmap, null, null);
-        clEnqueueReleaseGLObjects(this.queue, this.normalmap, null, null);
+        clEnqueueReleaseGLObjects(queue, position, null, null);
+        clEnqueueReleaseGLObjects(queue, heightmap, null, null);
+        clEnqueueReleaseGLObjects(queue, normalmap, null, null);
         
         clFinish(this.queue);
         
@@ -507,7 +517,17 @@ public class Rainstreaks {
      * draws the particles
      * @param cam Camera
      */
-    public void draw(Camera cam) {
+    public void draw(Camera cam)
+    {
+        if (maxParticles != (posBuffer.capacity()/4))
+        {
+            /*TODO: create new particles
+            createRainData();
+            createBuffer();
+            this.kernelMoveStreaks.setArg(5, maxParticles);
+            this.gwz.put(0, maxParticles);
+            */
+        }
         
     	StreakRenderSP.use();
         
@@ -535,15 +555,15 @@ public class Rainstreaks {
      * Frees memory.
      */
     public void destroy() {
-        clReleaseMemObject(this.position);
-        clReleaseMemObject(this.velos);
-        clReleaseMemObject(this.seed);
-        clReleaseMemObject(this.heightmap);
-        clReleaseMemObject(this.normalmap);
-        clReleaseKernel(this.kernelMoveStreaks);
-        clReleaseCommandQueue(this.queue);
-        clReleaseProgram(this.program);
-        clReleaseContext(this.context);
+        clReleaseMemObject(position);
+        clReleaseMemObject(velos);
+        clReleaseMemObject(seed);
+        clReleaseMemObject(heightmap);
+        clReleaseMemObject(normalmap);
+        clReleaseKernel(kernelMoveStreaks);
+        clReleaseCommandQueue(queue);
+        clReleaseProgram(program);
+        clReleaseContext(context);
     }
     
     /**
@@ -656,7 +676,7 @@ public class Rainstreaks {
      */
     public static void setMaxParticles(int maxParticles)
     {
-        Rainstreaks.maxParticles = maxParticles;
+       Rainstreaks.maxParticles = maxParticles;
     }
 }
 
