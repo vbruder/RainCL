@@ -1,10 +1,13 @@
 package main;
 
 import static apiWrapper.GL.*;
+import static apiWrapper.GL.GL_BLEND;
+import static apiWrapper.GL.GL_ONE;
+import static apiWrapper.GL.GL_ONE_MINUS_SRC_COLOR;
+import static apiWrapper.GL.glBlendFunc;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 
 import org.lwjgl.LWJGLException;
 import org.lwjgl.input.Keyboard;
@@ -25,6 +28,7 @@ import util.Camera;
 import util.Geometry;
 import util.GeometryFactory;
 import util.ShaderProgram;
+import util.Texture;
 import util.Util;
 import window.Settings;
 import window.TimerCaller;
@@ -40,6 +44,7 @@ public class Rain {
     // shader programs
     private static ShaderProgram terrainSP;
     private static ShaderProgram orbSP;
+    private static ShaderProgram skySP;
     
     // current configurations
     private static boolean bContinue = true;
@@ -59,14 +64,22 @@ public class Rain {
     // uniform data
     private static final Matrix4f viewProjMatrix = new Matrix4f();
     
-    //environment
+  //environment
     private static Rainstreaks raindrops;
     private static PointLightOrb orb;
     private static Sun sun;
+    //sky
+    private static Geometry skyDome;
+    private static Geometry skyCloud;
+    private static Texture skyDomeTex;
+    private static Texture sunTexture;
+    private static Texture skyCloudTex;
+    private static Matrix4f skyMoveMatrix = new Matrix4f();
+    private static Matrix4f  cloudModelMatrix = new Matrix4f();
     //terrain
     private static Geometry terrain;
     private static String terrainDataPath = "media/terrain/";
-    private static int scaleTerrain = 32;
+    private static int scaleTerrain = 64;
 
     //lighting
     private static float k_diff =  10.0f;
@@ -99,14 +112,14 @@ public class Rain {
             glEnable(GL_CULL_FACE);
             glFrontFace(GL_CCW);
             glCullFace(GL_BACK);
-            glEnable(GL_DEPTH_TEST);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);   
+            glEnable(GL_DEPTH_TEST);   
             
-            createTerrain();
-
+            createTerrain();            
+            createSky();
+            
             //create light sources
             //sun
-            sun = new Sun(new Vector3f(1.0f, 1.0f, 1.0f), new Vector3f(20.0f, 50.0f, 20.0f), 0.1f);
+            sun = new Sun(new Vector3f(1.0f, 1.0f, 1.0f), new Vector3f(100.0f, 0.0f, 100.0f), 0.1f);
             //point light(s)
             orbSP = new ShaderProgram("./shader/Orb.vsh", "./shader/Orb.fsh");
             orb = new PointLightOrb();
@@ -135,9 +148,27 @@ public class Rain {
         }
     }
     
+    /**
+     * Create data for sky dome.
+     */
+    private static void createSky()
+    {
+        skyDome  = GeometryFactory.createSkyDome(50, 50, 50);
+        skyCloud  = GeometryFactory.createSkyDome(45, 50, 50);
+        
+        skyDomeTex  = Texture.generateTexture("./media/sky/sky_2.jpg", 5);
+        sunTexture  = Texture.generateTexture("./media/sky/sun.jpg", 6);
+        skyCloudTex = Texture.generateTexture("./media/sky/sky_sw.jpg", 9);
+        
+        skySP = new ShaderProgram("shader/sky.vsh", "shader/sky.fsh");
+    }
+
+    /**
+     * Create terrain data.
+     */
     private static void createTerrain()
     {
-        terrain = GeometryFactory.createTerrainFromMap(terrainDataPath, 5.0f, scaleTerrain);
+        terrain = GeometryFactory.createTerrainFromMap(terrainDataPath, 16.0f, scaleTerrain);
         terrainSP = new ShaderProgram("shader/terrain.vsh", "shader/terrain.fsh");      
     }
 
@@ -146,7 +177,7 @@ public class Rain {
      * @throws LWJGLException
      */
     public static void render() throws LWJGLException {
-        glClearColor(0.5f, 0.5f, 0.5f, 1.0f); // background color: grey
+        glClearColor(0.3f, 0.3f, 0.3f, 1.0f); // background color: grey
         
         long last = System.currentTimeMillis();
         long now, millis;
@@ -175,6 +206,24 @@ public class Rain {
             
             orb.bindLightInformationToShader(raindrops.getShaderProgram().getID());
             
+            //sky dome
+            skySP.use();
+            skySP.setUniform("proj", cam.getProjection());
+            skySP.setUniform("view", cam.getView());
+            skySP.setUniform("model", skyMoveMatrix);
+            skySP.setUniform("textureImage", skyDomeTex);
+            glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
+            glEnable(GL_BLEND);
+            skyDome.draw();
+            
+            //TODO: sun cube
+            
+            //clouds
+            skySP.setUniform("model", cloudModelMatrix);
+            skySP.setUniform("textureImage", skyCloudTex);
+            skyCloud.draw();
+            glDisable(GL_BLEND);
+            
             //terrain
             terrainSP.use();
             //VS
@@ -195,6 +244,7 @@ public class Rain {
             terrain.draw();
             
             //rain streaks  
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             glEnable(GL_BLEND);
             raindrops.draw(cam);
             glDisable(GL_BLEND);
@@ -273,7 +323,13 @@ public class Rain {
      * updates all moving particles
      * @param millis milliseconds, passed since last update
      */
-    private static void animate(long millis) {
+    private static void animate(long millis)
+    {
+        Util.translationX(cam.getCamPos().x, skyMoveMatrix);
+        Util.mul(skyMoveMatrix, skyMoveMatrix, Util.translationZ(cam.getCamPos().z, null));
+        Util.rotationY((0.005f)*Util.PI_MUL2 * ingameTime, cloudModelMatrix);
+        Util.mul(cloudModelMatrix,skyMoveMatrix, cloudModelMatrix );
+        
         // update time properly
         ingameTime += ingameTimePerSecond * 1e-3f * (float)millis;        
         raindrops.updateSimulation(millis);

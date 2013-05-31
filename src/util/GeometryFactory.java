@@ -1,11 +1,12 @@
 package util;
 
 import static apiWrapper.GL.*;
+import static apiWrapper.GL.GL_TRIANGLE_STRIP;
+import static apiWrapper.GL.RESTART_INDEX;
 
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import org.lwjgl.BufferUtils;
-import org.lwjgl.util.vector.Vector3f;
 
 
 /**
@@ -142,6 +143,62 @@ public class GeometryFactory {
         return sphere;
     }   
 
+    /**
+     * Create a sky dome around view position
+     * @param r radius of dome
+     * @param n number of vertical stripes
+     * @param k number of horizontal stripes
+     * @return sky dome geometry
+     */
+    public static Geometry createSkyDome(float r, int n, int k) {
+        FloatBuffer fb = BufferUtils.createFloatBuffer((3+2) * (n+1)*((k/2)+2));
+        
+        float dTheta = Util.PI / (float)k;
+        float dPhi = Util.PI_MUL2 / (float)n;
+        float theta = 0;
+        for(int j=0; j <= (k/2)+1; ++j) {
+            float sinTheta = (float)Math.sin(theta);
+            float cosTheta = (float)Math.cos(theta);
+            float phi = 0;
+            for(int i=0; i <= n; ++i) {
+                float sinPhi = (float)Math.sin(phi);
+                float cosPhi = (float)Math.cos(phi);
+                
+                // position
+                fb.put(r*sinTheta*cosPhi);  
+                fb.put(r*cosTheta);
+                fb.put(r*sinTheta*sinPhi);
+                
+                // tex coords
+                fb.put(phi / Util.PI_MUL2);
+                fb.put(theta / Util.PI);
+                                
+                phi += dPhi;
+            }
+            theta += dTheta;
+        }
+        fb.position(0);
+        
+        IntBuffer ib = BufferUtils.createIntBuffer(k*(2*(n+1)+1));
+        for(int j=0; j < (k/2)+1; ++j)
+        {
+            for(int i=0; i <= n; ++i)
+            {
+                ib.put(j*(n+1) + i);
+                ib.put((j+1)*(n+1) + i);
+            }
+            ib.put(RESTART_INDEX);
+        }
+        ib.position(0);
+        
+        Geometry skyDome = new Geometry();
+        skyDome.setIndices(ib, GL_TRIANGLE_STRIP);
+        skyDome.setVertices(fb);
+        skyDome.addVertexAttribute(ShaderProgram.ATTR_POS, 3, 0);
+        skyDome.addVertexAttribute(ShaderProgram.ATTR_TEX, 2, 12);
+        return skyDome;
+    }
+    
     /**
      * @brief Creates a terrain out of a height map.
      * @param path path of terrain data pictures

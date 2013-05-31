@@ -181,14 +181,14 @@ public class ShaderProgram {
         log = glGetShaderInfoLog(this.fs, 1024);
         System.out.print(log);
         
-        glBindAttribLocation(this.id, ATTR_POS, "positionMC");
-        glBindAttribLocation(this.id, ATTR_NORMAL, "normalMC");        
-        glBindAttribLocation(this.id, ATTR_COLOR, "vertexColor");
-        glBindAttribLocation(this.id, ATTR_COLOR2, "vertexColor2");
-        glBindAttribLocation(this.id, ATTR_TEX, "vertexTexCoords");
+        glBindAttribLocation(this.id, ATTR_POS,      "positionMC");
+        glBindAttribLocation(this.id, ATTR_NORMAL,   "normalMC");        
+        glBindAttribLocation(this.id, ATTR_COLOR,    "vertexColor");
+        glBindAttribLocation(this.id, ATTR_COLOR2,   "vertexColor2");
+        glBindAttribLocation(this.id, ATTR_TEX,      "texCoords");
         glBindAttribLocation(this.id, ATTR_INSTANCE, "instancedData");
-        glBindAttribLocation(this.id, ATTR_VELO, "vertexVelo");
-        glBindAttribLocation(this.id, ATTR_SEED, "vertexSeed");
+        glBindAttribLocation(this.id, ATTR_VELO,     "vertexVelo");
+        glBindAttribLocation(this.id, ATTR_SEED,     "vertexSeed");
         
         glLinkProgram(this.id);        
         
