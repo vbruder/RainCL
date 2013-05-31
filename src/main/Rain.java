@@ -79,7 +79,7 @@ public class Rain {
     //terrain
     private static Geometry terrain;
     private static String terrainDataPath = "media/terrain/";
-    private static int scaleTerrain = 64;
+    private static int scaleTerrain = 128;
 
     //lighting
     private static float k_diff =  10.0f;
@@ -156,7 +156,7 @@ public class Rain {
         skyDome  = GeometryFactory.createSkyDome(50, 50, 50);
         skyCloud  = GeometryFactory.createSkyDome(45, 50, 50);
         
-        skyDomeTex  = Texture.generateTexture("./media/sky/sky_2.jpg", 5);
+        skyDomeTex  = Texture.generateTexture("./media/sky/sky02.png", 5);
         sunTexture  = Texture.generateTexture("./media/sky/sun.jpg", 6);
         skyCloudTex = Texture.generateTexture("./media/sky/sky_sw.jpg", 9);
         
@@ -168,7 +168,7 @@ public class Rain {
      */
     private static void createTerrain()
     {
-        terrain = GeometryFactory.createTerrainFromMap(terrainDataPath, 16.0f, scaleTerrain);
+        terrain = GeometryFactory.createTerrainFromMap(terrainDataPath, 32.0f, scaleTerrain);
         terrainSP = new ShaderProgram("shader/terrain.vsh", "shader/terrain.fsh");      
     }
 
@@ -213,16 +213,16 @@ public class Rain {
             skySP.setUniform("model", skyMoveMatrix);
             skySP.setUniform("textureImage", skyDomeTex);
             glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
-            glEnable(GL_BLEND);
             skyDome.draw();
             
             //TODO: sun cube
             
             //clouds
-            skySP.setUniform("model", cloudModelMatrix);
-            skySP.setUniform("textureImage", skyCloudTex);
-            skyCloud.draw();
-            glDisable(GL_BLEND);
+//            glEnable(GL_BLEND);
+//            skySP.setUniform("model", cloudModelMatrix);
+//            skySP.setUniform("textureImage", skyCloudTex);
+//            skyCloud.draw();
+//            glDisable(GL_BLEND);
             
             //terrain
             terrainSP.use();

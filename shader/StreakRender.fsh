@@ -57,6 +57,8 @@ vec4 rainResponse(vec3 lightVec, vec3 lightColor, float lightIntensity, bool fal
         // Inputs: lightDir, eyePosition, dropDir
         lightVec = normalize(lightVec);
         vec3 eyePos   = normalize(eyePosition);
+        eyePos.x -= 0.75;
+        eyePos.z -= 0.75;
         vec3 dropDir  = normalize(dropDirection);
         
         bool is_EpLp_angle_ccw = true;

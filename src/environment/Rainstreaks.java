@@ -190,7 +190,7 @@ public class Rainstreaks {
         this.orb = orb;
         this.sun = sun;
         //range of cylinder around cam
-        clusterScale = 2.0f;
+        clusterScale = 4.0f;
         //velocity factor
         veloFactor = 64.0f;
         
