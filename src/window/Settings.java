@@ -209,7 +209,7 @@ public class Settings extends JDialog implements TimerListener
                 lpGeneral.add(slrWind);
                 slrWind.addChangeListener(new ChangeListener(){
                     public void stateChanged(ChangeEvent e) {
-                        float newValue = ((float) slrWind.getValue()) / 16.0f;
+                        float newValue = ((float) slrWind.getValue()) / 10.0f;
                         environment.Rainstreaks.setWindForce(newValue);                 
                     }
                 });

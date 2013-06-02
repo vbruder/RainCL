@@ -150,7 +150,7 @@ public class Rainstreaks {
     
     private static Vector3f windDir[] = new Vector3f[500];
     private static int windPtr = 0;
-    private static float windForce = 3.f;
+    private static float windForce = 5.f;
     
     // terrain texture IDs
     private static Texture hTex;
@@ -190,9 +190,9 @@ public class Rainstreaks {
         this.orb = orb;
         this.sun = sun;
         //range of cylinder around cam
-        clusterScale = 4.0f;
+        clusterScale = 12.0f;
         //velocity factor
-        veloFactor = 64.0f;
+        veloFactor = 128.0f;
         
         this.gwz.put(0, maxParticles);
         this.lwz.put(0, this.localWorkSize);  

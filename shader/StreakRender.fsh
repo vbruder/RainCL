@@ -163,7 +163,7 @@ vec4 rainResponse(vec3 lightVec, vec3 lightColor, float lightIntensity, bool fal
         opacity = mix(hOpacity1, hOpacity2, t);
         // inverse gamma correction (expand dynamic range)
         opacity = pow(opacity, 0.7);            
-        opacity = 4.0 * lightIntensity * opacity * fallOff;
+        opacity = 1.0 * lightIntensity * opacity * fallOff;
     }
          
    return vec4(lightColor, opacity);
@@ -172,7 +172,7 @@ vec4 rainResponse(vec3 lightVec, vec3 lightColor, float lightIntensity, bool fal
 void main(void)
 {
     //sun (directional) lighting
-    vec4 sunLight = rainResponse(sunDir, sunColor, sunIntensity*randEnlight, false);
+    vec4 sunLight = rainResponse(sunDir, sunColor, sunIntensity*randEnlight* 0.5, false);
 
     //TODO: point lighting
     vec4 pointLight = vec4(0,0,0,0); 

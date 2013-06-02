@@ -133,7 +133,7 @@ public class Rain {
             raindrops = new Rainstreaks(Device_Type.GPU, Display.getDrawable(), cam, orb, sun);
 
             // starting position
-            cam.move(5.0f, 7.0f, 5.0f);
+            cam.move(50.0f, 50.0f, 5.0f);
             
             render();
             
@@ -153,8 +153,8 @@ public class Rain {
      */
     private static void createSky()
     {
-        skyDome  = GeometryFactory.createSkyDome(50, 50, 50);
-        skyCloud  = GeometryFactory.createSkyDome(45, 50, 50);
+        skyDome   = GeometryFactory.createSkyDome(100, 75, 75);
+        skyCloud  = GeometryFactory.createSkyDome( 95, 75, 75);
         
         skyDomeTex  = Texture.generateTexture("./media/sky/sky02.png", 5);
         sunTexture  = Texture.generateTexture("./media/sky/sun.jpg", 6);
