@@ -71,7 +71,9 @@ vec3 calcLighting2(vec3 normal, vec3 diff, vec3 spec, vec3 ambi)
 
 void main(void)
 {
-    vec4 normal = normalize(texture(normalTex, texCoords.st));
+    vec4 normal = normalize(texture(normalTex, texCoords.st).xzyw);
+    normal = normalize(-1 + 2 * normal);
+    
     vec3 diff   = texture(colorTex, texCoords.st).rgb;
     vec3 spec   = texture(specularTex, texCoords.st).rgb;
     vec3 ambi   = texture(lightTex, texCoords.st).rgb;

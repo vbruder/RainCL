@@ -217,7 +217,7 @@ public class GeometryFactory {
         for (int h = 0; h < ic.length; h++) {
             for (int w = 0; w < ic[0].length; w++) {                
                 vertexData.put(scale     *(w/(float)ic[0].length));
-                vertexData.put((amplitude *ic[h][w][0] - amplitude*0.5f));
+                vertexData.put((amplitude *ic[h][ic[0].length - w - 1][0] - amplitude*0.5f));
                 vertexData.put(scale     *(h/(float)ic.length));
             }
         }

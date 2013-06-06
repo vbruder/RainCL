@@ -12,7 +12,7 @@ uniform float scale;
 void main(void)
 {
     gl_Position = proj * view * vec4(positionMC, 1.0);
-    texCoords.st = (vec2(1.0) - (positionMC.xz / scale));
+    texCoords.st = positionMC.xz / scale;//(vec2(1.0) - (positionMC.xz / scale));
 
     positionFS = positionMC.xyz;
 }

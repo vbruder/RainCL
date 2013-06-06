@@ -119,7 +119,7 @@ public class Rain {
             
             //create light sources
             //sun
-            sun = new Sun(new Vector3f(1.0f, 1.0f, 1.0f), new Vector3f(100.0f, 0.0f, 100.0f), 0.1f);
+            sun = new Sun(new Vector3f(1.0f, 1.0f, 1.0f), new Vector3f(100.0f, 100.0f, 100.0f), 0.1f);
             //point light(s)
             orbSP = new ShaderProgram("./shader/Orb.vsh", "./shader/Orb.fsh");
             orb = new PointLightOrb();
@@ -255,6 +255,8 @@ public class Rain {
             Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);  
             orbSP.setUniform("viewProj", viewProj);
             orb.draw(orbSP.getID());
+            
+       
             
             // present screen
             Display.update();

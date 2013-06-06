@@ -175,6 +175,8 @@ public class ShaderProgram {
         glCompileShader(this.vs);
         glCompileShader(this.fs);
         
+        System.out.println(vs);
+        
         String log;
         log = glGetShaderInfoLog(this.vs, 1024);
         System.out.print(log);

@@ -1,4 +1,4 @@
-#version 300
+#version 330
 
 in vec2 fragmentTexCoords;
 
