@@ -24,6 +24,7 @@ import main.Rain;
 
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
@@ -48,6 +49,8 @@ import java.text.NumberFormat;
 
 import javax.swing.JCheckBox;
 
+import org.lwjgl.util.vector.Vector3f;
+
 public class Settings extends JDialog implements TimerListener
 {
     private static final long serialVersionUID = 1L;
@@ -68,6 +71,16 @@ public class Settings extends JDialog implements TimerListener
     private String sysOpenGL;
     private String sysShadingLang;
     private String sysOpenCL;
+    
+    private int particles;
+    private float windForce;
+    private float fog;
+    private boolean sound;
+    
+    private boolean changedParticles = false;
+    private boolean changedWind = false;
+    private boolean changedFog = false;
+    private boolean changedSound = false;
 
     /**
      * Launch the application.
@@ -173,12 +186,12 @@ public class Settings extends JDialog implements TimerListener
             gbc_tabbedPane.gridy = 1;
             settingsPanel.add(tabbedPane, gbc_tabbedPane);
             {
-                JLayeredPane lpGeneral = new JLayeredPane();
-                tabbedPane.addTab("General", null, lpGeneral, null);
+                JLayeredPane lpEnvironment = new JLayeredPane();
+                tabbedPane.addTab("Environment", null, lpEnvironment, null);
                 
                 JLabel lblParticles = new JLabel("Rain:");
                 lblParticles.setBounds(10, 28, 46, 26);
-                lpGeneral.add(lblParticles);
+                lpEnvironment.add(lblParticles);
                 
                 final JSlider slrParticles = new JSlider();
                 slrParticles.setValue(15);
@@ -189,9 +202,11 @@ public class Settings extends JDialog implements TimerListener
                 slrParticles.setSnapToTicks(true);
                 slrParticles.setPaintTicks(true);
                 slrParticles.setBounds(66, 28, 328, 26);
-                lpGeneral.add(slrParticles);
+                lpEnvironment.add(slrParticles);
+                particles = slrParticles.getValue();
                 slrParticles.addChangeListener(new ChangeListener(){
                     public void stateChanged(ChangeEvent e) {
+                        changedParticles = true;
                         int newValue = (1 << slrParticles.getValue());
                         environment.Rainstreaks.setMaxParticles(newValue);                 
                     }
@@ -199,47 +214,59 @@ public class Settings extends JDialog implements TimerListener
                 
                 JLabel lblWind = new JLabel("Wind:");
                 lblWind.setBounds(10, 83, 46, 26);
-                lpGeneral.add(lblWind);
+                lpEnvironment.add(lblWind);
                 
                 final JSlider slrWind = new JSlider();
                 slrWind.setMinorTickSpacing(10);
                 slrWind.setPaintTicks(true);
                 slrWind.setBackground(Color.WHITE);
                 slrWind.setBounds(66, 83, 328, 26);
-                lpGeneral.add(slrWind);
+                lpEnvironment.add(slrWind);
+                windForce = slrWind.getValue() / 10.0f;
                 slrWind.addChangeListener(new ChangeListener(){
                     public void stateChanged(ChangeEvent e) {
-                        float newValue = ((float) slrWind.getValue()) / 10.0f;
+                        changedWind = true;
+                        float newValue = slrWind.getValue() / 10.0f;
                         environment.Rainstreaks.setWindForce(newValue);                 
+                    }
+                });
+                               
+                JLabel lblFog = new JLabel("Fog:");
+                lblFog.setBounds(10, 140, 46, 14);
+                lpEnvironment.add(lblFog);
+                
+                final JSlider slrFog = new JSlider();
+                slrFog.setValue(5);
+                slrFog.setMinorTickSpacing(1);
+                slrFog.setMaximum(10);
+                slrFog.setPaintTicks(true);
+                slrFog.setBackground(Color.WHITE);
+                slrFog.setBounds(66, 140, 328, 26);
+                lpEnvironment.add(slrFog);
+                fog = ((float)slrFog.getValue()) / 100.0f;
+                slrFog.addChangeListener(new ChangeListener(){
+                    public void stateChanged(ChangeEvent e) {
+                        changedFog = true;
+                        float newValue = ((float)slrFog.getValue()) / 100.0f;
+                        main.Rain.setFogThickness(new Vector3f(newValue, newValue, newValue));        
                     }
                 });
                 
                 JCheckBox cbxSound = new JCheckBox("Sound");
                 cbxSound.setBackground(Color.WHITE);
-                cbxSound.setBounds(10, 174, 91, 23);
-                lpGeneral.add(cbxSound);
+                cbxSound.setBounds(10, 202, 91, 23);
+                lpEnvironment.add(cbxSound);
                 cbxSound.addItemListener(new ItemListener() {
                     public void itemStateChanged(ItemEvent e) {
-                        boolean temp;
+                        changedSound = true;
                         if (e.getStateChange() == 1)
-                            temp = true;
+                            sound = true;
                         else
-                            temp = false;
-                        main.Rain.setAudio(temp);
+                            sound = false;
+                        main.Rain.setAudio(sound);
                     }
                 });
                 cbxSound.setSelected(main.Rain.isAudio());
-                
-                JCheckBox cbxSPH = new JCheckBox("SPH");
-                cbxSPH.setBackground(Color.WHITE);
-                cbxSPH.setBounds(10, 200, 160, 23);
-                lpGeneral.add(cbxSPH);
-                {
-                    JCheckBox cbxFog = new JCheckBox("Fog");
-                    cbxFog.setBackground(Color.WHITE);
-                    cbxFog.setBounds(10, 148, 91, 23);
-                    lpGeneral.add(cbxFog);
-                }
             }
             
             JLayeredPane lpLighting = new JLayeredPane();
@@ -354,14 +381,25 @@ public class Settings extends JDialog implements TimerListener
             getContentPane().add(buttonPane, BorderLayout.SOUTH);
             {
                 JButton okButton = new JButton("OK");
-                okButton.setActionCommand("OK");
+                okButton.addActionListener(new ActionListener() {     
+                    public void actionPerformed(ActionEvent e)
+                    {
+                        closeWindow();
+                    }
+                });
                 buttonPane.add(okButton);
                 getRootPane().setDefaultButton(okButton);
             }
             {
-                JButton cancelButton = new JButton("Cancel");
-                cancelButton.setActionCommand("Cancel");
-                buttonPane.add(cancelButton);
+                JButton defaultButton = new JButton("Cancel");
+                defaultButton.addActionListener(new ActionListener() {     
+                    public void actionPerformed(ActionEvent e)
+                    {
+                        undoChanges();
+                        closeWindow();
+                    }
+                });
+                buttonPane.add(defaultButton);
             }
         }
         
@@ -369,6 +407,32 @@ public class Settings extends JDialog implements TimerListener
         this.run();
     }
     
+
+    protected void undoChanges()
+    {
+        //TODO: not only back to default
+        if (changedParticles)
+        {
+            environment.Rainstreaks.setMaxParticles(particles);
+            changedParticles ^= changedParticles;
+        }
+        if (changedWind)
+        {
+            environment.Rainstreaks.setWindForce(windForce);
+            changedWind ^= changedWind;
+        }
+        if (changedFog)
+        {
+            main.Rain.setFogThickness(new Vector3f(fog, fog, fog));
+            changedFog ^= changedFog;
+        }
+        if (changedSound)
+        {
+            main.Rain.setAudio(!sound);
+            changedSound ^= changedSound;
+        }
+    }
+
     @Override
     public void updateTex()
     {
@@ -391,6 +455,7 @@ public class Settings extends JDialog implements TimerListener
     {
         if(mDial != null)
         {
+            mDial.setVisible(true);
             mDial.toFront();
             return mDial;
         }
@@ -407,5 +472,9 @@ public class Settings extends JDialog implements TimerListener
         {
             mDial.close();
         }
+    }
+    public static void closeWindow()
+    {
+        mDial.setVisible(false);
     }
 }

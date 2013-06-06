@@ -110,7 +110,7 @@ import util.Util.ImageContents;
  */
 public class Rainstreaks {
     
-    //TODO: implement proper unit count
+    //TODO: implement proper texture unit count
     private static final int NORMALTEX_UNIT = 3;
     private static final int HEIGHTTEX_UNIT = 4;
     private static final int RAINTEX_UNIT = 6;

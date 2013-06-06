@@ -83,7 +83,7 @@ public class Rain {
 
     //lighting
     private static float k_diff =  10.0f;
-    private static float k_spec =  0.3f;
+    private static float k_spec =  25.0f;
     private static float k_ambi =  0.1f;
     
     //sound
@@ -94,6 +94,7 @@ public class Rain {
     private static TimerCaller tc = new TimerCaller();
     //view
     private static float fps;
+    private static Vector3f fogThickness = new Vector3f(0.05f, 0.05f, 0.05f);
 
     /**
      * main
@@ -119,7 +120,7 @@ public class Rain {
             
             //create light sources
             //sun
-            sun = new Sun(new Vector3f(1.0f, 1.0f, 1.0f), new Vector3f(100.0f, 100.0f, 100.0f), 0.1f);
+            sun = new Sun(new Vector3f(1.0f, 1.0f, 1.0f), new Vector3f(10.0f, 10.0f, 10.0f), 0.1f);
             //point light(s)
             orbSP = new ShaderProgram("./shader/Orb.vsh", "./shader/Orb.fsh");
             orb = new PointLightOrb();
@@ -241,6 +242,7 @@ public class Rain {
             terrainSP.setUniform("k_spec", k_spec);
             terrainSP.setUniform("k_ambi", k_ambi);
             terrainSP.setUniform("eyePosition", cam.getCamPos());
+            terrainSP.setUniform("fogThickness", fogThickness);
             terrain.draw();
             
             //rain streaks  
@@ -296,6 +298,7 @@ public class Rain {
                     case Keyboard.KEY_UP: break;
                     case Keyboard.KEY_DOWN: break;
                     case Keyboard.KEY_M:
+                                        Settings.getInstance();
                                         tc.start();
                                         tc.addTimerListener(Settings.getInstance());
                                         break;
@@ -338,11 +341,17 @@ public class Rain {
         orb.animate(millis);
     }
     
+    /**
+     * @return true if audio
+     */
     public static boolean isAudio()
     {
         return audio;
     }
 
+    /**
+     * @param audio
+     */
     public static void setAudio(boolean audio)
     {
         Rain.audio = audio;
@@ -352,8 +361,28 @@ public class Rain {
             sound.stopSound();
     }
 
+    /**
+     * @return the FPS
+     */
     public static float getFPS()
     {
         return fps;
     }
+
+    /**
+     * @return the fogThickness
+     */
+    public static Vector3f getFogThickness()
+    {
+        return fogThickness;
+    }
+
+    /**
+     * @param fogThickness the fogThickness to set
+     */
+    public static void setFogThickness(Vector3f fogThickness)
+    {
+        Rain.fogThickness = fogThickness;
+    }
+    
 }
