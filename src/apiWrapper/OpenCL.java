@@ -380,7 +380,19 @@ public class OpenCL {
      */
     public static void clReleaseMemObject(CLMem mem) {
         CL10.clReleaseMemObject(mem);
+        checkError();
     }
+    
+    /**
+     * Loescht OpenCL Buffer.
+     * @see <a href="http://www.khronos.org/registry/cl/sdk/1.0/docs/man/xhtml/clRetainMemObject.html">clRetainMemObject</a>
+     * @param mem CLMem
+     */
+    public static void clRetainMemObject(CLMem mem) {
+        CL10.clRetainMemObject(mem);
+        checkError();
+    }
+    
     
     /**
      * Gibt auﬂerdem compiler Fehler aus.

@@ -292,6 +292,21 @@ public class GL {
     public static final int GL_RED = GL11.GL_RED;  
     
     /**
+     * GL30.GL_R16F
+     */
+    public static final int GL_R16F = GL30.GL_R16F;  
+    
+    /**
+     * GL30.GL_R16
+     */
+    public static final int GL_R16 = GL30.GL_R16;  
+    
+    /**
+     * GL30.GL_R32F
+     */
+    public static final int GL_R32F = GL30.GL_R32F;  
+    
+    /**
      * GL30.GL_RG
      */
     public static final int GL_RG = GL30.GL_RG;   
@@ -1153,6 +1168,26 @@ public class GL {
     public static void glBindBufferBase(int target, int index, int buffer){
         GL30.glBindBufferBase(target, index, buffer);
         GL.checkError("glBindBufferBase");
+    }
+    
+    /**
+     * OpenGL 3.0
+     * @see <a href="http://www.opengl.org/sdk/docs/man4/xhtml/glDeleteRenderbuffers.xml">glDeleteRenderbuffers</a>
+     * @param target
+     */
+    public static void glDeleteRenderbuffers(int target){
+        GL30.glDeleteRenderbuffers(target);
+        GL.checkError("glDeleteRenderbuffers");
+    }
+    
+    /**
+     * OpenGL 3.0
+     * @see <a href="http://www.opengl.org/sdk/docs/man4/xhtml/glDeleteFramebuffers.xml">glDeleteFramebuffers</a>
+     * @param target
+     */
+    public static void glDeleteFramebuffers(int target){
+        GL30.glDeleteFramebuffers(target);
+        GL.checkError("glDeleteFramebuffers");
     }
     
     /**

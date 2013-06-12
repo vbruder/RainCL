@@ -6,6 +6,9 @@ import static apiWrapper.GL.GL_FLOAT;
 import static apiWrapper.GL.GL_POINTS;
 import static apiWrapper.GL.GL_R8;
 import static apiWrapper.GL.GL_RED;
+import static apiWrapper.GL.GL_R16;
+import static apiWrapper.GL.GL_R16F;
+import static apiWrapper.GL.GL_R32F;
 import static apiWrapper.GL.GL_RG;
 import static apiWrapper.GL.GL_RG8;
 import static apiWrapper.GL.GL_RGB;
@@ -38,6 +41,10 @@ import static apiWrapper.GL.glTexSubImage3D;
 import static apiWrapper.GL.glUniform1f;
 import static apiWrapper.GL.glUniform3f;
 import static apiWrapper.GL.glVertexAttribPointer;
+import static apiWrapper.GL.glDeleteFramebuffers;
+import static apiWrapper.GL.glDeleteRenderbuffers;
+import static apiWrapper.GL.glDeleteBuffers;
+import static apiWrapper.GL.glDeleteVertexArrays;
 import static apiWrapper.OpenCL.CL_MEM_COPY_HOST_PTR;
 import static apiWrapper.OpenCL.CL_MEM_READ_ONLY;
 import static apiWrapper.OpenCL.CL_MEM_READ_WRITE;
@@ -59,18 +66,12 @@ import static apiWrapper.OpenCL.clReleaseKernel;
 import static apiWrapper.OpenCL.clReleaseMemObject;
 import static apiWrapper.OpenCL.clReleaseProgram;
 import static apiWrapper.OpenCL.create;
+import static apiWrapper.OpenCL.clRetainMemObject;
 
-
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.text.DecimalFormat;
 import java.util.Random;
-
-import javax.imageio.ImageIO;
-
 
 import org.lwjgl.BufferUtils;
 import org.lwjgl.LWJGLException;
@@ -85,20 +86,13 @@ import org.lwjgl.opencl.CLMem;
 import org.lwjgl.opencl.CLPlatform;
 import org.lwjgl.opencl.CLProgram;
 import org.lwjgl.opengl.Drawable;
-import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL12;
-import org.lwjgl.opengl.GL20;
-import org.lwjgl.opengl.GL21;
-import org.lwjgl.opengl.GL30;
 import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
 
-import apiWrapper.GL;
 import apiWrapper.OpenCL;
 import apiWrapper.OpenCL.Device_Type;
 
 import util.Camera;
-import util.Geometry;
 import util.ShaderProgram;
 import util.Texture;
 import util.Util;
@@ -120,10 +114,10 @@ public class Rainstreaks {
     
     //opencl pointer
     private static CLContext context;
-    private CLProgram program;
+    private static CLProgram program;
     private CLDevice device;
     private CLCommandQueue queue;
-    private CLKernel kernelMoveStreaks;
+    private static CLKernel kernelMoveStreaks;
     
     //data
     private static FloatBuffer posBuffer;
@@ -202,7 +196,6 @@ public class Rainstreaks {
         createWindData();
         createRainData();
         createBuffer();
-        createKernels();
         createShaderProgram();
     }
     
@@ -244,7 +237,7 @@ public class Rainstreaks {
         queue = clCreateCommandQueue(context, this.device, 0);       
         program = clCreateProgramWithSource(context, source);
 
-        clBuildProgram(this.program, this.device, "", null);
+        clBuildProgram(program, this.device, "", null);
     }
     
     public ShaderProgram getShaderProgram() {
@@ -264,7 +257,7 @@ public class Rainstreaks {
         rainTex.bind();
         glTexImage3D(   GL_TEXTURE_2D_ARRAY,
                         0,
-                        GL30.GL_R16,
+                        GL_R16,
                         content.width,
                         content.height,
                         numTextures,
@@ -426,12 +419,13 @@ public class Rainstreaks {
         glVertexAttribPointer(ShaderProgram.ATTR_VELO, 4, GL_FLOAT, false, 16, 32);
         
         glBindVertexArray(0);
-        
+
         position = clCreateFromGLBuffer(context, CL_MEM_READ_WRITE, vertBufferID);
         seed  = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, seedBuffer); 
         velos = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, veloBuffer);
 
         loadTexturesCL();
+        createKernels();
     }
     
     private static void loadTexturesCL()
@@ -450,16 +444,16 @@ public class Rainstreaks {
         hTex.bind();
         glTexImage2D(   GL_TEXTURE_2D,
                         0,
-                        GL30.GL_R16F,
+                        GL_R16F,
                         contentHeight.width,
                         contentHeight.height,
                         0,
-                        GL11.GL_RED,
+                        GL_RED,
                         GL_FLOAT,
                         dataH);
         glGenerateMipmap(GL_TEXTURE_2D);
 
-        heightmap = CL10GL.clCreateFromGLTexture2D(context, CL10.CL_MEM_READ_ONLY, GL11.GL_TEXTURE_2D, 0, hTex.getId(), errorCheck);
+        heightmap = CL10GL.clCreateFromGLTexture2D(context, CL10.CL_MEM_READ_ONLY, GL_TEXTURE_2D, 0, hTex.getId(), errorCheck);
         
         //normal map
         ImageContents contentNorm = Util.loadImage("media/terrain/terrainNormal01.png");
@@ -485,7 +479,7 @@ public class Rainstreaks {
                         dataN);
         glGenerateMipmap(GL_TEXTURE_2D);
         
-        normalmap = CL10GL.clCreateFromGLTexture2D(context, CL10.CL_MEM_READ_ONLY, GL11.GL_TEXTURE_2D, 0, nTex.getId(), errorCheck);
+        normalmap = CL10GL.clCreateFromGLTexture2D(context, CL10.CL_MEM_READ_ONLY, GL_TEXTURE_2D, 0, nTex.getId(), errorCheck);
         
         OpenCL.checkError(errorCheck.get(0));
         
@@ -494,24 +488,24 @@ public class Rainstreaks {
     /**
      * Creates two OpenCL kernels.
      */
-    private void createKernels() {
+    private static void createKernels() {
                
         //kernel
-        this.kernelMoveStreaks = clCreateKernel(program, "rain_sim");
-        this.kernelMoveStreaks.setArg(0, position);
-        this.kernelMoveStreaks.setArg(1, velos);
-        this.kernelMoveStreaks.setArg(2, seed);
-        this.kernelMoveStreaks.setArg(3, heightmap);
-        this.kernelMoveStreaks.setArg(4, normalmap);
-        this.kernelMoveStreaks.setArg(5, maxParticles);
-        this.kernelMoveStreaks.setArg(6, 0.f);
+        kernelMoveStreaks = clCreateKernel(program, "rain_sim");
+        kernelMoveStreaks.setArg(0, position);
+        kernelMoveStreaks.setArg(1, velos);
+        kernelMoveStreaks.setArg(2, seed);
+        kernelMoveStreaks.setArg(3, heightmap);
+        kernelMoveStreaks.setArg(4, normalmap);
+        kernelMoveStreaks.setArg(5, maxParticles);
+        kernelMoveStreaks.setArg(6, 0.f);
         //Eye position
-        this.kernelMoveStreaks.setArg(7, 0.f);
-        this.kernelMoveStreaks.setArg(8, 0.f);
-        this.kernelMoveStreaks.setArg(9, 0.f);
+        kernelMoveStreaks.setArg(7, 0.f);
+        kernelMoveStreaks.setArg(8, 0.f);
+        kernelMoveStreaks.setArg(9, 0.f);
         //Wind direction
-        this.kernelMoveStreaks.setArg(10, 0.f);
-        this.kernelMoveStreaks.setArg(11, 0.f);
+        kernelMoveStreaks.setArg(10, 0.f);
+        kernelMoveStreaks.setArg(11, 0.f);
     }
     
     /**
@@ -526,12 +520,12 @@ public class Rainstreaks {
         clEnqueueAcquireGLObjects(queue, heightmap, null, null);
         clEnqueueAcquireGLObjects(queue, normalmap, null, null);
         
-        this.kernelMoveStreaks.setArg( 6, dt);
-        this.kernelMoveStreaks.setArg( 7, eyePos.x);
-        this.kernelMoveStreaks.setArg( 8, eyePos.y);
-        this.kernelMoveStreaks.setArg( 9, eyePos.z);
-        this.kernelMoveStreaks.setArg(10, windDir[windPtr].x);
-        this.kernelMoveStreaks.setArg(11, windDir[windPtr].z);
+        kernelMoveStreaks.setArg( 6, dt);
+        kernelMoveStreaks.setArg( 7, eyePos.x);
+        kernelMoveStreaks.setArg( 8, eyePos.y);
+        kernelMoveStreaks.setArg( 9, eyePos.z);
+        kernelMoveStreaks.setArg(10, windDir[windPtr].x);
+        kernelMoveStreaks.setArg(11, windDir[windPtr].z);
         clEnqueueNDRangeKernel(queue, kernelMoveStreaks, 1, null, gwz, lwz, null, null);            
 
         clEnqueueReleaseGLObjects(queue, position, null, null);
@@ -556,12 +550,18 @@ public class Rainstreaks {
     {
         if (maxParticles != (posBuffer.capacity()/4))
         {
-            /*TODO: create new particles
+        	clRetainMemObject(position);
+        	clRetainMemObject(seed);
+        	clRetainMemObject(velos);
+        	clRetainMemObject(heightmap);
+        	clRetainMemObject(normalmap);
+        	glDeleteBuffers(vertBufferID);
+        	glDeleteVertexArrays(vertArrayID);
+        	
             createRainData();
             createBuffer();
-            this.kernelMoveStreaks.setArg(5, maxParticles);
-            this.gwz.put(0, maxParticles);
-            */
+            kernelMoveStreaks.setArg(5, maxParticles);
+            this.gwz.put(0, maxParticles);            
         }
         
     	StreakRenderSP.use();
@@ -656,7 +656,7 @@ public class Rainstreaks {
         rainfactTex.bind();
         glTexImage1D(   GL_TEXTURE_1D,
                         0,
-                        GL30.GL_R32F,
+                        GL_R32F,
                         numTextures,
                         0,
                         GL_RED,

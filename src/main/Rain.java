@@ -82,7 +82,7 @@ public class Rain {
     private static int scaleTerrain = 128;
 
     //lighting
-    private static float k_diff =  10.0f;
+    private static float k_diff =  15.0f;
     private static float k_spec =  25.0f;
     private static float k_ambi =  0.1f;
     
