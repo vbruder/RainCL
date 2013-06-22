@@ -23,6 +23,7 @@ import apiWrapper.OpenCL.Device_Type;
 import environment.PointLightOrb;
 import environment.Rainstreaks;
 import environment.Sun;
+import environment.Water;
 
 import util.Camera;
 import util.Geometry;
@@ -63,23 +64,29 @@ public class Rain {
     
     // uniform data
     private static final Matrix4f viewProjMatrix = new Matrix4f();
-    
-  //environment
+        
+    //environment
     private static Rainstreaks raindrops;
+    private static boolean drawRain = false;
     private static PointLightOrb orb;
     private static Sun sun;
+    private static Water watermap;
+    private static boolean drawWater = true;
     //sky
     private static Geometry skyDome;
     private static Geometry skyCloud;
     private static Texture skyDomeTex;
     private static Texture sunTexture;
     private static Texture skyCloudTex;
+    private static boolean drawSky	= true;
     private static Matrix4f skyMoveMatrix = new Matrix4f();
     private static Matrix4f  cloudModelMatrix = new Matrix4f();
+    private static boolean drawClouds = false;
     //terrain
     private static Geometry terrain;
     private static String terrainDataPath = "media/terrain/";
     private static int scaleTerrain = 128;
+    private static boolean drawTerrain = true;
 
     //lighting
     private static float k_diff =  15.0f;
@@ -132,13 +139,17 @@ public class Rain {
             
             //create rain streaks
             raindrops = new Rainstreaks(Device_Type.GPU, Display.getDrawable(), cam, orb, sun);
+            //create water map
+            watermap = new Water(Device_Type.GPU, Display.getDrawable(), terrain);
 
             // starting position
             cam.move(50.0f, 50.0f, 5.0f);
             
             render();
             
-            //cleanup 
+            //cleanup
+            watermap.destroy();
+            raindrops.destroy();
             OpenCL.destroy();
             sound.destroy();
             tc.stop();
@@ -161,7 +172,7 @@ public class Rain {
         sunTexture  = Texture.generateTexture("./media/sky/sun.jpg", 6);
         skyCloudTex = Texture.generateTexture("./media/sky/sky_sw.jpg", 9);
         
-        skySP = new ShaderProgram("shader/sky.vsh", "shader/sky.fsh");
+        skySP = new ShaderProgram("shader/Sky.vsh", "shader/Sky.fsh");
     }
 
     /**
@@ -170,7 +181,7 @@ public class Rain {
     private static void createTerrain()
     {
         terrain = GeometryFactory.createTerrainFromMap(terrainDataPath, 32.0f, scaleTerrain);
-        terrainSP = new ShaderProgram("shader/terrain.vsh", "shader/terrain.fsh");      
+        terrainSP = new ShaderProgram("shader/Terrain.vsh", "shader/Terrain.fsh");      
     }
 
     /**
@@ -245,21 +256,28 @@ public class Rain {
             terrainSP.setUniform("fogThickness", fogThickness);
             terrain.draw();
             
-            //rain streaks  
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glEnable(GL_BLEND);
-            raindrops.draw(cam);
-            glDisable(GL_BLEND);
+            //rain streaks
+            if (drawRain)
+            {
+	            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	            glEnable(GL_BLEND);
+	            raindrops.draw(cam);
+	            glDisable(GL_BLEND);
+            }
             
+            //water map
+            if (drawWater)
+            {
+            	watermap.draw(cam);
+            }
+            	
             //TODO: proper integration
-            glUseProgram(orbSP.getID());
-            Matrix4f viewProj = new Matrix4f();
-            Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);  
-            orbSP.setUniform("viewProj", viewProj);
-            orb.draw(orbSP.getID());
-            
-       
-            
+//            glUseProgram(orbSP.getID());
+//            Matrix4f viewProj = new Matrix4f();
+//            Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);  
+//            orbSP.setUniform("viewProj", viewProj);
+//            orb.draw(orbSP.getID());
+                  
             // present screen
             Display.update();
             Display.sync(60);
@@ -273,7 +291,7 @@ public class Rain {
      * @param millis milliseconds, passed since last update
      */
     public static void handleInput(long millis) {
-        float moveSpeed = 2e-3f*(Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) ? 2.0f : 1.0f)*(float)millis;
+        float moveSpeed = 2e-3f*(Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) ? 5.0f : 1.0f)*(float)millis;
         float camSpeed = 5e-3f;
         
         while(Keyboard.next()) {
@@ -338,6 +356,7 @@ public class Rain {
         // update time properly
         ingameTime += ingameTimePerSecond * 1e-3f * (float)millis;        
         raindrops.updateSimulation(millis);
+        watermap.updateSimulation(millis);
         orb.animate(millis);
     }
     

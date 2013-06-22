@@ -1,6 +1,6 @@
 #version 400 core
 
-in vec3 positionMC;
+in vec4 positionMC;
 
 out vec2 texCoords;
 out vec3 positionFS;
@@ -11,8 +11,8 @@ uniform float scale;
 
 void main(void)
 {
-    gl_Position = proj * view * vec4(positionMC, 1.0);
-    texCoords.st = positionMC.xz / scale;//(vec2(1.0) - (positionMC.xz / scale));
+    gl_Position = proj * view * positionMC;
+    texCoords.st = positionMC.xz / scale;
 
     positionFS = positionMC.xyz;
 }

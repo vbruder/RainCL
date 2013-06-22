@@ -15,7 +15,7 @@ float getRand(int seed)
     return rand;
 }
 
-kernel void rain_sim(
+kernel void rainSim(
     //position array contains: float4 position, float4 seed, float4 velos
 	global float4* position,
 	global float4* velos,
@@ -24,16 +24,16 @@ kernel void rain_sim(
 	read_only image2d_t heightmap,
 	read_only image2d_t normalmap,
 	
-	uint maxParticles,
-	float dt,
-    float eyePosX,
-    float eyePosY,
-    float eyePosZ,
-    float windDirX,
-    float windDirZ)
+	const uint maxParticles,
+	const float dt,
+    const float eyePosX,
+    const float eyePosY,
+    const float eyePosZ,
+    const float windDirX,
+    const float windDirZ)
 {
     
-    int myId = get_global_id(0);
+    uint myId = get_global_id(0);
     
     //*3, to skip seed and velos??
     float4 myPos = position[myId];

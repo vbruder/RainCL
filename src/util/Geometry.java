@@ -19,7 +19,7 @@ import org.lwjgl.opengl.GL33;
 public class Geometry {
     private int vaid = -1;                  // vertex array id
     private FloatBuffer vertexValueBuffer;  // vertex buffer values
-    private FloatBuffer instanceData;
+	private FloatBuffer instanceData;
     private IntBuffer indexValueBuffer;     // index buffer values
     private int topology;                   // index topology
     private int indexCount;                 // number of indices
@@ -33,72 +33,6 @@ public class Geometry {
     
     private Texture normalTex, lightTex, specularTex, colorTex;
 
-    /**
-     * Set normal texture.
-     * @param normalTex texture containing normal information
-     */
-    public void setNormalTex(Texture normalTex) {
-        this.normalTex = normalTex;
-    }
-    
-    /**
-     * Set light texture.
-     * @param lightTex texture containing light information
-     */
-    public void setLightTex(Texture lightTex) {
-        this.lightTex = lightTex;
-    }
-    
-    /**
-     * Set specular texture.
-     * @param specularTex texture containing specular lighting information
-     */
-    public void setSpecularTex(Texture specularTex) {
-        this.specularTex = specularTex;
-    }
-    
-    /**
-     * Set color texture.
-     * @param colorTex texture containing normal information
-     */
-    public void setColorTex(Texture colorTex) {
-        this.colorTex = colorTex;
-    }
-  
-    /**
-     * Returns the normal texture.
-     * @return normal texture
-     */
-    public Texture getNormalTex() {
-        return normalTex;
-    }
-
-    /**
-     * Returns the light texture.
-     * @return light texture
-     */
-    public Texture getLightTex()
-    {
-        return lightTex;
-    }
-    
-    /**
-     * Returns the specular texture.
-     * @return specular texture
-     */
-    public Texture getSpecularTex()
-    {
-        return specularTex;
-    }
-
-    /**
-     * Returns color texture.
-     * @return color texture
-     */
-    public Texture getColorTex()
-    {
-        return colorTex;
-    }
 
     /**
      * Setzt den IntBuffer, der die Indexdaten dieser Geometrie beinhaltet und
@@ -248,5 +182,79 @@ public class Geometry {
          * Offset des Attributs in einem Vertex, gemessen in Byte
          */
         private int offset;
+    }
+    /**
+     * Set normal texture.
+     * @param normalTex texture containing normal information
+     */
+    public void setNormalTex(Texture normalTex) {
+    	this.normalTex = normalTex;
+    }
+    
+    /**
+     * Set light texture.
+     * @param lightTex texture containing light information
+     */
+    public void setLightTex(Texture lightTex) {
+    	this.lightTex = lightTex;
+    }
+    
+    /**
+     * Set specular texture.
+     * @param specularTex texture containing specular lighting information
+     */
+    public void setSpecularTex(Texture specularTex) {
+    	this.specularTex = specularTex;
+    }
+    
+    /**
+     * Set color texture.
+     * @param colorTex texture containing normal information
+     */
+    public void setColorTex(Texture colorTex) {
+    	this.colorTex = colorTex;
+    }
+    
+    /**
+     * Returns the normal texture.
+     * @return normal texture
+     */
+    public Texture getNormalTex() {
+    	return normalTex;
+    }
+    
+    /**
+     * Returns the light texture.
+     * @return light texture
+     */
+    public Texture getLightTex()
+    {
+    	return lightTex;
+    }
+    
+    /**
+     * Returns the specular texture.
+     * @return specular texture
+     */
+    public Texture getSpecularTex()
+    {
+    	return specularTex;
+    }
+    
+    /**
+     * Returns color texture.
+     * @return color texture
+     */
+    public Texture getColorTex()
+    {
+    	return colorTex;
+    }
+    
+    /**
+     * Returns vertex data.
+     * @return Float buffer containing vertex data.
+     */
+    public FloatBuffer getVertexValueBuffer() {
+    	return vertexValueBuffer;
     }
 }

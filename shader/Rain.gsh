@@ -21,12 +21,11 @@ out float randEnlight;
 out float texArrayID;
 
 // GS for billboard technique (make two triangles from point).
-// based on http://ogldev.atspace.co.uk/www/tutorial27/tutorial27.html
 void main()                                                                         
 {
     //streak size
-    float height = 0.15;
-    float width = height/30.0;
+    float height = 0.5;
+    float width = height/100.0;
                                                                                  
     vec3 pos = gl_in[0].gl_Position.xyz;                                            
     vec3 toCamera = normalize(eyePosition - pos);                                    

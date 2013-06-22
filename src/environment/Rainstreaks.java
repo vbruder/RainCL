@@ -100,7 +100,7 @@ import util.Util.ImageContents;
 
 /**
  * Rainstreaks particle system
- * @author Valentin Bruder (vbruder@uos.de)
+ * @author Valentin Bruder <vbruder@uos.de>
  */
 public class Rainstreaks {
     
@@ -139,8 +139,8 @@ public class Rainstreaks {
     
     //kernel settings
     private int localWorkSize = 256;
-    private final PointerBuffer gwz = BufferUtils.createPointerBuffer(1);
-    private final PointerBuffer lwz = BufferUtils.createPointerBuffer(1);
+    private final PointerBuffer gws = BufferUtils.createPointerBuffer(1);
+    private final PointerBuffer lws = BufferUtils.createPointerBuffer(1);
     
     private static Vector3f windDir[] = new Vector3f[500];
     private static int windPtr = 0;
@@ -177,8 +177,8 @@ public class Rainstreaks {
      * @param drawable OpenGL drawable.
      * @throws LWJGLException
      */
-    public Rainstreaks(Device_Type device_type, Drawable drawable, Camera cam, PointLightOrb orb, Sun sun) throws LWJGLException {
-        
+    public Rainstreaks(Device_Type device_type, Drawable drawable, Camera cam, PointLightOrb orb, Sun sun) throws LWJGLException
+    {
         maxParticles = 1 << 17;
         this.eyePos = cam.getCamPos();
         this.orb = orb;
@@ -186,13 +186,13 @@ public class Rainstreaks {
         //range of cylinder around cam
         clusterScale = 12.0f;
         //velocity factor
-        veloFactor = 128.0f;
+        veloFactor = 150.0f;
         
-        this.gwz.put(0, maxParticles);
-        this.lwz.put(0, this.localWorkSize);  
+        this.gws.put(0, maxParticles);
+        //this.lws.put(0, this.localWorkSize);  
         
         //openCL context
-        createCLContext(device_type, Util.getFileContents("./shader/RainSim.cl"), drawable);
+        createCLContext(device_type, Util.getFileContents("./kernel/RainSim.cl"), drawable);
         createWindData();
         createRainData();
         createBuffer();
@@ -249,7 +249,7 @@ public class Rainstreaks {
      */
     private void createShaderProgram() { 
         
-        this.StreakRenderSP = new ShaderProgram("./shader/StreakRender.vsh", "./shader/StreakRender.gsh", "./shader/StreakRender.fsh");
+        this.StreakRenderSP = new ShaderProgram("./shader/Rain.vsh", "./shader/Rain.gsh", "./shader/Rain.fsh");
         
         //load the 370 point light textures into a texture array
         ImageContents content = Util.loadImage("media/rainTex/point/cv0_vPos_000.png");       
@@ -431,7 +431,7 @@ public class Rainstreaks {
     private static void loadTexturesCL()
     {
         IntBuffer errorCheck = BufferUtils.createIntBuffer(1);
-        //load hight map
+        //load height map
         ImageContents contentHeight = Util.loadImage("media/terrain/terrainHeight01.png");
         FloatBuffer dataH = BufferUtils.createFloatBuffer(contentHeight.height * contentHeight.width);
         for(int i = 0; i < dataH.capacity(); ++i)
@@ -491,7 +491,7 @@ public class Rainstreaks {
     private static void createKernels() {
                
         //kernel
-        kernelMoveStreaks = clCreateKernel(program, "rain_sim");
+        kernelMoveStreaks = clCreateKernel(program, "rainSim");
         kernelMoveStreaks.setArg(0, position);
         kernelMoveStreaks.setArg(1, velos);
         kernelMoveStreaks.setArg(2, seed);
@@ -526,7 +526,7 @@ public class Rainstreaks {
         kernelMoveStreaks.setArg( 9, eyePos.z);
         kernelMoveStreaks.setArg(10, windDir[windPtr].x);
         kernelMoveStreaks.setArg(11, windDir[windPtr].z);
-        clEnqueueNDRangeKernel(queue, kernelMoveStreaks, 1, null, gwz, lwz, null, null);            
+        clEnqueueNDRangeKernel(queue, kernelMoveStreaks, 1, null, gws, null, null, null);            
 
         clEnqueueReleaseGLObjects(queue, position, null, null);
         clEnqueueReleaseGLObjects(queue, heightmap, null, null);
@@ -561,7 +561,7 @@ public class Rainstreaks {
             createRainData();
             createBuffer();
             kernelMoveStreaks.setArg(5, maxParticles);
-            this.gwz.put(0, maxParticles);            
+            this.gws.put(0, maxParticles);            
         }
         
     	StreakRenderSP.use();
