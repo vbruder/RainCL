@@ -18,13 +18,14 @@ import org.lwjgl.opengl.GL33;
  */
 public class Geometry {
     private int vaid = -1;                  // vertex array id
-    private FloatBuffer vertexValueBuffer;  // vertex buffer values
+	private FloatBuffer vertexValueBuffer;  // vertex buffer values
 	private FloatBuffer instanceData;
     private IntBuffer indexValueBuffer;     // index buffer values
     private int topology;                   // index topology
     private int indexCount;                 // number of indices
     private int vbid;                       // geometry vertex buffer
-    private int ibid;                       // geometry index buffer
+
+	private int ibid;                       // geometry index buffer
     private int instancebid = -1;
     private int instanceStride;
     private int instanceCount;
@@ -90,8 +91,20 @@ public class Geometry {
         this.instanceCount = instanceData.capacity() / size;
     }
     
+    /**
+     * 
+     * @return instance buffer
+     */
     public int getInstanceBuffer() {
         return this.instancebid;
+    }
+    
+    /**
+     * 
+     * @return OpenGL vertex buffer ID
+     */
+    public int getVbid() {
+    	return vbid;
     }
     
     /**

@@ -4,6 +4,7 @@ import static apiWrapper.GL.*;
 import static apiWrapper.GL.GL_BLEND;
 import static apiWrapper.GL.GL_ONE;
 import static apiWrapper.GL.GL_ONE_MINUS_SRC_COLOR;
+import static apiWrapper.GL.GL_ONE_MINUS_DST_COLOR;
 import static apiWrapper.GL.glBlendFunc;
 
 import java.util.logging.Level;
@@ -268,7 +269,10 @@ public class Rain {
             //water map
             if (drawWater)
             {
+	            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	            glEnable(GL_BLEND);
             	watermap.draw(cam);
+	            glDisable(GL_BLEND);
             }
             	
             //TODO: proper integration

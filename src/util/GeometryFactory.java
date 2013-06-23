@@ -226,11 +226,12 @@ public class GeometryFactory {
         
         // indexbuffer
         IntBuffer indexData = BufferUtils.createIntBuffer((ic.length-1)*2*ic[0].length+(ic.length-2));
-        for (int y = 0; y < ic.length-1; y++) {
-            for (int x = 0; x < ic[0].length; x++) {
+        for (int y = 0; y < ic.length-1; y++)
+        {
+            for (int x = 0; x < ic[0].length; x++)
+            {
                 indexData.put(y*ic[0].length + x);
                 indexData.put((y+1)*ic[0].length + x);
-                
             }
             if (y < ic.length-2)
                 indexData.put(-1);

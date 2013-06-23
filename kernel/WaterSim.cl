@@ -61,7 +61,7 @@ kernel void waterSim(
 	//TODO: size?? 
 	//angle between tangent and (1,0,0)
 	normalize(tangent);
-	float grad = gradient[id]*30; 	// 0-9
+	float grad = gradient[id]*50; 	// 0-9
 	//calculate the neighbor to flow to (Moore neighborhood)
 	//
 	// x: current thread
@@ -80,18 +80,18 @@ kernel void waterSim(
 	//TODO: improve conditional mess and do atomic_add (on floats ?)
 	// maybe atomic_xchg (read - swap - store)
 	
-		 if (dir == 0) (water[id - rowlen + 1].y) += grad*dt*0.8;
-	else if (dir == 1) (water[id          + 1].y) += grad*dt*0.9;
-	else if (dir == 2) (water[id + rowlen + 1].y) += grad*dt*0.9;
-	else if (dir == 3) (water[id + rowlen + 0].y) += grad*dt*0.9;
-	else if (dir == 4) (water[id + rowlen - 1].y) += grad*dt*0.9;
-	else if (dir == 5) (water[id          - 1].y) += grad*dt*0.9;
-	else if (dir == 6) (water[id - rowlen - 1].y) += grad*dt*0.9;
-	else if (dir == 7) (water[id - rowlen - 1].y) += grad*dt*0.9;
+		 if (dir == 0) (water[id - rowlen + 1].y) += grad*dt;
+	else if (dir == 1) (water[id          + 1].y) += grad*dt;
+	else if (dir == 2) (water[id + rowlen + 1].y) += grad*dt;
+	else if (dir == 3) (water[id + rowlen + 0].y) += grad*dt;
+	else if (dir == 4) (water[id + rowlen - 1].y) += grad*dt;
+	else if (dir == 5) (water[id          - 1].y) += grad*dt;
+	else if (dir == 6) (water[id - rowlen - 1].y) += grad*dt;
+	else if (dir == 7) (water[id - rowlen - 1].y) += grad*dt;
 	
 	barrier(CLK_GLOBAL_MEM_FENCE);
 	//water[id - 1].y += grad*dt;
-	water[id].y -= grad*dt*1.2;
+	water[id].y -= grad*dt*1.3;
 	
 	//*********************************************************************************
 	//distribute water equally to neighbors with height field method
@@ -115,4 +115,5 @@ kernel void waterSim(
 	//water[id].y = tangent.y * 5;
 	
 	//TODO: blend water ~ amount
+	//water[id].s3 = 1.0;
 }
