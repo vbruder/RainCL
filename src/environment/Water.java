@@ -88,9 +88,11 @@ public class Water {
 	//openCL
 	private CLDevice device;
 
+	private FloatBuffer velosDataBuffer;
 	private FloatBuffer heightDataBuffer;
 	private FloatBuffer normalDataBuffer;
 	private FloatBuffer attributeDataBuffer;
+	private FloatBuffer gradientDataBuffer;
 	
 	private PointerBuffer gws = new PointerBuffer(1);
 	
@@ -98,9 +100,14 @@ public class Water {
 	private CLMem memNormal;
 	private CLMem memAttribute;
 	private CLMem memWater;
+	private CLMem memVelos;
+	private CLMem memGradient;
 
     //delta time for animations
 	private float dt;
+	private float rainfactor;
+	private float oozingfactor;
+	private float dampingfactor;
 
 	//openGL IDs
 	private static int vertArrayID2;
@@ -117,7 +124,8 @@ public class Water {
 	//shader
 	private ShaderProgram WaterRenderSP;
     private final Matrix4f viewProj = new Matrix4f();
-	
+
+
 	/**
 	 * Create water object.
 	 * @param device_type OpenCl device type
@@ -128,6 +136,10 @@ public class Water {
 	public Water(Device_Type device_type, Drawable drawable, Geometry terrain) throws LWJGLException
 	{		
 		this.terrain = terrain;
+		rainfactor = 0.00000052f;
+		oozingfactor = 0.091f;
+		dampingfactor = 0.1f;
+		
         createCLContext(device_type, Util.getFileContents("./kernel/WaterSim.cl"), drawable);
         createWaterData();
         createKernels();
@@ -141,7 +153,8 @@ public class Water {
 	{
         //load height map data
         ImageContents contentHeight = Util.loadImage("media/terrain/terrainHeight01.png");
-        heightDataBuffer = BufferUtils.createFloatBuffer(contentHeight.height * contentHeight.width);
+        int terrainDim = contentHeight.height * contentHeight.width;
+        heightDataBuffer = BufferUtils.createFloatBuffer(terrainDim);
         for(int i = 0; i < heightDataBuffer.capacity(); ++i)
         {
             heightDataBuffer.put(contentHeight.data.get(i));
@@ -151,7 +164,7 @@ public class Water {
                         
         //load normal map data
         ImageContents contentNorm = Util.loadImage("media/terrain/terrainNormal01.png");
-        normalDataBuffer = BufferUtils.createFloatBuffer(contentNorm.height * contentNorm.width * 4);
+        normalDataBuffer = BufferUtils.createFloatBuffer(terrainDim * 4);
         for(int i = 0; i < (normalDataBuffer.capacity()/4); ++i)
         {
             normalDataBuffer.put(contentNorm.data.get(i));
@@ -164,7 +177,7 @@ public class Water {
         
         //load attribute map data
         ImageContents contentAttrib = Util.loadImage("media/terrain/terrainAttribute01.png");
-        attributeDataBuffer = BufferUtils.createFloatBuffer(contentAttrib.height * contentAttrib.width);
+        attributeDataBuffer = BufferUtils.createFloatBuffer(terrainDim);
         for(int i = 0; i < attributeDataBuffer.capacity(); ++i)
         {
         	attributeDataBuffer.put(contentAttrib.data.get(i));
@@ -172,10 +185,26 @@ public class Water {
         attributeDataBuffer.rewind();
         memAttribute = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, attributeDataBuffer);
         
+        //load gradient map data
+        ImageContents contentGradient = Util.loadImage("media/terrain/terrainGradient01.png");
+        gradientDataBuffer = BufferUtils.createFloatBuffer(terrainDim);
+        for(int i = 0; i < gradientDataBuffer.capacity(); ++i)
+        {
+        	gradientDataBuffer.put(contentGradient.data.get(i));
+        }
+        gradientDataBuffer.rewind();
+        memGradient = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, gradientDataBuffer);
+        
+        
+        //create velocity buffer
+        velosDataBuffer = BufferUtils.createFloatBuffer(terrainDim);
+        BufferUtils.zeroBuffer(velosDataBuffer);
+        memVelos = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, velosDataBuffer);
+        
         //generate initial water map
         //set water map initially to height data
         //TODO: accumulate data
-        gws.put(0, contentHeight.height * contentHeight.width);
+        gws.put(0, terrainDim);
         
     	vertArrayID2 = glGenVertexArrays();
     	glBindVertexArray(vertArrayID2);
@@ -240,10 +269,12 @@ public class Water {
 		
 		//kernel for water simulation
 		kernelWaterSim = clCreateKernel(program, "waterSim");
-		kernelWaterSim.setArg(3, memWater);
-		kernelWaterSim.setArg(1, memNormal);
+		kernelWaterSim.setArg(0, memWater);
+		kernelWaterSim.setArg(1, memVelos);
 		kernelWaterSim.setArg(2, memHeight);
-		kernelWaterSim.setArg(0, memAttribute);
+		kernelWaterSim.setArg(3, memNormal);
+		kernelWaterSim.setArg(4, memAttribute);
+		kernelWaterSim.setArg(5, memGradient);
 	}
 	
 	/**
@@ -254,8 +285,10 @@ public class Water {
 	{	        	        
 	    clEnqueueAcquireGLObjects(queue, memWater, null, null);
 	    
-	    kernelWaterSim.setArg( 4, Rainstreaks.getMaxParticles());
-	    kernelWaterSim.setArg( 5, 1e-3f*deltaTime);
+	    kernelWaterSim.setArg( 6, ((float) Rainstreaks.getMaxParticles())*rainfactor);
+	    kernelWaterSim.setArg( 7, oozingfactor);
+	    kernelWaterSim.setArg( 8, dampingfactor);
+	    kernelWaterSim.setArg( 9, 1e-3f*deltaTime);
 	    
         clEnqueueNDRangeKernel(queue, kernelWaterSim, 1, null, gws, null, null, null);            
 
@@ -284,9 +317,11 @@ public class Water {
 	 */
 	public void destroy()
 	{
-        clReleaseMemObject(memAttribute);
+		clReleaseMemObject(memGradient);
+		clReleaseMemObject(memAttribute);
         clReleaseMemObject(memHeight);
         clReleaseMemObject(memNormal);
+        clReleaseMemObject(memVelos);
         clReleaseMemObject(memWater);
         clReleaseKernel(kernelWaterSim);
         clReleaseCommandQueue(queue);
