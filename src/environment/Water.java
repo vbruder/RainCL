@@ -141,7 +141,7 @@ public class Water {
 		this.terrain = terrain;
 		rainfactor = 0.00000051f;
 		oozingfactor = 0.091f;
-		dampingfactor = 0.1f;
+		dampingfactor = 0.05f;
 		
         createCLContext(device_type, Util.getFileContents("./kernel/WaterSim.cl"), drawable);
         createWaterData();
