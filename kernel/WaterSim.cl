@@ -61,7 +61,7 @@ kernel void waterSim(
 	//TODO: size?? 
 	//angle between tangent and (1,0,0)
 	normalize(tangent);
-	float grad = gradient[id]*50; 	// 
+	float grad = gradient[id]*0.9; 	// 
 	//calculate the neighbor to flow to (Moore neighborhood)
 	//
 	// x: current thread
@@ -78,7 +78,7 @@ kernel void waterSim(
 
 	//map to IDs and increase neighbor dependant on grad and time
 	//TODO: improve conditional mess and do atomic_add (on floats ?)
-	// maybe atomic_xchg (read - swap - store)
+	// maybe atomic_xchg (read - swap - store) or integer
 	
 		 if (dir == 0) (water[id - rowlen + 1].y) += grad*dt;
 	else if (dir == 1) (water[id          + 1].y) += grad*dt;
@@ -102,7 +102,7 @@ kernel void waterSim(
 		f *= 15.0;
 		//newWaterVal += velos[id]*dt*20;
 	}
-	float newWaterVal = f*dt;
+	float newWaterVal = f*dt - grad*0.001;
 	//velos[id] += f*dt;
 	newWaterVal += waterVal;
 

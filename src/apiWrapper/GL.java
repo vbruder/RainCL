@@ -598,6 +598,15 @@ public class GL {
     
     /**
      * OpenGL 1.1
+     * @see <a href="http://www.opengl.org/sdk/docs/man4/xhtml/glClear.xml">glFinish</a>
+     */
+    public static void glFinish() {
+        GL11.glFinish();
+        GL.checkError("glFinish");
+    }
+    
+    /**
+     * OpenGL 1.1
      * @see <a href="http://www.opengl.org/sdk/docs/man4/xhtml/glClearColor.xml">glClearColor</a>
      * @param red
      * @param green

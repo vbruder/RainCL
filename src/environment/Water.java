@@ -23,6 +23,7 @@ import static apiWrapper.GL.glGenVertexArrays;
 import static apiWrapper.GL.glGenerateMipmap;
 import static apiWrapper.GL.glTexImage2D;
 import static apiWrapper.GL.glVertexAttribPointer;
+import static apiWrapper.GL.glFinish;
 import static apiWrapper.OpenCL.clBuildProgram;
 import static apiWrapper.OpenCL.clCreateCommandQueue;
 import static apiWrapper.OpenCL.clCreateProgramWithSource;
@@ -139,8 +140,8 @@ public class Water {
 	public Water(Device_Type device_type, Drawable drawable, Geometry terrain) throws LWJGLException
 	{		
 		this.terrain = terrain;
-		rainfactor = 0.00000051f;
-		oozingfactor = 0.091f;
+		rainfactor = 0.09f;
+		oozingfactor = 0.092f;
 		dampingfactor = 0.05f;
 		
         createCLContext(device_type, Util.getFileContents("./kernel/WaterSim.cl"), drawable);
@@ -319,10 +320,13 @@ public class Water {
 	 * @param deltaTime Time past since last update.
 	 */
 	public void updateSimulation(long deltaTime)
-	{	        	        
+	{	        	  
+		glFinish();
 	    clEnqueueAcquireGLObjects(queue, memWater, null, null);
 	    
-	    kernelWaterSim.setArg( 6, ((float) Rainstreaks.getMaxParticles())*rainfactor);
+	    float rain = (float) ((double) Math.log(Rainstreaks.getMaxParticles()) / Math.log(2))/10.0f - 1.0f; // 0-1
+	    
+	    kernelWaterSim.setArg( 6, rain*rainfactor);
 	    kernelWaterSim.setArg( 7, oozingfactor);
 	    kernelWaterSim.setArg( 8, dampingfactor);
 	    kernelWaterSim.setArg( 9, 1e-3f*deltaTime);
