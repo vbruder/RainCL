@@ -144,7 +144,7 @@ public class Rainstreaks {
     
     private static Vector3f windDir[] = new Vector3f[500];
     private static int windPtr = 0;
-    private static float windForce = 5.f;
+    private static float windForce = 10.f;
     
     // terrain texture IDs
     private static Texture hTex;

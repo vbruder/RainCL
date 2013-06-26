@@ -141,8 +141,8 @@ public class Water {
 	{		
 		this.terrain = terrain;
 		rainfactor = 0.09f;
-		oozingfactor = 0.092f;
-		dampingfactor = 0.05f;
+		oozingfactor = 0.090f;
+		dampingfactor = 0.001f;
 		
         createCLContext(device_type, Util.getFileContents("./kernel/WaterSim.cl"), drawable);
         createWaterData();
@@ -208,6 +208,10 @@ public class Water {
         //generate initial water map
         //set water map initially to height data
         //TODO: accumulate data
+        
+        for (int i = 0; i < 10000; i++) {
+			System.out.println(terrain.getVertexValueBuffer().get(i));
+		}
         gws.put(0, terrainDim);
         
     	vertArrayID2 = glGenVertexArrays();

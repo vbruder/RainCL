@@ -6,7 +6,7 @@ kernel void waterSim(
 					global float* 	height,
 					global float4*	normal,
 					global float* 	attribute,
-					global float* 	gradMap,
+					global float* 	gradient,
 					const  float	rain,
 					const  float	oozing,
 					const  float	damping,
@@ -16,23 +16,21 @@ kernel void waterSim(
 	uint gws = get_global_size(0);
 	uint rowlen = sqrt((float) gws);
 	
-	//check if border bucket
-	if (id % (rowlen-1) == 0 || id %  rowlen == 0)
-		;
-	//water.y initital -1..12 something??
+	//TODO: check if border bucket
+	if (id % (rowlen-1) == 0 || id %  rowlen == 0);
 	
 	//TODO: rain factor size??
-	float rainFactor = rain * dt;			// 0.1 .. 1.0 *dt
-	float heightVal  = height[id]/32;			// 0..255 -> 0..1
-	float waterVal   = water[id].y - heightVal;
+	float rainFactor = rain * dt;			// 0.1 - 1.0 *dt
+	float heightVal  = height[id];			// 0 - 255
+	float waterVal   = water[id].y;
 	//grad of terrain as flow amount factor
-	float grad 		 = gradMap[id]*10.0; 	// grad: 0.0 .. 1.0 -> 0.0 .. 20.0
+	float grad 		 = gradient[id]*0.9; 	// grad: 0.0 - 1.0
 	
 	//*********************************************************************************
-	//add rain water
+	//add rain to water map
 	waterVal += rainFactor;	
 	//remove oozing water
-	waterVal -= attribute[id] * oozing * dt;
+	waterVal -= attribute[id] * oozing * dt;	// attribute: 0.0 - 1.0
 	
 	barrier(CLK_GLOBAL_MEM_FENCE);
 	
@@ -60,11 +58,8 @@ kernel void waterSim(
 		tangent = (float3) (0.0) - tangent;
 	}
 	
-	//grad of terrain as flow amount factor
-	//TODO: size?? 
-	//angle between tangent and (1,0,0)
+	
 	normalize(tangent);
-
 	//calculate the neighbor to flow to (Moore neighborhood)
 	//
 	// x: current thread
@@ -75,7 +70,7 @@ kernel void waterSim(
 	//	x-1  x  x+1		=>		5  x  1
 	//  d-1  d  d+1				4  3  2
 	//
-	// Calculate angle starting 0Â° at (1,0). 
+	// Calculate angle starting 0° at (1,0). 
 	// Divide angle by 8 (amount of neighbor fields) and roud result to nearest int.
 	uint dir = (int)((atan2pi(tangent.y, tangent.x) * 180.0f)/45.0f + 0.5f);
 
@@ -94,49 +89,22 @@ kernel void waterSim(
 	
 	barrier(CLK_GLOBAL_MEM_FENCE);
 	
-	water[id].y -= grad*dt;
+	water[id].y -= grad*dt*1.3;
 	
 	//*********************************************************************************
 	//distribute water equally to neighbors with height field method
-	//pick data from von Neumann neighborhood 
-	//but only if grad of neighbors <= grad of current item
-	int cnt = 0;
-	float rightN, leftN, topN, botN;
-	rightN = leftN = topN = botN = 0.0;
-	//right neighbor
-	if (gradMap[id + 1] <= grad)
+	//TODO: add speed factor c^2 ??
+	float f = damping * (water[id + 1].y + water[id - 1].y + water[id + rowlen].y + water[id - rowlen].y - 4*(waterVal));
+	if (grad < 0.5)
 	{
-		rightN = water[id + 1].y;
-		cnt++;
+		f *= 15.0;
+		//newWaterVal += velos[id]*dt*20;
 	}
-	//left neighbor
-	if (gradMap[id - 1] <= grad)
-	{
-		leftN = water[id - 1].y;
-		cnt++;
-	}
-	//bottom neighbor
-	if (gradMap[id + rowlen] <= grad)
-	{
-		botN = water[id + rowlen].y;
-		cnt++;
-	}
-	//top neighbor
-	if (gradMap[id - rowlen] <= grad)
-	{
-		topN = water[id - rowlen].y;
-		cnt++;
-	}
-
-	//calculate height-field-fluids function
-	float hff = damping * (rightN + leftN + botN + topN - cnt*(waterVal));
-	
-	float newWaterVal = hff*dt;
+	float newWaterVal = f*dt - grad*0.001;
 	//velos[id] += f*dt;
 	newWaterVal += waterVal;
-	newWaterVal += heightVal;
 
-	//calculate new water value and set water map. Set minimal limit.
+	//calculate new water value and set water map. Value cannot be smaller than height.
 	if (newWaterVal < -10.0)
 	{
 		water[id].y = -10.0;
@@ -148,8 +116,7 @@ kernel void waterSim(
 	
 	//debug:
 	//water[id].y = grad;
-
-	//water[id].y = tangent.z * 10;
+	//water[id].y = tangent.y * 5;
 	
 	//TODO: blend water ~ amount
 	//water[id].s3 = 1.0;

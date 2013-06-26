@@ -69,7 +69,8 @@ public class Rain {
     //environment
     private static Rainstreaks raindrops;
     private static boolean drawRain = false;
-    private static PointLightOrb orb;
+
+	private static PointLightOrb orb;
     private static Sun sun;
     private static Water watermap;
     private static boolean drawWater = true;
@@ -89,7 +90,7 @@ public class Rain {
     private static int scaleTerrain = 128;
     private static boolean drawTerrain = true;
 
-    //lighting
+	//lighting
     private static float k_diff =  15.0f;
     private static float k_spec =  25.0f;
     private static float k_ambi =  0.1f;
@@ -238,25 +239,28 @@ public class Rain {
 //            glDisable(GL_BLEND);
             
             //terrain
-            terrainSP.use();
-            //VS
-            terrainSP.setUniform("proj", cam.getProjection());
-            terrainSP.setUniform("view", cam.getView());
-            terrainSP.setUniform("scale", scaleTerrain);
-            //FS
-            terrainSP.setUniform("normalTex", terrain.getNormalTex());
-            terrainSP.setUniform("lightTex", terrain.getLightTex());
-            terrainSP.setUniform("specularTex", terrain.getSpecularTex());
-            terrainSP.setUniform("colorTex", terrain.getColorTex());
-            terrainSP.setUniform("sunIntensity", sun.getIntensity());
-            terrainSP.setUniform("sunDir", sun.getDirection());
-            terrainSP.setUniform("k_diff", k_diff);
-            terrainSP.setUniform("k_spec", k_spec);
-            terrainSP.setUniform("k_ambi", k_ambi);
-            terrainSP.setUniform("eyePosition", cam.getCamPos());
-            terrainSP.setUniform("fogThickness", fogThickness);
-            terrain.draw();
-            
+            if (drawTerrain)
+            {
+	            terrainSP.use();
+	            //VS
+	            terrainSP.setUniform("proj", cam.getProjection());
+	            terrainSP.setUniform("view", cam.getView());
+	            terrainSP.setUniform("scale", scaleTerrain);
+	            //FS
+	            terrainSP.setUniform("normalTex", terrain.getNormalTex());
+	            terrainSP.setUniform("lightTex", terrain.getLightTex());
+	            terrainSP.setUniform("specularTex", terrain.getSpecularTex());
+	            terrainSP.setUniform("colorTex", terrain.getColorTex());
+	            terrainSP.setUniform("sunIntensity", sun.getIntensity());
+	            terrainSP.setUniform("sunDir", sun.getDirection());
+	            terrainSP.setUniform("k_diff", k_diff);
+	            terrainSP.setUniform("k_spec", k_spec);
+	            terrainSP.setUniform("k_ambi", k_ambi);
+	            terrainSP.setUniform("eyePosition", cam.getCamPos());
+	            terrainSP.setUniform("fogThickness", fogThickness);
+	            terrain.draw();
+            }
+	            
             //rain streaks
             if (drawRain)
             {
@@ -316,7 +320,8 @@ public class Rain {
                     case Keyboard.KEY_D: moveDir.x += 1.0f; break;
                     case Keyboard.KEY_SPACE: moveDir.y -= 1.0f; break;
                     case Keyboard.KEY_C: moveDir.y += 1.0f; break;
-                    case Keyboard.KEY_F1: cam.changeProjection(); break;
+                    case Keyboard.KEY_F1: setDrawRain(!isDrawRain()); break;
+                    case Keyboard.KEY_F2: setDrawTerrain(!isDrawTerrain()); break;
                     case Keyboard.KEY_UP: break;
                     case Keyboard.KEY_DOWN: break;
                     case Keyboard.KEY_M:
@@ -324,8 +329,8 @@ public class Rain {
                                         tc.start();
                                         tc.addTimerListener(Settings.getInstance());
                                         break;
-                    case Keyboard.KEY_F2: glPolygonMode(GL_FRONT_AND_BACK, (wireframe ^= true) ? GL_FILL : GL_LINE); break;
-                    case Keyboard.KEY_F3: if(culling ^= true) glEnable(GL_CULL_FACE); else glDisable(GL_CULL_FACE); break;
+                    case Keyboard.KEY_F9: glPolygonMode(GL_FRONT_AND_BACK, (wireframe ^= true) ? GL_FILL : GL_LINE); break;
+                    case Keyboard.KEY_F10: if(culling ^= true) glEnable(GL_CULL_FACE); else glDisable(GL_CULL_FACE); break;
                 }
             }
         }
@@ -408,4 +413,31 @@ public class Rain {
         Rain.fogThickness = fogThickness;
     }
     
+    /**
+	 * @return the drawRain
+	 */
+	public static boolean isDrawRain() {
+		return drawRain;
+	}
+
+	/**
+	 * @param drawRain the drawRain to set
+	 */
+	public static void setDrawRain(boolean drawRain) {
+		Rain.drawRain = drawRain;
+	}
+	
+    /**
+	 * @return the drawTerrain
+	 */
+	public static boolean isDrawTerrain() {
+		return drawTerrain;
+	}
+
+	/**
+	 * @param drawTerrain the drawTerrain to set
+	 */
+	public static void setDrawTerrain(boolean drawTerrain) {
+		Rain.drawTerrain = drawTerrain;
+	}
 }
