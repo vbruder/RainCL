@@ -67,6 +67,7 @@ import org.lwjgl.opencl.CLMem;
 import org.lwjgl.opencl.CLPlatform;
 import org.lwjgl.opencl.CLProgram;
 import org.lwjgl.opengl.Drawable;
+import org.lwjgl.opengl.GL11;
 import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
 
@@ -208,10 +209,6 @@ public class Water {
         //generate initial water map
         //set water map initially to height data
         //TODO: accumulate data
-        
-        for (int i = 0; i < 10000; i++) {
-			System.out.println(terrain.getVertexValueBuffer().get(i));
-		}
         gws.put(0, terrainDim);
         
     	vertArrayID2 = glGenVertexArrays();
@@ -226,6 +223,8 @@ public class Water {
         glVertexAttribPointer(ShaderProgram.ATTR_POS, 4, GL_FLOAT, false, 16,  0);
         
         memWater = clCreateFromGLBuffer(context, CL_MEM_READ_WRITE, vertBufferID2);
+        
+        GL11.glPointSize(10f);
         
                
         //create water surface mesh
@@ -328,7 +327,7 @@ public class Water {
 		glFinish();
 	    clEnqueueAcquireGLObjects(queue, memWater, null, null);
 	    
-	    float rain = (float) ((double) Math.log(Rainstreaks.getMaxParticles()) / Math.log(2))/10.0f - 1.0f; // 0-1
+	    float rain = (float) ((double) Math.log(Rainstreaks.getMaxParticles()) / Math.log(2))/10.0f - 1.0f; // 0..1
 	    
 	    kernelWaterSim.setArg( 6, rain*rainfactor);
 	    kernelWaterSim.setArg( 7, oozingfactor);
@@ -337,6 +336,13 @@ public class Water {
 	    
         clEnqueueNDRangeKernel(queue, kernelWaterSim, 1, null, gws, null, null, null);            
 
+	    kernelWaterSim.setArg( 6, rain*rainfactor);
+	    kernelWaterSim.setArg( 7, oozingfactor);
+	    kernelWaterSim.setArg( 8, dampingfactor);
+	    kernelWaterSim.setArg( 9, 1e-3f*deltaTime);
+	    
+        clEnqueueNDRangeKernel(queue, kernelWaterSim, 1, null, gws, null, null, null);            
+        
         clEnqueueReleaseGLObjects(queue, memWater, null, null);
         
         clFinish(queue);
