@@ -96,6 +96,7 @@ public class Water {
 	private FloatBuffer normalDataBuffer;
 	private FloatBuffer attributeDataBuffer;
 	private FloatBuffer gradientDataBuffer;
+	private FloatBuffer tmpDataBuffer;
 	
 	private PointerBuffer gws = new PointerBuffer(1);
 	
@@ -105,6 +106,7 @@ public class Water {
 	private CLMem memWater;
 	private CLMem memVelos;
 	private CLMem memGradient;
+	private CLMem memTmp;
 
     //delta time for animations
 	private float dt;
@@ -120,7 +122,10 @@ public class Water {
 	private static CLCommandQueue queue;
 	private static CLProgram program;
 	private static CLKernel kernelAccumulate;
-	private static CLKernel kernelWaterSim;
+	private static CLKernel kernelRainOozing;
+	private static CLKernel kernelFlow;
+	private static CLKernel kernelReduce;
+	private static CLKernel kernelDistribute;
 
 	private Geometry terrain;
 	private Geometry waterMap;
@@ -129,7 +134,7 @@ public class Water {
 	private ShaderProgram WaterRenderSP;
     private final Matrix4f viewProj = new Matrix4f();
 
-
+    boolean swap = false;
 
 	/**
 	 * Create water object.
@@ -143,7 +148,7 @@ public class Water {
 		this.terrain = terrain;
 		rainfactor = 0.09f;
 		oozingfactor = 0.090f;
-		dampingfactor = 0.001f;
+		dampingfactor = 0.1f;
 		
         createCLContext(device_type, Util.getFileContents("./kernel/WaterSim.cl"), drawable);
         createWaterData();
@@ -201,7 +206,7 @@ public class Water {
         memGradient = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, gradientDataBuffer);
         
         
-        //create velocity buffer
+        //TODO necessary? create velocity buffer
         velosDataBuffer = BufferUtils.createFloatBuffer(terrainDim);
         BufferUtils.zeroBuffer(velosDataBuffer);
         memVelos = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, velosDataBuffer);
@@ -223,9 +228,11 @@ public class Water {
         glVertexAttribPointer(ShaderProgram.ATTR_POS, 4, GL_FLOAT, false, 16,  0);
         
         memWater = clCreateFromGLBuffer(context, CL_MEM_READ_WRITE, vertBufferID2);
+
+        tmpDataBuffer = BufferUtils.createFloatBuffer(terrainDim);
+        memTmp = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, tmpDataBuffer);
         
-        GL11.glPointSize(10f);
-        
+        GL11.glPointSize(2f);
                
         //create water surface mesh
         // indexbuffer
@@ -307,15 +314,28 @@ public class Water {
 	private void createKernels()
 	{
 		// TODO kernel to accumulate data (a sort of grid)
+				
+		//kernel for rain and oozing
+		kernelRainOozing = clCreateKernel(program, "rainOozing");
+		kernelRainOozing.setArg(0, memWater);
+		kernelRainOozing.setArg(1, memAttribute);
 		
-		//kernel for water simulation
-		kernelWaterSim = clCreateKernel(program, "waterSim");
-		kernelWaterSim.setArg(0, memWater);
-		kernelWaterSim.setArg(1, memVelos);
-		kernelWaterSim.setArg(2, memHeight);
-		kernelWaterSim.setArg(3, memNormal);
-		kernelWaterSim.setArg(4, memAttribute);
-		kernelWaterSim.setArg(5, memGradient);
+		//kernel for water flow
+		kernelFlow = clCreateKernel(program, "flowWaterTangential");
+		kernelFlow.setArg(0, memWater);
+		kernelFlow.setArg(1, memHeight);
+		
+		//kernel to reduce flowed water 
+		kernelReduce = clCreateKernel(program, "reduceFlowedWater");
+		kernelReduce.setArg(0, memWater);
+		kernelReduce.setArg(1, memHeight);
+		
+		//kernel to distribute water
+		kernelDistribute = clCreateKernel(program, "distributeWater");
+		kernelDistribute.setArg(0, memWater);
+		kernelDistribute.setArg(1, memHeight);
+		kernelDistribute.setArg(2, memGradient);
+		kernelDistribute.setArg(3, memTmp);
 	}
 	
 	/**
@@ -328,21 +348,33 @@ public class Water {
 	    clEnqueueAcquireGLObjects(queue, memWater, null, null);
 	    
 	    float rain = (float) ((double) Math.log(Rainstreaks.getMaxParticles()) / Math.log(2))/10.0f - 1.0f; // 0..1
-	    
-	    kernelWaterSim.setArg( 6, rain*rainfactor);
-	    kernelWaterSim.setArg( 7, oozingfactor);
-	    kernelWaterSim.setArg( 8, dampingfactor);
-	    kernelWaterSim.setArg( 9, 1e-3f*deltaTime);
-	    
-        clEnqueueNDRangeKernel(queue, kernelWaterSim, 1, null, gws, null, null, null);            
+	    kernelRainOozing.setArg( 2, rain*rainfactor);
+	    kernelRainOozing.setArg( 3, oozingfactor);
+	    kernelRainOozing.setArg( 4, 1e-3f*deltaTime);	    
+//        clEnqueueNDRangeKernel(queue, kernelRainOozing, 1, null, gws, null, null, null); 
+        //global sync
+	    kernelFlow.setArg( 2, 1e-3f*deltaTime);	    
+        clEnqueueNDRangeKernel(queue, kernelFlow, 1, null, gws, null, null, null);            
+        //global sync
+	    kernelReduce.setArg( 2, 1e-3f*deltaTime);	    
+        clEnqueueNDRangeKernel(queue, kernelReduce, 1, null, gws, null, null, null);            
+        //global sync
+        if (swap)
+        {
+        	kernelDistribute.setArg( 0, memTmp);
+        	kernelDistribute.setArg( 3, memWater);
+        	swap = !swap;
+        }
+        else
+        {
+        	kernelDistribute.setArg( 0, memWater);
+        	kernelDistribute.setArg( 3, memTmp);
+        	swap = !swap;
+        }
+	    kernelDistribute.setArg( 4, dampingfactor);
+	    kernelDistribute.setArg( 5, 1e-3f*deltaTime);	    
+        clEnqueueNDRangeKernel(queue, kernelDistribute, 1, null, gws, null, null, null); 
 
-	    kernelWaterSim.setArg( 6, rain*rainfactor);
-	    kernelWaterSim.setArg( 7, oozingfactor);
-	    kernelWaterSim.setArg( 8, dampingfactor);
-	    kernelWaterSim.setArg( 9, 1e-3f*deltaTime);
-	    
-        clEnqueueNDRangeKernel(queue, kernelWaterSim, 1, null, gws, null, null, null);            
-        
         clEnqueueReleaseGLObjects(queue, memWater, null, null);
         
         clFinish(queue);
@@ -376,7 +408,8 @@ public class Water {
         clReleaseMemObject(memNormal);
         clReleaseMemObject(memVelos);
         clReleaseMemObject(memWater);
-        clReleaseKernel(kernelWaterSim);
+        clReleaseKernel(kernelReduce);
+        clReleaseKernel(kernelFlow);
         clReleaseCommandQueue(queue);
         clReleaseProgram(program);
         clReleaseContext(context);
