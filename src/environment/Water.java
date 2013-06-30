@@ -91,7 +91,7 @@ public class Water {
 	//openCL
 	private CLDevice device;
 
-	private FloatBuffer velosDataBuffer;
+	private FloatBuffer heightScaleDataBuffer;
 	private FloatBuffer heightDataBuffer;
 	private FloatBuffer normalDataBuffer;
 	private FloatBuffer attributeDataBuffer;
@@ -106,7 +106,7 @@ public class Water {
 	private CLMem memNormal;
 	private CLMem memAttribute;
 	private CLMem memWaterHeight;
-	private CLMem memVelos;
+	private CLMem memHeightScale;
 	private CLMem memGradient;
 	private CLMem memTmpWaterHeight;
 	private CLMem memWater;
@@ -150,9 +150,9 @@ public class Water {
 	public Water(Device_Type device_type, Drawable drawable, Geometry terrain) throws LWJGLException
 	{		
 		this.terrain = terrain;
-		rainfactor = 0.09f;
+		rainfactor = 0.08f;
 		oozingfactor = 0.085f;
-		dampingfactor = 10.f;
+		dampingfactor = 1.f;
 		
         createCLContext(device_type, Util.getFileContents("./kernel/WaterSim.cl"), drawable);
         createWaterData();
@@ -217,10 +217,13 @@ public class Water {
         BufferUtils.zeroBuffer(tmpWaterDataBuffer);
         memTmpWater = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, tmpWaterDataBuffer);
         
-        //TODO necessary? create velocity buffer
-        velosDataBuffer = BufferUtils.createFloatBuffer(terrainDim);
-        BufferUtils.zeroBuffer(velosDataBuffer);
-        memVelos = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, velosDataBuffer);
+        //height scaled
+        heightScaleDataBuffer = BufferUtils.createFloatBuffer(terrainDim);        
+        for (int i = 1; i < terrainDim*4; i = i+4) {
+        	heightScaleDataBuffer.put(terrain.getVertexValueBuffer().get(i));
+		}
+        heightScaleDataBuffer.rewind();
+        memHeightScale = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, heightScaleDataBuffer);
         
         //generate initial water map
         //set water map initially to height data
@@ -346,7 +349,7 @@ public class Water {
 		
 		//kernel to distribute water
 		kernelDistribute = clCreateKernel(program, "distributeWater");
-		kernelDistribute.setArg(1, memHeight);
+		kernelDistribute.setArg(1, memHeightScale);
 		kernelDistribute.setArg(2, memWater);
 	}
 	
@@ -421,7 +424,7 @@ public class Water {
 		clReleaseMemObject(memAttribute);
         clReleaseMemObject(memHeight);
         clReleaseMemObject(memNormal);
-        clReleaseMemObject(memVelos);
+        clReleaseMemObject(memHeightScale);
         clReleaseMemObject(memWaterHeight);
         clReleaseKernel(kernelReduce);
         clReleaseKernel(kernelFlow);
