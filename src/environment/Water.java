@@ -96,17 +96,21 @@ public class Water {
 	private FloatBuffer normalDataBuffer;
 	private FloatBuffer attributeDataBuffer;
 	private FloatBuffer gradientDataBuffer;
-	private FloatBuffer tmpDataBuffer;
+	private FloatBuffer tmpWHDataBuffer;
+	private FloatBuffer waterDataBuffer;
+	private FloatBuffer tmpWaterDataBuffer;
 	
 	private PointerBuffer gws = new PointerBuffer(1);
 	
 	private CLMem memHeight;
 	private CLMem memNormal;
 	private CLMem memAttribute;
-	private CLMem memWater;
+	private CLMem memWaterHeight;
 	private CLMem memVelos;
 	private CLMem memGradient;
-	private CLMem memTmp;
+	private CLMem memTmpWaterHeight;
+	private CLMem memWater;
+	private CLMem memTmpWater;
 
     //delta time for animations
 	private float dt;
@@ -147,8 +151,8 @@ public class Water {
 	{		
 		this.terrain = terrain;
 		rainfactor = 0.09f;
-		oozingfactor = 0.090f;
-		dampingfactor = 0.1f;
+		oozingfactor = 0.085f;
+		dampingfactor = 10.f;
 		
         createCLContext(device_type, Util.getFileContents("./kernel/WaterSim.cl"), drawable);
         createWaterData();
@@ -204,7 +208,14 @@ public class Water {
         }
         gradientDataBuffer.rewind();
         memGradient = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, gradientDataBuffer);
-        
+
+        waterDataBuffer = BufferUtils.createFloatBuffer(terrainDim);
+        BufferUtils.zeroBuffer(waterDataBuffer);
+        memWater = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, waterDataBuffer);
+
+        tmpWaterDataBuffer = BufferUtils.createFloatBuffer(terrainDim);
+        BufferUtils.zeroBuffer(tmpWaterDataBuffer);
+        memTmpWater = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, tmpWaterDataBuffer);
         
         //TODO necessary? create velocity buffer
         velosDataBuffer = BufferUtils.createFloatBuffer(terrainDim);
@@ -213,7 +224,6 @@ public class Water {
         
         //generate initial water map
         //set water map initially to height data
-        //TODO: accumulate data
         gws.put(0, terrainDim);
         
     	vertArrayID2 = glGenVertexArrays();
@@ -227,10 +237,11 @@ public class Water {
         glEnableVertexAttribArray(ShaderProgram.ATTR_POS);
         glVertexAttribPointer(ShaderProgram.ATTR_POS, 4, GL_FLOAT, false, 16,  0);
         
-        memWater = clCreateFromGLBuffer(context, CL_MEM_READ_WRITE, vertBufferID2);
+        memWaterHeight = clCreateFromGLBuffer(context, CL_MEM_READ_WRITE, vertBufferID2);
 
-        tmpDataBuffer = BufferUtils.createFloatBuffer(terrainDim);
-        memTmp = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, tmpDataBuffer);
+        tmpWHDataBuffer = BufferUtils.createFloatBuffer(terrainDim);
+        tmpWHDataBuffer = terrain.getVertexValueBuffer();
+        memTmpWaterHeight = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, tmpWHDataBuffer);
         
         GL11.glPointSize(2f);
                
@@ -319,23 +330,24 @@ public class Water {
 		kernelRainOozing = clCreateKernel(program, "rainOozing");
 		kernelRainOozing.setArg(0, memWater);
 		kernelRainOozing.setArg(1, memAttribute);
+		kernelRainOozing.setArg(2, memTmpWater);
 		
 		//kernel for water flow
 		kernelFlow = clCreateKernel(program, "flowWaterTangential");
 		kernelFlow.setArg(0, memWater);
 		kernelFlow.setArg(1, memHeight);
+		kernelFlow.setArg(2, memTmpWater);
 		
 		//kernel to reduce flowed water 
 		kernelReduce = clCreateKernel(program, "reduceFlowedWater");
 		kernelReduce.setArg(0, memWater);
 		kernelReduce.setArg(1, memHeight);
+		kernelReduce.setArg(2, memTmpWater);
 		
 		//kernel to distribute water
 		kernelDistribute = clCreateKernel(program, "distributeWater");
-		kernelDistribute.setArg(0, memWater);
 		kernelDistribute.setArg(1, memHeight);
-		kernelDistribute.setArg(2, memGradient);
-		kernelDistribute.setArg(3, memTmp);
+		kernelDistribute.setArg(2, memWater);
 	}
 	
 	/**
@@ -345,37 +357,40 @@ public class Water {
 	public void updateSimulation(long deltaTime)
 	{	        	  
 		glFinish();
-	    clEnqueueAcquireGLObjects(queue, memWater, null, null);
+	    clEnqueueAcquireGLObjects(queue, memWaterHeight, null, null);
 	    
 	    float rain = (float) ((double) Math.log(Rainstreaks.getMaxParticles()) / Math.log(2))/10.0f - 1.0f; // 0..1
-	    kernelRainOozing.setArg( 2, rain*rainfactor);
-	    kernelRainOozing.setArg( 3, oozingfactor);
-	    kernelRainOozing.setArg( 4, 1e-3f*deltaTime);	    
-//        clEnqueueNDRangeKernel(queue, kernelRainOozing, 1, null, gws, null, null, null); 
+	    kernelRainOozing.setArg( 3, rain*rainfactor);
+	    kernelRainOozing.setArg( 4, oozingfactor);
+	    kernelRainOozing.setArg( 5, 1e-3f*deltaTime);	    
+        clEnqueueNDRangeKernel(queue, kernelRainOozing, 1, null, gws, null, null, null); 
+        
         //global sync
-	    kernelFlow.setArg( 2, 1e-3f*deltaTime);	    
+	    kernelFlow.setArg( 3, 1e-3f*deltaTime);	    
         clEnqueueNDRangeKernel(queue, kernelFlow, 1, null, gws, null, null, null);            
+        
         //global sync
-	    kernelReduce.setArg( 2, 1e-3f*deltaTime);	    
+	    kernelReduce.setArg( 3, 1e-3f*deltaTime);	    
         clEnqueueNDRangeKernel(queue, kernelReduce, 1, null, gws, null, null, null);            
+        
         //global sync
         if (swap)
         {
-        	kernelDistribute.setArg( 0, memTmp);
-        	kernelDistribute.setArg( 3, memWater);
+        	kernelDistribute.setArg( 0, memTmpWaterHeight);
+        	kernelDistribute.setArg( 3, memWaterHeight);
         	swap = !swap;
         }
         else
         {
-        	kernelDistribute.setArg( 0, memWater);
-        	kernelDistribute.setArg( 3, memTmp);
+        	kernelDistribute.setArg( 0, memWaterHeight);
+        	kernelDistribute.setArg( 3, memTmpWaterHeight);
         	swap = !swap;
         }
 	    kernelDistribute.setArg( 4, dampingfactor);
 	    kernelDistribute.setArg( 5, 1e-3f*deltaTime);	    
         clEnqueueNDRangeKernel(queue, kernelDistribute, 1, null, gws, null, null, null); 
 
-        clEnqueueReleaseGLObjects(queue, memWater, null, null);
+        clEnqueueReleaseGLObjects(queue, memWaterHeight, null, null);
         
         clFinish(queue);
 	}
@@ -407,7 +422,7 @@ public class Water {
         clReleaseMemObject(memHeight);
         clReleaseMemObject(memNormal);
         clReleaseMemObject(memVelos);
-        clReleaseMemObject(memWater);
+        clReleaseMemObject(memWaterHeight);
         clReleaseKernel(kernelReduce);
         clReleaseKernel(kernelFlow);
         clReleaseCommandQueue(queue);
