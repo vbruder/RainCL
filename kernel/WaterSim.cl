@@ -12,23 +12,32 @@ kernel void rainOozing(
 						)
 {
 	uint id = get_global_id(0);
+	uint N = get_global_size(0);
+	uint rowlen = sqrt((float) N);
 
-	float gain = 0.0;
-
-	//add rain to water
-	//gain += rain * dt;	 					// 0.1 - 1.0
-	
-	//remove oozing water
-	//gain -= attribute[id] * oozing * dt;	
-	gain += 0.00001;
-	//calculate new water value and set water map. Set minimal limit.
-	water[id] += gain;
-	if (water[id] < -0.5)
+	if (!( ((id % rowlen)-1 == 0) || id % rowlen == 0 || id < 512 || id > 512*511))
 	{
-		water[id] = -0.5;
-	}
+		float gain = 0.0;
 	
-	tmp[id] = water[id];
+		//add rain to water
+		gain += rain * dt;	 					// 0.1 - 1.0
+		
+		//remove oozing water
+		gain -= attribute[id] * oozing * dt;	
+		//gain += 0.0001;
+		//calculate new water value and set water map. Set minimal limit.
+		water[id] += gain;
+		if (water[id] < -0.1)
+		{
+			water[id] = -0.1;
+		}
+		if (water[id] > +0.2)
+		{
+			water[id] = 0.2;
+		}
+		
+		tmp[id] = water[id];
+	}
 }
 
 
@@ -49,7 +58,7 @@ kernel void flowWaterTangential(
 	float waterVal = tmp[id];
 	
 	//check if border bucket
-	if ((id % (rowlen) == 0) || ((id % rowlen) == 0) || id < 512 || id > 512*511)
+	if ((id % rowlen == 0) || ((id % rowlen)-1 == 0) || id < 512 || id > 512*511)
 	{
 		border = 1;
 	}
@@ -99,7 +108,7 @@ kernel void flowWaterTangential(
 	
 	float ddtt = 0.001f;
 	
-	if (dot((float)dir2.x, (float)dir2.y) != 0)
+	if (!border && dot((float)dir2.x, (float)dir2.y) != 0)
 	{
 		//von Neumann neighborhood
 		water[abs(id + dir2.y*rowlen + dir2.x) % N] += waterVal*dt*len;
@@ -133,7 +142,7 @@ kernel void reduceFlowedWater(
 	int border = 0;
 	
 	//check if border bucket
-	if ((id % (rowlen) == 0) || ((id % rowlen) == 0) || id < 512 || id > 512*511)
+	if ((id % rowlen == 0) || ((id % rowlen)-1 == 0) || id < 512 || id > 512*511)
 	{
 		border = 1;
 	}
@@ -166,7 +175,7 @@ kernel void reduceFlowedWater(
 	
 	int2 dir2 = (int2)(sign(dx), sign(dy));
 	
-	if (dot((float)dir2.x, (float)dir2.y) != 0)
+	if (!border && dot((float)dir2.x, (float)dir2.y) != 0)
 	{
 		water[id] -= tmp[id]*dt*len;
 	}
@@ -185,64 +194,58 @@ kernel void distributeWater(
 	uint rowlen = sqrt((float) gws);
 	int border = 0;
 	
-	float heightVal  = heightScaled[id];			// 0..255
+	float heightVal  = heightScaled[id];			// -1..12?
 	float waterVal   = water[id];
 	
 	//check if border bucket
 	//TODO one edge...
-	if ( (id % rowlen == 0) || id < 512 || id > 512*511 || (id % (rowlen) == 0) )
+	if ( (id % rowlen == 0) || id < 512 || id > 512*511 || ((id % rowlen)-1 == 0) )
 		border = 1;
 	
 	float hff = 0.0;
 	int cnt = 0;
-	float eps = 0.2;
+	float eps = 0.1;
 	float rightN, leftN, topN, botN;
 	rightN = leftN = topN = botN = 0.0;
 	
-// && (water[id+1]	   	 + eps <= waterVal)
-//				&& (water[id-1]	   	 + eps <= waterVal)
-//				&& (water[id+rowlen] + eps <= waterVal)
-//				&& (water[id-rowlen] + eps <= waterVal))
-	if (!border)
-	{
-		hff = damping * (water[id + 1] + water[id - 1] + water[id + rowlen] + water[id - rowlen] - 4*(waterVal));
-	}	
-		
+
+//	if (!border)
+//	{
+//		hff = damping * (water[id + 1] + water[id - 1] + water[id + rowlen] + water[id - rowlen] - 4*(waterVal));
+//	}
+
 	
 	//right neighbor
-	/*
-	if (!border)//&& gradMap[id + 1] <= grad)
+	
+	if (!border && heightScaled[id + 1] <= heightVal + eps)
 	{
 		rightN = water[id + 1];
 		++cnt;
 	}
 	//left neighbor
-	if (!border)// && gradMap[id - 1] <= grad)
+	if (!border && heightScaled[id - 1] <= heightVal + eps)
 	{
 		leftN = water[id - 1];
 		++cnt;
 	}
 	//bottom neighbor
-	if (!border)// && gradMap[id + rowlen] <= grad)
+	if (!border && heightScaled[id + rowlen] <= heightVal + eps)
 	{
 		botN = water[id + rowlen];
 		++cnt;
 	}
 	//top neighbor
-	if (!border)// && gradMap[id - rowlen] <= grad)
+	if (!border && heightScaled[id - rowlen] <= heightVal + eps)
 	{
 		topN = water[id - rowlen];
 		++cnt;
 	}
 	
 	//calculate height-field-fluids function
-	hff = damping * (rightN + leftN + botN + topN - cnt*(waterVal));
-	*/
+	hff = damping * (rightN + leftN + botN + topN - 4*(waterVal));
 	
-	//tmp[id].y += (hff);
-	//water[id] = (hff);
-	
-	tmp[id].y = hff + heightVal;
+	tmp[id].y = hff + waterVal + heightVal;
+	water[id] = hff + waterVal;
 }
 
 
@@ -278,7 +281,7 @@ kernel void waterSim(
 	int border = 0;
 	
 	//check if border bucket
-	if (id % (rowlen-1) == 0 || id %  rowlen == 0 || id < 512 || id > 512*511)
+	if ((id % rowlen)-1 == 0 || id %  rowlen == 0 || id < 512 || id > 512*511)
 		border = 1;
 	
 	//water.y initital -1..12 something??

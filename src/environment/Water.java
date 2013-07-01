@@ -150,9 +150,9 @@ public class Water {
 	public Water(Device_Type device_type, Drawable drawable, Geometry terrain) throws LWJGLException
 	{		
 		this.terrain = terrain;
-		rainfactor = 0.08f;
-		oozingfactor = 0.085f;
-		dampingfactor = 1.f;
+		rainfactor = 0.075f;
+		oozingfactor = 0.080f;
+		dampingfactor = 0.001f;
 		
         createCLContext(device_type, Util.getFileContents("./kernel/WaterSim.cl"), drawable);
         createWaterData();
