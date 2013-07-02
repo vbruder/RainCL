@@ -31,9 +31,9 @@ kernel void rainOozing(
 		{
 			water[id] = -0.1;
 		}
-		if (water[id] > +0.2)
+		if (water[id] > +0.5)
 		{
-			water[id] = 0.2;
+			//water[id] = 0.5;
 		}
 		
 		tmp[id] = water[id];
@@ -115,14 +115,14 @@ kernel void flowWaterTangential(
 		
 		//Moore neighborhood
 		/*
-			 if (dir == 0) (water[id - rowlen + 1]) += waterVal;
-		else if (dir == 1) (water[id          + 1]) += waterVal;
-		else if (dir == 2) (water[id + rowlen + 1]) += waterVal;
-		else if (dir == 3) (water[id + rowlen + 0]) += waterVal;
-		else if (dir == 4) (water[id + rowlen - 1]) += waterVal;
-		else if (dir == 5) (water[id          - 1]) += waterVal;
-		else if (dir == 6) (water[id - rowlen - 1]) += waterVal;
-		else if (dir == 7) (water[id - rowlen - 1]) += waterVal;
+			 if (dir == 0) (water[id - rowlen + 1]) += waterVal*dt*len;
+		else if (dir == 1) (water[id          + 1]) += waterVal*dt*len;
+		else if (dir == 2) (water[id + rowlen + 1]) += waterVal*dt*len;
+		else if (dir == 3) (water[id + rowlen + 0]) += waterVal*dt*len;
+		else if (dir == 4) (water[id + rowlen - 1]) += waterVal*dt*len;
+		else if (dir == 5) (water[id          - 1]) += waterVal*dt*len;
+		else if (dir == 6) (water[id - rowlen - 1]) += waterVal*dt*len;
+		else if (dir == 7) (water[id - rowlen - 1]) += waterVal*dt*len;
 		*/
 	}
 }
@@ -204,38 +204,31 @@ kernel void distributeWater(
 	
 	float hff = 0.0;
 	int cnt = 0;
-	float eps = 0.1;
+	float eps = 0.2;
 	float rightN, leftN, topN, botN;
 	rightN = leftN = topN = botN = 0.0;
 	
-
-//	if (!border)
-//	{
-//		hff = damping * (water[id + 1] + water[id - 1] + water[id + rowlen] + water[id - rowlen] - 4*(waterVal));
-//	}
-
-	
 	//right neighbor
 	
-	if (!border && heightScaled[id + 1] <= heightVal + eps)
+	if (!border && fabs(heightScaled[id + 1]) <= fabs(heightVal) + eps)
 	{
 		rightN = water[id + 1];
 		++cnt;
 	}
 	//left neighbor
-	if (!border && heightScaled[id - 1] <= heightVal + eps)
+	if (!border && fabs(heightScaled[id - 1]) <= fabs(heightVal) + eps)
 	{
 		leftN = water[id - 1];
 		++cnt;
 	}
 	//bottom neighbor
-	if (!border && heightScaled[id + rowlen] <= heightVal + eps)
+	if (!border && fabs(heightScaled[id + rowlen]) <= fabs(heightVal) + eps)
 	{
 		botN = water[id + rowlen];
 		++cnt;
 	}
 	//top neighbor
-	if (!border && heightScaled[id - rowlen] <= heightVal + eps)
+	if (!border && fabs(heightScaled[id - rowlen]) <= fabs(heightVal) + eps)
 	{
 		topN = water[id - rowlen];
 		++cnt;
@@ -244,7 +237,10 @@ kernel void distributeWater(
 	//calculate height-field-fluids function
 	hff = damping * (rightN + leftN + botN + topN - 4*(waterVal));
 	
-	tmp[id].y = hff + waterVal + heightVal;
+	float finalWater = hff + waterVal + heightVal;
+	finalWater = finalWater < -10.0 ? -10 : finalWater;
+	
+	tmp[id].y = finalWater;
 	water[id] = hff + waterVal;
 }
 

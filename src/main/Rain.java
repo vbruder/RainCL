@@ -175,6 +175,7 @@ public class Rain {
         skyCloudTex = Texture.generateTexture("./media/sky/sky_sw.jpg", 9);
         
         skySP = new ShaderProgram("shader/Sky.vsh", "shader/Sky.fsh");
+        
     }
 
     /**
@@ -261,6 +262,14 @@ public class Rain {
 	            terrain.draw();
             }
 	            
+            //water map
+            if (drawWater)
+            {
+            	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            	glEnable(GL_BLEND);
+            	watermap.draw(cam);
+            	glDisable(GL_BLEND);
+            }
             //rain streaks
             if (drawRain)
             {
@@ -270,14 +279,6 @@ public class Rain {
 	            glDisable(GL_BLEND);
             }
             
-            //water map
-            if (drawWater)
-            {
-	            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	            glEnable(GL_BLEND);
-            	watermap.draw(cam);
-	            glDisable(GL_BLEND);
-            }
             	
             //TODO: proper integration
 //            glUseProgram(orbSP.getID());
@@ -360,7 +361,7 @@ public class Rain {
         Util.translationX(cam.getCamPos().x, skyMoveMatrix);
         Util.mul(skyMoveMatrix, skyMoveMatrix, Util.translationZ(cam.getCamPos().z, null));
         Util.rotationY((0.005f)*Util.PI_MUL2 * ingameTime, cloudModelMatrix);
-        Util.mul(cloudModelMatrix,skyMoveMatrix, cloudModelMatrix );
+        Util.mul(cloudModelMatrix, skyMoveMatrix, cloudModelMatrix);
         
         // update time properly
         ingameTime += ingameTimePerSecond * 1e-3f * (float)millis;        

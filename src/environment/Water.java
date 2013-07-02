@@ -151,8 +151,8 @@ public class Water {
 	{		
 		this.terrain = terrain;
 		rainfactor = 0.075f;
-		oozingfactor = 0.080f;
-		dampingfactor = 0.001f;
+		oozingfactor = 0.075f;
+		dampingfactor = 0.005f;
 		
         createCLContext(device_type, Util.getFileContents("./kernel/WaterSim.cl"), drawable);
         createWaterData();
@@ -229,18 +229,18 @@ public class Water {
         //set water map initially to height data
         gws.put(0, terrainDim);
         
-    	vertArrayID2 = glGenVertexArrays();
-    	glBindVertexArray(vertArrayID2);
-    	
-        vertBufferID2 = glGenBuffers();
-        
-        glBindBuffer(GL_ARRAY_BUFFER, vertBufferID2);        
-        glBufferData(GL_ARRAY_BUFFER, terrain.getVertexValueBuffer(), GL_DYNAMIC_DRAW);
-
-        glEnableVertexAttribArray(ShaderProgram.ATTR_POS);
-        glVertexAttribPointer(ShaderProgram.ATTR_POS, 4, GL_FLOAT, false, 16,  0);
-        
-        memWaterHeight = clCreateFromGLBuffer(context, CL_MEM_READ_WRITE, vertBufferID2);
+//    	vertArrayID2 = glGenVertexArrays();
+//    	glBindVertexArray(vertArrayID2);
+//    	
+//        vertBufferID2 = glGenBuffers();
+//        
+//        glBindBuffer(GL_ARRAY_BUFFER, vertBufferID2);        
+//        glBufferData(GL_ARRAY_BUFFER, terrain.getVertexValueBuffer(), GL_DYNAMIC_DRAW);
+//
+//        glEnableVertexAttribArray(ShaderProgram.ATTR_POS);
+//        glVertexAttribPointer(ShaderProgram.ATTR_POS, 4, GL_FLOAT, false, 16,  0);
+//        
+//        memWaterHeight = clCreateFromGLBuffer(context, CL_MEM_READ_WRITE, vertBufferID2);
 
         tmpWHDataBuffer = BufferUtils.createFloatBuffer(terrainDim);
         tmpWHDataBuffer = terrain.getVertexValueBuffer();
@@ -250,36 +250,36 @@ public class Water {
                
         //create water surface mesh
         // indexbuffer
-//        int size = (int) Math.sqrt(terrainDim);
-//        IntBuffer indexData = BufferUtils.createIntBuffer((size-1)*2*size+(size-2));
-//        for (int y = 0; y < size-1; y++)
-//        {
-//            for (int x = 0; x < size; x++)
-//            {
-//                indexData.put(y*size + x);
-//                indexData.put((y+1)*size + x);
-//            }
-//            if (y < size-2)
-//                indexData.put(-1);
-//        }
-//        indexData.position(0); 
-//        
-//        //vertex buffer (deep copy)
-//        FloatBuffer waterBuffer = BufferUtils.createFloatBuffer(terrainDim*4);
-//        waterBuffer.put(terrain.getVertexValueBuffer());
-//        terrain.getVertexValueBuffer().rewind();
-//        waterBuffer.rewind();
-//        
-//        waterMap = new Geometry();
-//        waterMap.setIndices(indexData, GL_TRIANGLE_STRIP);
-//        waterMap.setVertices(waterBuffer);
-//        waterMap.addVertexAttribute(ShaderProgram.ATTR_POS, 4, 0);
-//        waterMap.construct();
-//
-//        Texture colorTex = Texture.generateTexture("media/textures/waterTex.png", 20);
-//        waterMap.setColorTex(colorTex);
-//        
-//        memWater = clCreateFromGLBuffer(context, CL_MEM_READ_WRITE, waterMap.getVbid());
+        int size = (int) Math.sqrt(terrainDim);
+        IntBuffer indexData = BufferUtils.createIntBuffer((size-1)*2*size+(size-2));
+        for (int y = 0; y < size-1; y++)
+        {
+            for (int x = 0; x < size; x++)
+            {
+                indexData.put(y*size + x);
+                indexData.put((y+1)*size + x);
+            }
+            if (y < size-2)
+                indexData.put(-1);
+        }
+        indexData.position(0); 
+        
+        //vertex buffer (deep copy)
+        FloatBuffer waterBuffer = BufferUtils.createFloatBuffer(terrainDim*4);
+        waterBuffer.put(terrain.getVertexValueBuffer());
+        terrain.getVertexValueBuffer().rewind();
+        waterBuffer.rewind();
+        
+        waterMap = new Geometry();
+        waterMap.setIndices(indexData, GL_TRIANGLE_STRIP);
+        waterMap.setVertices(waterBuffer);
+        waterMap.addVertexAttribute(ShaderProgram.ATTR_POS, 4, 0);
+        waterMap.construct();
+
+        Texture colorTex = Texture.generateTexture("media/textures/waterTex.png", 20);
+        waterMap.setColorTex(colorTex);
+        
+        memWaterHeight = clCreateFromGLBuffer(context, CL_MEM_READ_WRITE, waterMap.getVbid());
 	}
 
 	/**
@@ -410,9 +410,9 @@ public class Water {
         WaterRenderSP.setUniform("viewProj", viewProj);
 //        WaterRenderSP.setUniform("colorTex", waterMap.getColorTex());
 		
-//        waterMap.draw();
-		glBindVertexArray(vertArrayID2);
-		glDrawArrays(GL_POINTS, 0, (int)gws.get(0));
+        waterMap.draw();
+//		glBindVertexArray(vertArrayID2);
+//		glDrawArrays(GL_POINTS, 0, (int)gws.get(0));
 	}
 	
 	/**
