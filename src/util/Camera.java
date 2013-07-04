@@ -17,6 +17,8 @@ public final class Camera {
     private final Matrix4f projection = new Matrix4f();
     private boolean perspective = true;
 
+    private float near = 1e-2f;
+    private float far = 1e3f;
     /**
      * Default Constructor.
      */
@@ -67,7 +69,7 @@ public final class Camera {
      */
     public void updateProjection() {
         if(perspective) {
-            Util.frustum(-1e-2f, 1e-2f, -1e-2f, 1e-2f, 1e-2f, 1e+2f, projection);
+            Util.frustum(-1e-2f, 1e-2f, -1e-2f, 1e-2f, near, far, projection);
         } else {
             Util.ortho(-1.0f, 1.0f, -1.0f, 1.0f, 1e-2f, 1e+2f, projection);
         }

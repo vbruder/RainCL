@@ -1045,6 +1045,20 @@ public class GL {
     }
     
     /**
+     * OpenGl 2.0
+     * @see <a href="http://www.opengl.org/sdk/docs/man4/xhtml/glUniform.xml">glUniform</a>
+     * @param location
+     * @param v0
+     * @param v1
+     * @param v2
+     * @param v3
+     */
+    public static void glUniform4f(int location, float v0, float v1, float v2, float v3) {
+        GL20.glUniform4f(location, v0, v1, v2, v3);
+        GL.checkError("glUniform");
+    }
+    
+    /**
      * OpenGL 2.0
      * @see <a href="http://www.opengl.org/sdk/docs/man4/xhtml/glUniform.xml">glUniform</a>
      * @param location

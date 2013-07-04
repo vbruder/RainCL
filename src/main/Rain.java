@@ -54,8 +54,9 @@ public class Rain {
     private static boolean culling = true;
     private static boolean wireframe = true;
     private static boolean audio = false;
-    
-    // control
+    private static boolean points = false;
+
+	// control
     private static final Vector3f moveDir = new Vector3f(0.0f, 0.0f, 0.0f);
     private static final Camera cam = new Camera(); 
     
@@ -67,12 +68,12 @@ public class Rain {
     private static final Matrix4f viewProjMatrix = new Matrix4f();
         
     //environment
-    private static Rainstreaks raindrops;
+    private static Rainstreaks raindrops = null;
     private static boolean drawRain = false;
 
 	private static PointLightOrb orb;
     private static Sun sun;
-    private static Water watermap;
+    private static Water watermap = null;
     private static boolean drawWater = true;
     //sky
     private static Geometry skyDome;
@@ -138,20 +139,17 @@ public class Rain {
             orb.setOrbitTilt(Util.PI_DIV4 - (float)Math.random() * Util.PI_DIV2);
             orb.setSpeed((float)Math.random());
             orb.setColor(new Vector3f((float)Math.random(), (float)Math.random(), (float)Math.random()));
-            
-            //create rain streaks
-            raindrops = new Rainstreaks(Device_Type.GPU, Display.getDrawable(), cam, orb, sun);
-            //create water map
-            watermap = new Water(Device_Type.GPU, Display.getDrawable(), terrain);
+                       
+            createRainsys();
 
             // starting position
             cam.move(50.0f, 50.0f, 5.0f);
             
             render();
-            
+
             //cleanup
-            watermap.destroy();
             raindrops.destroy();
+            watermap.destroy();
             OpenCL.destroy();
             sound.destroy();
             tc.stop();
@@ -162,7 +160,24 @@ public class Rain {
         }
     }
     
-    /**
+    private static void createRainsys() throws LWJGLException
+    {
+    	
+    	if (raindrops != null)
+    	{
+    		raindrops.destroy();
+    	}
+    	if (watermap != null)
+    	{
+    		watermap.destroy();
+    	}
+        //create rain streaks
+        raindrops = new Rainstreaks(Device_Type.GPU, Display.getDrawable(), cam, orb, sun);
+        //create water map
+        watermap = new Water(Device_Type.GPU, Display.getDrawable(), terrain);
+	}
+
+	/**
      * Create data for sky dome.
      */
     private static void createSky()
@@ -198,7 +213,7 @@ public class Rain {
         long now, millis;
         long frameTimeDelta = 0;
         int frames = 0;
-        
+       
         while(bContinue && !Display.isCloseRequested()) {
             // time handling
             now = System.currentTimeMillis();
@@ -215,13 +230,13 @@ public class Rain {
             // input and animation
             handleInput(millis);
             animate(millis);
-            
             // clear screen
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             
             orb.bindLightInformationToShader(raindrops.getShaderProgram().getID());
             
             //sky dome
+           
             skySP.use();
             skySP.setUniform("proj", cam.getProjection());
             skySP.setUniform("view", cam.getView());
@@ -267,7 +282,7 @@ public class Rain {
             {
             	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             	glEnable(GL_BLEND);
-            	watermap.draw(cam);
+            	watermap.draw(cam, points);
             	glDisable(GL_BLEND);
             }
             //rain streaks
@@ -298,8 +313,9 @@ public class Rain {
     /**
      * Handle input and change camera accordingly.
      * @param millis milliseconds, passed since last update
+     * @throws LWJGLException 
      */
-    public static void handleInput(long millis) {
+    public static void handleInput(long millis) throws LWJGLException {
         float moveSpeed = 2e-3f*(Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) ? 5.0f : 1.0f)*(float)millis;
         float camSpeed = 5e-3f;
         
@@ -312,6 +328,9 @@ public class Rain {
                     case Keyboard.KEY_D: moveDir.x -= 1.0f; break;
                     case Keyboard.KEY_SPACE: moveDir.y += 1.0f; break;
                     case Keyboard.KEY_C: moveDir.y -= 1.0f; break;
+                    case Keyboard.KEY_ESCAPE :  bContinue = false; break;
+                    case Keyboard.KEY_R : watermap.compile(); raindrops.compile(); break;
+                    case Keyboard.KEY_T : createRainsys(); break;
                 }
             } else {
                 switch(Keyboard.getEventKey()) {
@@ -323,6 +342,7 @@ public class Rain {
                     case Keyboard.KEY_C: moveDir.y += 1.0f; break;
                     case Keyboard.KEY_F1: setDrawRain(!isDrawRain()); break;
                     case Keyboard.KEY_F2: setDrawTerrain(!isDrawTerrain()); break;
+                    case Keyboard.KEY_F3: setPoints(!isPoints()); break;
                     case Keyboard.KEY_UP: break;
                     case Keyboard.KEY_DOWN: break;
                     case Keyboard.KEY_M:
@@ -346,9 +366,7 @@ public class Rain {
                 cam.rotate(-camSpeed*Mouse.getEventDX(), -camSpeed*Mouse.getEventDY());
             }
         }
-        
-        if(Keyboard.isKeyDown(Keyboard.KEY_ESCAPE)) bContinue = false;
-        
+
         Matrix4f.mul(cam.getProjection(), cam.getView(), viewProjMatrix);        
     }
     
@@ -440,5 +458,19 @@ public class Rain {
 	 */
 	public static void setDrawTerrain(boolean drawTerrain) {
 		Rain.drawTerrain = drawTerrain;
+	}
+	
+	/**
+	 * @return points 
+	 */
+    public static boolean isPoints() {
+		return points;
+	}
+
+    /**
+     * @param points
+     */
+	public static void setPoints(boolean points) {
+		Rain.points = points;
 	}
 }

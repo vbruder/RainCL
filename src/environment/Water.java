@@ -68,8 +68,10 @@ import org.lwjgl.opencl.CLPlatform;
 import org.lwjgl.opencl.CLProgram;
 import org.lwjgl.opengl.Drawable;
 import org.lwjgl.opengl.GL11;
+import org.lwjgl.opengl.GL30;
 import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
+import org.lwjgl.util.vector.Vector4f;
 
 import util.Camera;
 import util.Geometry;
@@ -121,6 +123,7 @@ public class Water {
 	//openGL IDs
 	private static int vertArrayID2;
 	private static int vertBufferID2;
+	private int vertexArray = 0;
 	
 	private static CLContext context;
 	private static CLCommandQueue queue;
@@ -231,17 +234,18 @@ public class Water {
         
 //    	vertArrayID2 = glGenVertexArrays();
 //    	glBindVertexArray(vertArrayID2);
-//    	
+    	
 //        vertBufferID2 = glGenBuffers();
-//        
+        
 //        glBindBuffer(GL_ARRAY_BUFFER, vertBufferID2);        
 //        glBufferData(GL_ARRAY_BUFFER, terrain.getVertexValueBuffer(), GL_DYNAMIC_DRAW);
-//
+
 //        glEnableVertexAttribArray(ShaderProgram.ATTR_POS);
 //        glVertexAttribPointer(ShaderProgram.ATTR_POS, 4, GL_FLOAT, false, 16,  0);
-//        
+        
 //        memWaterHeight = clCreateFromGLBuffer(context, CL_MEM_READ_WRITE, vertBufferID2);
 
+        
         tmpWHDataBuffer = BufferUtils.createFloatBuffer(terrainDim);
         tmpWHDataBuffer = terrain.getVertexValueBuffer();
         memTmpWaterHeight = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, tmpWHDataBuffer);
@@ -280,6 +284,14 @@ public class Water {
         waterMap.setColorTex(colorTex);
         
         memWaterHeight = clCreateFromGLBuffer(context, CL_MEM_READ_WRITE, waterMap.getVbid());
+        vertexArray = glGenVertexArrays();
+    	glBindVertexArray(vertexArray);
+    	glBindBuffer(GL_ARRAY_BUFFER, waterMap.getVbid());        
+
+    	glEnableVertexAttribArray(ShaderProgram.ATTR_POS);
+    	glVertexAttribPointer(ShaderProgram.ATTR_POS, 4, GL_FLOAT, false, 16,  0);
+    	
+    	glBindVertexArray(0);
 	}
 
 	/**
@@ -398,21 +410,38 @@ public class Water {
         clFinish(queue);
 	}
 	
+	public void compile()
+	{
+        CLProgram p = clCreateProgramWithSource(context, Util.getFileContents("./kernel/WaterSim.cl"));
+
+        if(clBuildProgram(p, this.device, "", null))
+        {
+        	program = p;
+        	createKernels();
+        }
+	}
+	
 	/**
 	 * Draw the water on the scene.
 	 * @param cam Camera object
 	 */
-	public void draw(Camera cam)
+	public void draw(Camera cam, boolean points)
 	{
     	WaterRenderSP.use();
         
         Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);  
         WaterRenderSP.setUniform("viewProj", viewProj);
+        WaterRenderSP.setUniform("color", new Vector4f(1.0f, 1.0f, 1.0f, 0.5f));
 //        WaterRenderSP.setUniform("colorTex", waterMap.getColorTex());
 		
-        waterMap.draw();
-//		glBindVertexArray(vertArrayID2);
-//		glDrawArrays(GL_POINTS, 0, (int)gws.get(0));
+        if (points)
+        {
+        	WaterRenderSP.setUniform("color", new Vector4f(1.0f, 1.0f, 1.0f, 1.0f));
+        	glBindVertexArray(vertexArray);
+        	glDrawArrays(GL_POINTS, 0, (int)gws.get(0));
+        }	
+        else
+        	waterMap.draw();
 	}
 	
 	/**
@@ -420,16 +449,17 @@ public class Water {
 	 */
 	public void destroy()
 	{
+		GL30.glDeleteVertexArrays(vertexArray);
+		waterMap.delete();
 		clReleaseMemObject(memGradient);
 		clReleaseMemObject(memAttribute);
         clReleaseMemObject(memHeight);
         clReleaseMemObject(memNormal);
         clReleaseMemObject(memHeightScale);
-        clReleaseMemObject(memWaterHeight);
         clReleaseKernel(kernelReduce);
         clReleaseKernel(kernelFlow);
-        clReleaseCommandQueue(queue);
         clReleaseProgram(program);
-        clReleaseContext(context);
+        clReleaseCommandQueue(queue);
+        //clReleaseContext(context);
 	}
 }

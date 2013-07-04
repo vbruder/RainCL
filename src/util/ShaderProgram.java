@@ -5,6 +5,7 @@ import static apiWrapper.GL.*;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
+import org.lwjgl.util.vector.Vector4f;
 
 /**
  * 
@@ -267,4 +268,11 @@ public class ShaderProgram {
         
         GL20.glDeleteProgram(this.id);
     }
+
+	public void setUniform(String varName, Vector4f vec) {
+        int loc = glGetUniformLocation(this.id, varName);
+        if(loc != -1) {
+            glUniform4f(loc, vec.x, vec.y, vec.z, vec.w);
+        }		
+	}
 }

@@ -15,15 +15,15 @@ kernel void rainOozing(
 	uint N = get_global_size(0);
 	uint rowlen = sqrt((float) N);
 
-	if (!( ((id % rowlen)-1 == 0) || id % rowlen == 0 || id < 512 || id > 512*511))
+	if (!( (id % rowlen)-1 == 0 || id % rowlen == 0 || id < rowlen || id > rowlen*(rowlen-1) ))
 	{
 		float gain = 0.0;
 	
 		//add rain to water
-		gain += rain * dt;	 					// 0.1 - 1.0
+		gain += rain * dt *10;	 					// 0.1 - 1.0
 		
 		//remove oozing water
-		gain -= attribute[id] * oozing * dt;	
+		//gain -= attribute[id] * oozing * dt;	
 		//gain += 0.0001;
 		//calculate new water value and set water map. Set minimal limit.
 		water[id] += gain;
@@ -58,7 +58,7 @@ kernel void flowWaterTangential(
 	float waterVal = tmp[id];
 	
 	//check if border bucket
-	if ((id % rowlen == 0) || ((id % rowlen)-1 == 0) || id < 512 || id > 512*511)
+	if ((id % rowlen == 0) || ((id % rowlen)-1 == 0) || id < rowlen || id > rowlen*(rowlen-1))
 	{
 		border = 1;
 	}
@@ -76,7 +76,7 @@ kernel void flowWaterTangential(
 	float dx = border ? 0.0 : topleft - topright + 2*left - 2*right + downleft - downright;
 	float dz = border ? 0.0 : topleft + 2*top + topright - downleft - 2*down - downright;
 	
-	float sharpness = -3.0;
+	float sharpness = -1;
 	
 	float dy = sharpness * sqrt(dx*dx + dz*dz);
 	
@@ -100,7 +100,7 @@ kernel void flowWaterTangential(
 	uint dir = (int)((atan2pi(tangent.z, tangent.x) * 180.0f)/45.0f + 0.5f);
 
 	//do not move water smaller than epsilon
-	float eps = 0.1f;
+	float eps = 0.2f;
 	dx  = fabs(dx) < eps ? 0 : dx;
 	dy  = fabs(dy) < eps ? 0 : dy;
 	
@@ -111,7 +111,7 @@ kernel void flowWaterTangential(
 	if (!border && dot((float)dir2.x, (float)dir2.y) != 0)
 	{
 		//von Neumann neighborhood
-		water[abs(id + dir2.y*rowlen + dir2.x) % N] += waterVal*dt*len;
+		water[abs(id + dir2.y*rowlen + dir2.x) % N] += waterVal*dt *len;
 		
 		//Moore neighborhood
 		/*
@@ -142,7 +142,7 @@ kernel void reduceFlowedWater(
 	int border = 0;
 	
 	//check if border bucket
-	if ((id % rowlen == 0) || ((id % rowlen)-1 == 0) || id < 512 || id > 512*511)
+	if ((id % rowlen == 0) || ((id % rowlen)-1 == 0) || id < rowlen || id > rowlen*(rowlen-1))
 	{
 		border = 1;
 	}
@@ -177,10 +177,13 @@ kernel void reduceFlowedWater(
 	
 	if (!border && dot((float)dir2.x, (float)dir2.y) != 0)
 	{
-		water[id] -= tmp[id]*dt*len;
+		water[id] -= tmp[id]*dt * len;
 	}
 }
 
+/**
+ * Distribute wate with hight field fluids technique
+ */
 kernel void distributeWater(
 							global float4* 	waterHeight,
 							global float*	heightScaled,
@@ -198,8 +201,7 @@ kernel void distributeWater(
 	float waterVal   = water[id];
 	
 	//check if border bucket
-	//TODO one edge...
-	if ( (id % rowlen == 0) || id < 512 || id > 512*511 || ((id % rowlen)-1 == 0) )
+	if ( (id % rowlen == 0) || id < rowlen || id > rowlen*(rowlen-1) || ((id % rowlen)-1 == 0) )
 		border = 1;
 	
 	float hff = 0.0;
@@ -235,13 +237,17 @@ kernel void distributeWater(
 	}
 	
 	//calculate height-field-fluids function
-	hff = damping * (rightN + leftN + botN + topN - 4*(waterVal));
+	hff = 2*damping * (rightN + leftN + botN + topN - cnt*(waterVal));
 	
 	float finalWater = hff + waterVal + heightVal;
-	finalWater = finalWater < -10.0 ? -10 : finalWater;
+	//float finalWater =  waterVal + heightVal;
+
+	//finalWater = finalWater < -10.0 ? -10 : finalWater;
 	
 	tmp[id].y = finalWater;
 	water[id] = hff + waterVal;
+		//water[id] =  waterVal;
+
 }
 
 
@@ -257,6 +263,7 @@ kernel void distributeWater(
 
 
 
+//********************************************************************************
 
 
 kernel void waterSim(

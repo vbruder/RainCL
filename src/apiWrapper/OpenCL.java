@@ -402,10 +402,11 @@ public class OpenCL {
      * @param options
      * @param pfn_notify
      */
-    public static void clBuildProgram(CLProgram program, CLDevice device, CharSequence options, CLBuildProgramCallback pfn_notify) {
+    public static boolean clBuildProgram(CLProgram program, CLDevice device, CharSequence options, CLBuildProgramCallback pfn_notify) {
         lastErrorCode.put(0, CL10.clBuildProgram(program, device, "", null));
         checkProgram(program, device);
-        checkError();
+        //checkError();
+        return lastErrorCode.get(0) == 0x0;
     }
     
     /**
@@ -477,7 +478,7 @@ public class OpenCL {
             log.get(bytes);
             System.out.println(String.format("CL Compiler Error/Warning:\n %s", new String(bytes)));
         }
-        checkError();
+        //checkError();
     }
     
     public static void checkError() {

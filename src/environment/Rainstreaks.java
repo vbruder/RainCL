@@ -199,6 +199,11 @@ public class Rainstreaks {
         createShaderProgram();
     }
     
+    public void compile()
+    {
+    	
+    }
+    
     /**
      * Sets the called device (GPU/CPU) (if existent else throw error)
      * Creates context, queue and program.
@@ -291,9 +296,7 @@ public class Rainstreaks {
      * Create initial position and velocity data pseudo randomly.
      */
     private static void createRainData()
-    {
-        System.out.println("Generating data...");
- 
+    { 
 	    //init attribute buffer: position, starting position (seed), velocity, random and texture type
 		posBuffer  = BufferUtils.createFloatBuffer(4 * maxParticles);
 		seedBuffer = BufferUtils.createFloatBuffer(4 * maxParticles);
@@ -375,7 +378,6 @@ public class Rainstreaks {
         veloBuffer.rewind();
         vertexDataBuffer.rewind();
         
-        System.out.println("done.");
     }
     
     /**
