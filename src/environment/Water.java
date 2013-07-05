@@ -93,6 +93,7 @@ public class Water {
 	//openCL
 	private CLDevice device;
 
+	//float buffer for generating OpenCL memory objects
 	private FloatBuffer heightScaleDataBuffer;
 	private FloatBuffer heightDataBuffer;
 	private FloatBuffer normalDataBuffer;
@@ -101,9 +102,11 @@ public class Water {
 	private FloatBuffer tmpWHDataBuffer;
 	private FloatBuffer waterDataBuffer;
 	private FloatBuffer tmpWaterDataBuffer;
+	private FloatBuffer velosDataBuffer;
 	
 	private PointerBuffer gws = new PointerBuffer(1);
 	
+	//OpenCL memory objects
 	private CLMem memHeight;
 	private CLMem memNormal;
 	private CLMem memAttribute;
@@ -113,16 +116,14 @@ public class Water {
 	private CLMem memTmpWaterHeight;
 	private CLMem memWater;
 	private CLMem memTmpWater;
+	private CLMem memVelos;
 
-    //delta time for animations
-	private float dt;
+	//szene manipulation factors
 	private float rainfactor;
 	private float oozingfactor;
 	private float dampingfactor;
 
 	//openGL IDs
-	private static int vertArrayID2;
-	private static int vertBufferID2;
 	private int vertexArray = 0;
 	
 	private static CLContext context;
@@ -212,10 +213,17 @@ public class Water {
         gradientDataBuffer.rewind();
         memGradient = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, gradientDataBuffer);
 
+        //velocity buffer for height field fluid calculation
+        velosDataBuffer = BufferUtils.createFloatBuffer(terrainDim);
+        BufferUtils.zeroBuffer(velosDataBuffer);
+        memVelos = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, velosDataBuffer);
+
+        //buffer for water data
         waterDataBuffer = BufferUtils.createFloatBuffer(terrainDim);
         BufferUtils.zeroBuffer(waterDataBuffer);
         memWater = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, waterDataBuffer);
-
+        
+        //temporary buffer for water data (toggle buffer)
         tmpWaterDataBuffer = BufferUtils.createFloatBuffer(terrainDim);
         BufferUtils.zeroBuffer(tmpWaterDataBuffer);
         memTmpWater = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, tmpWaterDataBuffer);
@@ -231,20 +239,6 @@ public class Water {
         //generate initial water map
         //set water map initially to height data
         gws.put(0, terrainDim);
-        
-//    	vertArrayID2 = glGenVertexArrays();
-//    	glBindVertexArray(vertArrayID2);
-    	
-//        vertBufferID2 = glGenBuffers();
-        
-//        glBindBuffer(GL_ARRAY_BUFFER, vertBufferID2);        
-//        glBufferData(GL_ARRAY_BUFFER, terrain.getVertexValueBuffer(), GL_DYNAMIC_DRAW);
-
-//        glEnableVertexAttribArray(ShaderProgram.ATTR_POS);
-//        glVertexAttribPointer(ShaderProgram.ATTR_POS, 4, GL_FLOAT, false, 16,  0);
-        
-//        memWaterHeight = clCreateFromGLBuffer(context, CL_MEM_READ_WRITE, vertBufferID2);
-
         
         tmpWHDataBuffer = BufferUtils.createFloatBuffer(terrainDim);
         tmpWHDataBuffer = terrain.getVertexValueBuffer();
@@ -283,6 +277,7 @@ public class Water {
         Texture colorTex = Texture.generateTexture("media/textures/waterTex.png", 20);
         waterMap.setColorTex(colorTex);
         
+        //water as point visualization stuff 
         memWaterHeight = clCreateFromGLBuffer(context, CL_MEM_READ_WRITE, waterMap.getVbid());
         vertexArray = glGenVertexArrays();
     	glBindVertexArray(vertexArray);
@@ -363,6 +358,7 @@ public class Water {
 		kernelDistribute = clCreateKernel(program, "distributeWater");
 		kernelDistribute.setArg(1, memHeightScale);
 		kernelDistribute.setArg(2, memWater);
+		kernelDistribute.setArg(4, memVelos);
 	}
 	
 	/**
@@ -401,8 +397,8 @@ public class Water {
         	kernelDistribute.setArg( 3, memTmpWaterHeight);
         	swap = !swap;
         }
-	    kernelDistribute.setArg( 4, dampingfactor);
-	    kernelDistribute.setArg( 5, 1e-3f*deltaTime);	    
+	    kernelDistribute.setArg( 5, dampingfactor);
+	    kernelDistribute.setArg( 6, 1e-3f*deltaTime);	    
         clEnqueueNDRangeKernel(queue, kernelDistribute, 1, null, gws, null, null, null); 
 
         clEnqueueReleaseGLObjects(queue, memWaterHeight, null, null);
@@ -431,7 +427,7 @@ public class Water {
         
         Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);  
         WaterRenderSP.setUniform("viewProj", viewProj);
-        WaterRenderSP.setUniform("color", new Vector4f(1.0f, 1.0f, 1.0f, 0.5f));
+        WaterRenderSP.setUniform("color", new Vector4f(1.0f, 1.0f, 1.0f, 0.2f));
 //        WaterRenderSP.setUniform("colorTex", waterMap.getColorTex());
 		
         if (points)
@@ -456,6 +452,12 @@ public class Water {
         clReleaseMemObject(memHeight);
         clReleaseMemObject(memNormal);
         clReleaseMemObject(memHeightScale);
+        clReleaseMemObject(memTmpWater);
+        clReleaseMemObject(memTmpWaterHeight);
+        clReleaseMemObject(memVelos);
+        clReleaseMemObject(memWater);
+        clReleaseMemObject(memWaterHeight);
+        
         clReleaseKernel(kernelReduce);
         clReleaseKernel(kernelFlow);
         clReleaseProgram(program);
