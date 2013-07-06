@@ -31,9 +31,9 @@ kernel void rainOozing(
 		{
 			water[id] = -0.1;
 		}
-		if (water[id] > +5.0)
+		if (water[id] > +1.0)
 		{
-			water[id] = 5.0;
+			water[id] = 1.0;
 		}
 		
 		tmp[id] = water[id];
@@ -207,17 +207,17 @@ kernel void distributeWater(
 	
 	float hff = 0.0;
 	int cnt = 0;
-	float eps = 0.3;
+	float eps = 0.1;
 	float rightN, leftN, topN, botN;
 	rightN = leftN = topN = botN = 0.0;
 	
 	//right neighbor
 	if ( !(id == rowlen*rowlen-1) && (id % rowlen)-1 == 0 )
 	{
-		rightN = water[id];
+		rightN = waterVal;
 		++cnt;
 	}
-	else if (heightVal-eps < heightScaled[id + 1] && heightScaled[id + 1] < heightVal+eps)
+	else if (heightScaled[id + 1] >= heightVal+eps)
 	{
 		rightN = water[id + 1];
 		++cnt;
@@ -226,10 +226,10 @@ kernel void distributeWater(
 	//left neighbor
 	if (!(id == 0) && id % rowlen == 0)
 	{
-		leftN = water[id];
+		leftN = 0;
 		++cnt;
 	}
-	else if (heightVal-eps < heightScaled[id - 1] && heightScaled[id - 1] < heightVal + eps)
+	else if (heightScaled[id - 1] > heightVal + eps)
 	{
 		leftN = water[id - 1];
 		++cnt;
@@ -238,10 +238,10 @@ kernel void distributeWater(
 	//bottom neighbor
 	if ( !(id == rowlen*(rowlen-1)+1) && id > rowlen*(rowlen-1) )
 	{
-		botN = water[id];
+		botN = 0;
 		++cnt;
 	}
-	else if (heightVal-eps < heightScaled[id + rowlen] && heightScaled[id + rowlen] < heightVal + eps)
+	else if (heightScaled[id + rowlen] > heightVal + eps)
 	{
 		botN = water[id + rowlen];
 		++cnt;
@@ -250,17 +250,17 @@ kernel void distributeWater(
 	//top neighbor
 	if (!(id == rowlen-1) && id < rowlen)
 	{
-		topN = water[id];
+		topN = waterVal;
 		++cnt;
 	}
-	else if (heightVal-eps < heightScaled[id - rowlen] && heightScaled[id - rowlen] < heightVal + eps)
+	else if (heightScaled[id - rowlen] > heightVal + eps)
 	{
 		topN = water[id - rowlen];
 		++cnt;
 	}
 	
 	//calculate height-field-fluids function
-	hff = 100*damping * (rightN + leftN + botN + topN - cnt*(waterVal));
+	hff = 0.1*damping* (rightN + leftN + botN + topN - cnt*(waterVal));
 	
 	velos[id] += hff * dt;
 	float currVelos = velos[id];
