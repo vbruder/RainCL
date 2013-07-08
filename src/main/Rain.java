@@ -280,10 +280,14 @@ public class Rain {
             //water map
             if (drawWater)
             {
-            	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            	glBlendFunc(GL_ONE, GL_ONE);
             	glEnable(GL_BLEND);
+            	//glDisable(GL_CULL_FACE);
+            	//glDisable(GL_DEPTH_TEST);
             	watermap.draw(cam, points);
             	glDisable(GL_BLEND);
+            	//glEnable(GL_CULL_FACE);
+            	//glEnable(GL_DEPTH_TEST);
             }
             //rain streaks
             if (drawRain)
@@ -331,6 +335,10 @@ public class Rain {
                     case Keyboard.KEY_ESCAPE :  bContinue = false; break;
                     case Keyboard.KEY_R : watermap.compile(); raindrops.compile(); break;
                     case Keyboard.KEY_T : createRainsys(); break;
+                    case Keyboard.KEY_UP : watermap.sigma(0.5f); break;
+                    case Keyboard.KEY_DOWN : watermap.sigma(-0.5f); break;
+                    case Keyboard.KEY_LEFT : watermap.size(2); break;
+                    case Keyboard.KEY_RIGHT : watermap.size(-2); break;
                 }
             } else {
                 switch(Keyboard.getEventKey()) {

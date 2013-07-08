@@ -23,20 +23,21 @@ kernel void rainOozing(
 		gain += rain * dt;	 					// 0.1 - 1.0
 		
 		//remove oozing water
-		gain -= attribute[id] * oozing * dt;	
+		//gain -= attribute[id] * oozing * dt;	
 
 		//calculate new water value and set water map. Set limits.
 		water[id] += gain;
-		if (water[id] < -0.1)
-		{
-			water[id] = -0.1;
-		}
-		if (water[id] > +1.0)
-		{
-			water[id] = 1.0;
-		}
-		
+
 		tmp[id] = water[id];
+	}
+	
+	if (water[id] < -0.1)
+	{
+		water[id] = -0.1;
+	}
+	if (water[id] > +10.0)
+	{
+		water[id] = 10;
 	}
 }
 
@@ -111,10 +112,10 @@ kernel void flowWaterTangential(
 	if (!border && dot((float)dir2.x, (float)dir2.y) != 0)
 	{
 		//von Neumann neighborhood
-		water[abs(id + dir2.y*rowlen + dir2.x) % N] += waterVal*dt *len;
+		//water[abs(id + dir2.y*rowlen + dir2.x) % N] += waterVal*dt *len;
 		
 		//Moore neighborhood
-		/*
+		
 			 if (dir == 0) (water[id - rowlen + 1]) += waterVal*dt*len;
 		else if (dir == 1) (water[id          + 1]) += waterVal*dt*len;
 		else if (dir == 2) (water[id + rowlen + 1]) += waterVal*dt*len;
@@ -123,7 +124,7 @@ kernel void flowWaterTangential(
 		else if (dir == 5) (water[id          - 1]) += waterVal*dt*len;
 		else if (dir == 6) (water[id - rowlen - 1]) += waterVal*dt*len;
 		else if (dir == 7) (water[id - rowlen - 1]) += waterVal*dt*len;
-		*/
+		
 	}
 }
 
@@ -217,7 +218,7 @@ kernel void distributeWater(
 		rightN = waterVal;
 		++cnt;
 	}
-	else if (heightScaled[id + 1] >= heightVal+eps)
+	else if (heightScaled[id + 1] > heightVal + eps)
 	{
 		rightN = water[id + 1];
 		++cnt;
@@ -250,7 +251,7 @@ kernel void distributeWater(
 	//top neighbor
 	if (!(id == rowlen-1) && id < rowlen)
 	{
-		topN = waterVal;
+		topN = 0;
 		++cnt;
 	}
 	else if (heightScaled[id - rowlen] > heightVal + eps)
@@ -260,7 +261,9 @@ kernel void distributeWater(
 	}
 	
 	//calculate height-field-fluids function
-	hff = 0.1*damping* (rightN + leftN + botN + topN - cnt*(waterVal));
+	float h = 1;//2.0f / 512.0f;
+	float c = 1;
+	hff = c * rightN + leftN + botN + topN - cnt*(waterVal) / h;
 	
 	velos[id] += hff * dt;
 	float currVelos = velos[id];
@@ -270,10 +273,43 @@ kernel void distributeWater(
 
 	//finalWater = finalWater < -10.0 ? -10 : finalWater;
 	
-	tmp[id].y = finalWater;
 	water[id] = waterVal + currVelos * dt;
+	
+	tmp[id].y = finalWater;
 	
 	//debug:	
 	//water[id] =  waterVal;
 
 }
+
+
+kernel void blurWater(global float4* src, global float4* dst, global float* mask, const int maskSize)
+{   
+    int x = get_global_id(0);
+    int y = get_global_id(1);
+    int w = get_global_size(0);
+    int h = get_global_size(1);
+    
+	uint N = w*h;
+	
+    float hh = 0;
+    int halfSize = maskSize / 2;
+    
+    for(int i = 0; i < maskSize; ++i)
+    {
+        int row = i - halfSize;
+        
+        for(int j = 0; j < maskSize; ++j)
+        {
+            int col = j - halfSize;
+        
+            uint index = (y + row) * w + x + col;
+        
+            index = index < 0 ? N-index : (index >= N ? index % N : index);
+
+            hh += src[index].y * mask[i * maskSize + j];
+        }
+    }
+    
+    dst[y * w + x].y = hh;
+} 

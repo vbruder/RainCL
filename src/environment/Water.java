@@ -117,6 +117,8 @@ public class Water {
 	private CLMem memWater;
 	private CLMem memTmpWater;
 	private CLMem memVelos;
+	private CLMem memGauss;
+	private CLMem memBlur;
 
 	//szene manipulation factors
 	private float rainfactor;
@@ -137,12 +139,21 @@ public class Water {
 
 	private Geometry terrain;
 	private Geometry waterMap;
+	private Geometry waterBlured;
 	
 	//shader
 	private ShaderProgram WaterRenderSP;
     private final Matrix4f viewProj = new Matrix4f();
 
     boolean swap = false;
+
+	private FloatBuffer gaussDataBuffer;
+	
+	private int maskSize = 15;
+	private float sigma = 4;
+
+
+	private CLKernel kernelBlur;
 
 	/**
 	 * Create water object.
@@ -162,6 +173,18 @@ public class Water {
         createWaterData();
         createKernels();
         WaterRenderSP = new ShaderProgram("./shader/Water.vsh", "./shader/Water.fsh");
+	}
+	
+	public void sigma(float delta)
+	{
+		sigma += delta;
+		createGauss();
+	}
+	
+	public void size(int delta)
+	{
+		maskSize += delta;
+		createGauss();
 	}
 
 	/**
@@ -273,6 +296,7 @@ public class Water {
         waterMap.setVertices(waterBuffer);
         waterMap.addVertexAttribute(ShaderProgram.ATTR_POS, 4, 0);
         waterMap.construct();
+        waterBuffer.rewind();
 
         Texture colorTex = Texture.generateTexture("media/textures/waterTex.png", 20);
         waterMap.setColorTex(colorTex);
@@ -287,6 +311,16 @@ public class Water {
     	glVertexAttribPointer(ShaderProgram.ATTR_POS, 4, GL_FLOAT, false, 16,  0);
     	
     	glBindVertexArray(0);
+    	
+        
+        
+        waterBlured = new Geometry();
+        waterBlured.setIndices(indexData, GL_TRIANGLE_STRIP);
+        waterBlured.setVertices(waterBuffer);
+        waterBlured.addVertexAttribute(ShaderProgram.ATTR_POS, 4, 0);
+        waterBlured.construct();
+        
+        memBlur = clCreateFromGLBuffer(context, CL_MEM_READ_WRITE, waterBlured.getVbid());
 	}
 
 	/**
@@ -359,6 +393,14 @@ public class Water {
 		kernelDistribute.setArg(1, memHeightScale);
 		kernelDistribute.setArg(2, memWater);
 		kernelDistribute.setArg(4, memVelos);
+		
+		//kernel gauss
+		kernelBlur = clCreateKernel(program, "blurWater");
+		kernelBlur.setArg(2, memGauss);
+		kernelBlur.setArg(3, maskSize);
+		
+		createGauss();
+		
 	}
 	
 	/**
@@ -369,6 +411,7 @@ public class Water {
 	{	        	  
 		glFinish();
 	    clEnqueueAcquireGLObjects(queue, memWaterHeight, null, null);
+	    clEnqueueAcquireGLObjects(queue, memBlur, null, null);
 	    
 	    float rain = (float) ((double) Math.log(Rainstreaks.getMaxParticles()) / Math.log(2))/10.0f - 1.0f; // 0..1
 	    kernelRainOozing.setArg( 3, rain*rainfactor);
@@ -401,9 +444,18 @@ public class Water {
 	    kernelDistribute.setArg( 6, 1e-3f*deltaTime);	    
         clEnqueueNDRangeKernel(queue, kernelDistribute, 1, null, gws, null, null, null); 
 
+
+        	kernelBlur.setArg( 0, memWaterHeight);
+        	kernelBlur.setArg( 1, memBlur);
+
+        clEnqueueNDRangeKernel(queue, kernelBlur, 1, null, gws, null, null, null);
+        
         clEnqueueReleaseGLObjects(queue, memWaterHeight, null, null);
+        clEnqueueReleaseGLObjects(queue, memBlur, null, null);
         
         clFinish(queue);
+        
+
 	}
 	
 	public void compile()
@@ -416,6 +468,55 @@ public class Water {
         	createKernels();
         }
 	}
+	public void createGauss()
+	{ 
+		if(memGauss != null)
+		{
+			OpenCL.clReleaseMemObject(memGauss);
+		}
+		System.out.println(maskSize + ", " + sigma);
+		gaussDataBuffer = BufferUtils.createFloatBuffer(maskSize*maskSize);
+    	gaussDataBuffer.put(getGaussianBlur(maskSize, sigma));
+    	gaussDataBuffer.rewind();
+        memGauss = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, gaussDataBuffer);
+		
+		kernelBlur.setArg(2, memGauss);
+		kernelBlur.setArg(3, maskSize);
+		
+	}
+	
+	/**
+	 * TODO
+	 * @param size
+	 * @param sigma
+	 * @return
+	 */
+    public float[] getGaussianBlur(int size, double sigma)
+    {
+        float data[] = new float[size * size];
+        int halfSize = size / 2;
+        float sum = 0.0f;
+        for(int i = 0; i < size; ++i)
+        {
+            for(int j = 0; j < size; ++j)
+            {
+                double x = i - halfSize;
+                double y = j - halfSize;
+                data[i * size + j] = (float)(1.0 / (Math.PI * 2 * sigma * sigma) * Math.exp(-(x * x + y * y) / (2 * sigma * sigma)));
+                sum += data[i * size +j];
+            }
+        }
+        
+        for(int i = 0; i < size; ++i)
+        {
+            for(int j = 0; j < size; ++j)
+            {
+                data[i * size + j] /= sum;
+            }
+        }
+        
+        return data;
+    }
 	
 	/**
 	 * Draw the water on the scene.
@@ -427,7 +528,7 @@ public class Water {
         
         Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);  
         WaterRenderSP.setUniform("viewProj", viewProj);
-        WaterRenderSP.setUniform("color", new Vector4f(1.0f, 1.0f, 1.0f, 0.2f));
+        WaterRenderSP.setUniform("color", new Vector4f(0.2f, 0.2f, 1.0f, 1.0f));
 //        WaterRenderSP.setUniform("colorTex", waterMap.getColorTex());
 		
         if (points)
@@ -435,9 +536,10 @@ public class Water {
         	WaterRenderSP.setUniform("color", new Vector4f(1.0f, 1.0f, 1.0f, 1.0f));
         	glBindVertexArray(vertexArray);
         	glDrawArrays(GL_POINTS, 0, (int)gws.get(0));
-        }	
+        }
         else
-        	waterMap.draw();
+        	waterBlured.draw();
+        	//waterMap.draw();
 	}
 	
 	/**
