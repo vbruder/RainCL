@@ -77,7 +77,7 @@ kernel void flowWaterTangential(
 	float dx = border ? 0.0 : topleft - topright + 2*left - 2*right + downleft - downright;
 	float dz = border ? 0.0 : topleft + 2*top + topright - downleft - 2*down - downright;
 	
-	float sharpness = -1;
+	float sharpness = -0.01;
 	
 	float dy = sharpness * sqrt(dx*dx + dz*dz);
 	
@@ -106,9 +106,7 @@ kernel void flowWaterTangential(
 	dy  = fabs(dy) < eps ? 0 : dy;
 	
 	int2 dir2 = (int2)(sign(dx), sign(dy));
-	
-	float ddtt = 0.001f;
-	
+		
 	if (!border && dot((float)dir2.x, (float)dir2.y) != 0)
 	{
 		//von Neumann neighborhood
@@ -262,16 +260,13 @@ kernel void distributeWater(
 	
 	//calculate height-field-fluids function
 	float h = 1;//2.0f / 512.0f;
-	float c = 1;
-	hff = c * rightN + leftN + botN + topN - cnt*(waterVal) / h;
+	float c = 10;
+	hff = c * rightN + leftN + botN + topN - (cnt)*(waterVal) / h;
 	
 	velos[id] += hff * dt;
 	float currVelos = velos[id];
 	
 	float finalWater = waterVal + heightVal + currVelos * dt;
-	//float finalWater =  waterVal + heightVal;
-
-	//finalWater = finalWater < -10.0 ? -10 : finalWater;
 	
 	water[id] = waterVal + currVelos * dt;
 	

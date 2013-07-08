@@ -212,7 +212,7 @@ public class GeometryFactory {
         glBindVertexArray(vaid);
 
         // load height map
-        float[][][] ic = Util.getImageContents(path + "terrainHeight01.png");
+        float[][][] ic = Util.getImageContents(path + "terrainHeight05.png");
         FloatBuffer vertexData = BufferUtils.createFloatBuffer(ic[0].length*ic.length*4);
         for (int h = 0; h < ic.length; h++) {
             for (int w = 0; w < ic[0].length; w++) {                

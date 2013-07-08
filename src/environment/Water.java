@@ -193,7 +193,7 @@ public class Water {
 	private void createWaterData()
 	{
         //load height map data
-        ImageContents contentHeight = Util.loadImage("media/terrain/terrainHeight01.png");
+        ImageContents contentHeight = Util.loadImage("media/terrain/terrainHeight05.png");
         int terrainDim = contentHeight.height * contentHeight.width;
         heightDataBuffer = BufferUtils.createFloatBuffer(terrainDim);
         for(int i = 0; i < heightDataBuffer.capacity(); ++i)
