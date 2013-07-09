@@ -16,7 +16,7 @@ import util.Util;
 public class PointLightOrb {
     private static final Geometry geo = GeometryFactory.createSphere(1.0f, 16, 8);
     
-    private final Matrix4f model = new Matrix4f();
+    public final Matrix4f model = new Matrix4f();
     private Vector3f position = new Vector3f();
     private final Vector3f color = new Vector3f();
     private float radius = 1.0f;
@@ -52,8 +52,8 @@ public class PointLightOrb {
     
     private void buildModelMatrix() {
         Util.mul(this.model, Util.rotationY(this.orbitAngle, null), Util.rotationX(this.orbitTilt, null), Util.translationZ(this.orbitRadius, null), Util.scale(this.radius, null));
+        this.position = new Vector3f(20.0f, 20.0f, 20.0f);
         Util.transformCoord(this.model, new Vector3f(), this.position);
-        this.position = new Vector3f(10.0f, 10.0f, 0.0f);
     }
     
     public void bindLightInformationToShader(int program) {

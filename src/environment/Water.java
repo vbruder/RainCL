@@ -528,7 +528,7 @@ public class Water {
         
         Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);  
         WaterRenderSP.setUniform("viewProj", viewProj);
-        WaterRenderSP.setUniform("color", new Vector4f(0.2f, 0.2f, 0.2f, 1.0f));
+        WaterRenderSP.setUniform("color", new Vector4f(0.1f, 0.1f, 0.1f, 1.0f));
 //        WaterRenderSP.setUniform("colorTex", waterMap.getColorTex());
 		
         if (points)
