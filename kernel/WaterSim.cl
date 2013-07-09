@@ -22,8 +22,8 @@ kernel void rainOozing(
 		//add rain to water
 		gain += rain * dt;	 					// 0.1 - 1.0
 		
-		//remove oozing water
-		//gain -= attribute[id] * oozing * dt;	
+		//remove oozing waterw
+		gain -= attribute[id] * oozing * dt;	
 
 		//calculate new water value and set water map. Set limits.
 		water[id] += gain;
@@ -35,9 +35,9 @@ kernel void rainOozing(
 	{
 		water[id] = -0.1;
 	}
-	if (water[id] > +10.0)
+	if (water[id] > +5.0)
 	{
-		water[id] = 10;
+		water[id] = 5;
 	}
 }
 
@@ -101,7 +101,7 @@ kernel void flowWaterTangential(
 	uint dir = (int)((atan2pi(tangent.z, tangent.x) * 180.0f)/45.0f + 0.5f);
 
 	//do not move water smaller than epsilon
-	float eps = 0.2f;
+	float eps = 0.01f;
 	dx  = fabs(dx) < eps ? 0 : dx;
 	dy  = fabs(dy) < eps ? 0 : dy;
 	
@@ -168,7 +168,7 @@ kernel void reduceFlowedWater(
 	float len = 0.01 * length(tangent);
 
 	//do not move water smaller than epsilon
-	float eps = 0.1f;
+	float eps = 0.01f;
 	dx  = fabs(dx) < eps ? 0 : dx;
 	dy  = fabs(dy) < eps ? 0 : dy;
 	
@@ -225,7 +225,7 @@ kernel void distributeWater(
 	//left neighbor
 	if (!(id == 0) && id % rowlen == 0)
 	{
-		leftN = 0;
+		leftN = waterVal;
 		++cnt;
 	}
 	else if (heightScaled[id - 1] > heightVal + eps)
@@ -237,7 +237,7 @@ kernel void distributeWater(
 	//bottom neighbor
 	if ( !(id == rowlen*(rowlen-1)+1) && id > rowlen*(rowlen-1) )
 	{
-		botN = 0;
+		botN = waterVal;
 		++cnt;
 	}
 	else if (heightScaled[id + rowlen] > heightVal + eps)
@@ -249,7 +249,7 @@ kernel void distributeWater(
 	//top neighbor
 	if (!(id == rowlen-1) && id < rowlen)
 	{
-		topN = 0;
+		topN = waterVal;
 		++cnt;
 	}
 	else if (heightScaled[id - rowlen] > heightVal + eps)
@@ -260,8 +260,13 @@ kernel void distributeWater(
 	
 	//calculate height-field-fluids function
 	float h = 1;//2.0f / 512.0f;
-	float c = 10;
+	float c = 1;
 	hff = c * rightN + leftN + botN + topN - (cnt)*(waterVal) / h;
+	
+	//clamping
+	float maxOffset = 1;
+	if (hff >  maxOffset)	waterVal += hff - maxOffset;
+	if (hff < -maxOffset)	waterVal += hff + maxOffset;
 	
 	velos[id] += hff * dt;
 	float currVelos = velos[id];

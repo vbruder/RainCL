@@ -69,7 +69,7 @@ public class Rain {
         
     //environment
     private static Rainstreaks raindrops = null;
-    private static boolean drawRain = false;
+    private static boolean drawRain = true;
 
 	private static PointLightOrb orb;
     private static Sun sun;
@@ -81,7 +81,7 @@ public class Rain {
     private static Texture skyDomeTex;
     private static Texture sunTexture;
     private static Texture skyCloudTex;
-    private static boolean drawSky	= true;
+    private static boolean drawSky = true;
     private static Matrix4f skyMoveMatrix = new Matrix4f();
     private static Matrix4f  cloudModelMatrix = new Matrix4f();
     private static boolean drawClouds = false;
@@ -143,7 +143,7 @@ public class Rain {
             createRainsys();
 
             // starting position
-            cam.move(50.0f, 50.0f, 5.0f);
+            cam.move(50.0f, 50.0f, 20.0f);
             
             render();
 
@@ -237,22 +237,28 @@ public class Rain {
             
             //sky dome
            
-            skySP.use();
-            skySP.setUniform("proj", cam.getProjection());
-            skySP.setUniform("view", cam.getView());
-            skySP.setUniform("model", skyMoveMatrix);
-            skySP.setUniform("textureImage", skyDomeTex);
-            glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
-            skyDome.draw();
-            
+            if (drawSky)
+            {
+	            skySP.use();
+	            skySP.setUniform("proj", cam.getProjection());
+	            skySP.setUniform("view", cam.getView());
+	            skySP.setUniform("model", skyMoveMatrix);
+	            skySP.setUniform("textureImage", skyDomeTex);
+	            glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
+	            skyDome.draw();
+            }
+	            
             //TODO: sun cube
             
             //clouds
-//            glEnable(GL_BLEND);
-//            skySP.setUniform("model", cloudModelMatrix);
-//            skySP.setUniform("textureImage", skyCloudTex);
-//            skyCloud.draw();
-//            glDisable(GL_BLEND);
+            if (drawClouds)
+            {
+	            glEnable(GL_BLEND);
+	            skySP.setUniform("model", cloudModelMatrix);
+	            skySP.setUniform("textureImage", skyCloudTex);
+	            skyCloud.draw();
+	            glDisable(GL_BLEND);
+            }
             
             //terrain
             if (drawTerrain)
@@ -339,6 +345,10 @@ public class Rain {
                     case Keyboard.KEY_DOWN : watermap.sigma(-0.5f); break;
                     case Keyboard.KEY_LEFT : watermap.size(2); break;
                     case Keyboard.KEY_RIGHT : watermap.size(-2); break;
+                    case Keyboard.KEY_NUMPAD8 : Rainstreaks.setMaxParticles(Rainstreaks.getMaxParticles()*2); break;
+                    case Keyboard.KEY_NUMPAD2 : Rainstreaks.setMaxParticles(Rainstreaks.getMaxParticles()/2); break;
+                    case Keyboard.KEY_NUMPAD6 : Rainstreaks.setWindForce(Rainstreaks.getWindForce() + 1.0f); break;
+                    case Keyboard.KEY_NUMPAD4 : Rainstreaks.setWindForce(Rainstreaks.getWindForce() - 1.0f); break;
                 }
             } else {
                 switch(Keyboard.getEventKey()) {

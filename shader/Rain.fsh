@@ -57,8 +57,8 @@ vec4 rainResponse(vec3 lightVec, vec3 lightColor, float lightIntensity, bool fal
         // Inputs: lightDir, eyePosition, dropDir
         lightVec = normalize(lightVec);
         vec3 eyePos   = normalize(eyePosition);
-        eyePos.x -= 0.75;
-        eyePos.z -= 0.75;
+        eyePos.x -= 0.73;
+        eyePos.z -= 0.73;
         vec3 dropDir  = normalize(dropDirection);
         
         bool is_EpLp_angle_ccw = true;
@@ -163,7 +163,7 @@ vec4 rainResponse(vec3 lightVec, vec3 lightColor, float lightIntensity, bool fal
         opacity = mix(hOpacity1, hOpacity2, t);
         // inverse gamma correction (expand dynamic range)
         opacity = pow(opacity, 0.7);            
-        opacity = 1.0 * lightIntensity * opacity * fallOff;
+        opacity = 1.2 * lightIntensity * opacity * fallOff;
     }
          
    return vec4(lightColor, opacity);

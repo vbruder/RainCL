@@ -670,7 +670,7 @@ public class Rainstreaks {
     /**
      * @return the windForce
      */
-    public float getWindForce()
+    public static float getWindForce()
     {
         return windForce;
     }

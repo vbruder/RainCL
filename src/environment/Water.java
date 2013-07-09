@@ -149,8 +149,8 @@ public class Water {
 
 	private FloatBuffer gaussDataBuffer;
 	
-	private int maskSize = 15;
-	private float sigma = 4;
+	private int maskSize = 11;
+	private float sigma = 10;
 
 
 	private CLKernel kernelBlur;
@@ -193,7 +193,7 @@ public class Water {
 	private void createWaterData()
 	{
         //load height map data
-        ImageContents contentHeight = Util.loadImage("media/terrain/terrainHeight05.png");
+        ImageContents contentHeight = Util.loadImage("media/terrain/terrainHeight01.png");
         int terrainDim = contentHeight.height * contentHeight.width;
         heightDataBuffer = BufferUtils.createFloatBuffer(terrainDim);
         for(int i = 0; i < heightDataBuffer.capacity(); ++i)
@@ -528,7 +528,7 @@ public class Water {
         
         Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);  
         WaterRenderSP.setUniform("viewProj", viewProj);
-        WaterRenderSP.setUniform("color", new Vector4f(0.2f, 0.2f, 1.0f, 1.0f));
+        WaterRenderSP.setUniform("color", new Vector4f(0.2f, 0.2f, 0.2f, 1.0f));
 //        WaterRenderSP.setUniform("colorTex", waterMap.getColorTex());
 		
         if (points)
