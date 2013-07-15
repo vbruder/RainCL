@@ -20,7 +20,7 @@ vec3 calcLighting(vec3 normal, vec3 diff, vec3 spec, vec3 ambi)
 	vec3 viewVec = positionFS - eyePosition;
 	float lenView = length(viewVec);
 	vec3 view = normalize(viewVec);
-	vec3 expDir = exp(-fogThickness*lenView);
+	vec3 expDir = exp2(-fogThickness*lenView);
 	float wetSurface = clamp(k_spec/2.0*clamp(normal.y, 0.0, 1.0), 0.0, 1.0);
 	vec3 reflVec = reflect(view, normal);
 	
@@ -32,38 +32,12 @@ vec3 calcLighting(vec3 normal, vec3 diff, vec3 spec, vec3 ambi)
     //diffuse
     vec3 diffDirLight = dirLighting*expDir;        
     //ambient
-	vec3 ambiFactor = vec3(0.96/pow(1 - cosGammaDir*0.2, 2.0));
+	vec3 ambiFactor = vec3(0.96/pow(1 - cosGammaDir*0.2, 2.0)) *4;
     vec3 ambiDirLight = ambiFactor * sunIntensity * vec3(1-expDir.x, 1-expDir.y, 1-expDir.z);
     //specular
-    vec3 specDirLight = clamp(pow(dot(lightDirNorm, reflVec), 25.0), 0.0, 1.0) * sunIntensity * k_spec * expDir; 
+    vec3 specDirLight = clamp(pow(dot(lightDirNorm, reflVec), 20.0), 0.0, 1.0) * sunIntensity * k_spec * expDir; 
 
 	return vec3(ambiDirLight.xyz + diff*(diffDirLight.xyz) + spec*specDirLight);
-}
-
-vec3 calcLighting2(vec3 normal, vec3 diff, vec3 spec, vec3 ambi)
-{
-    vec3 d;
-    vec3 s;
-    vec3 a;
-    vec3 ref;
-    vec3 v;
-    vec3 erg = vec3(0, 0, 0);
-
-    //diffuse
-    d = sunIntensity * k_diff * diff * max(dot(-normalize(positionFS - sunDir), normal), 0.0);
-        
-    //specular
-    ref = reflect(normalize(positionFS - sunDir), normal);
-    v = normalize(eyePosition - positionFS);
-    s = k_spec * spec * max(dot(ref, v), 0.0);
-        
-    erg += (d + s);
-
-    //ambient
-    a = k_ambi * ambi;
-    erg += a;
-    
-    return erg;
 }
 
 void main(void)

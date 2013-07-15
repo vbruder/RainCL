@@ -104,6 +104,7 @@ public class Water {
 	private FloatBuffer tmpWaterDataBuffer;
 	private FloatBuffer velosDataBuffer;
 	
+	//global work size for OpenCL kernels
 	private PointerBuffer gws = new PointerBuffer(1);
 	
 	//OpenCL memory objects
@@ -128,6 +129,7 @@ public class Water {
 	//openGL IDs
 	private int vertexArray = 0;
 	
+	//OpenCL Context and kernels
 	private static CLContext context;
 	private static CLCommandQueue queue;
 	private static CLProgram program;
@@ -137,6 +139,7 @@ public class Water {
 	private static CLKernel kernelReduce;
 	private static CLKernel kernelDistribute;
 
+	//OPenGL Geometries
 	private Geometry terrain;
 	private Geometry waterMap;
 	private Geometry waterBlured;
@@ -175,12 +178,20 @@ public class Water {
         WaterRenderSP = new ShaderProgram("./shader/Water.vsh", "./shader/Water.fsh");
 	}
 	
+	/**
+	 * Change sharpness parameter of Gaussian blur function.
+	 * @param delta added to the sharpness factor.
+	 */
 	public void sigma(float delta)
 	{
 		sigma += delta;
 		createGauss();
 	}
 	
+	/**
+	 * Change mask size of Gaussian blur function.
+	 * @param delta added to the mask size.
+	 */
 	public void size(int delta)
 	{
 		maskSize += delta;
@@ -311,8 +322,6 @@ public class Water {
     	glVertexAttribPointer(ShaderProgram.ATTR_POS, 4, GL_FLOAT, false, 16,  0);
     	
     	glBindVertexArray(0);
-    	
-        
         
         waterBlured = new Geometry();
         waterBlured.setIndices(indexData, GL_TRIANGLE_STRIP);
@@ -458,6 +467,9 @@ public class Water {
 
 	}
 	
+	/**
+	 * Compile OpenCL source code.
+	 */
 	public void compile()
 	{
         CLProgram p = clCreateProgramWithSource(context, Util.getFileContents("./kernel/WaterSim.cl"));
@@ -468,13 +480,16 @@ public class Water {
         	createKernels();
         }
 	}
+	
+	/**
+	 * Create Gauss blur kernel and all significant objects.
+	 */
 	public void createGauss()
 	{ 
 		if(memGauss != null)
 		{
 			OpenCL.clReleaseMemObject(memGauss);
 		}
-		System.out.println(maskSize + ", " + sigma);
 		gaussDataBuffer = BufferUtils.createFloatBuffer(maskSize*maskSize);
     	gaussDataBuffer.put(getGaussianBlur(maskSize, sigma));
     	gaussDataBuffer.rewind();
@@ -482,14 +497,13 @@ public class Water {
 		
 		kernelBlur.setArg(2, memGauss);
 		kernelBlur.setArg(3, maskSize);
-		
 	}
 	
 	/**
-	 * TODO
-	 * @param size
-	 * @param sigma
-	 * @return
+	 * Create mask for Gaussian blur function.
+	 * @param size of the mask
+	 * @param sigma factor of sharpness
+	 * @return float array containing mask
 	 */
     public float[] getGaussianBlur(int size, double sigma)
     {

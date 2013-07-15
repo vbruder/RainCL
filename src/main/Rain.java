@@ -36,7 +36,7 @@ import window.Settings;
 import window.TimerCaller;
 
 /**
- * main class
+ * Main class
  * This framework uses LWJGL (www.lwjgl.org)
  * 
  * @author Valentin Bruder (vbruder@uos.de)
@@ -68,28 +68,29 @@ public class Rain {
     private static final Matrix4f viewProjMatrix = new Matrix4f();
         
     //environment
+    private static boolean drawTerrain 	= true;
+    private static boolean drawRain 	= false;
+    private static boolean drawWater 	= false;
+    private static boolean drawSky 		= true;
+    private static boolean drawClouds 	= false;
+    
     private static Rainstreaks raindrops = null;
-    private static boolean drawRain = true;
 
 	private static PointLightOrb orb;
     private static Sun sun;
     private static Water watermap = null;
-    private static boolean drawWater = true;
     //sky
     private static Geometry skyDome;
     private static Geometry skyCloud;
     private static Texture skyDomeTex;
     private static Texture sunTexture;
     private static Texture skyCloudTex;
-    private static boolean drawSky = true;
     private static Matrix4f skyMoveMatrix = new Matrix4f();
     private static Matrix4f  cloudModelMatrix = new Matrix4f();
-    private static boolean drawClouds = false;
     //terrain
     private static Geometry terrain;
     private static String terrainDataPath = "media/terrain/";
     private static int scaleTerrain = 128;
-    private static boolean drawTerrain = true;
 
 	//lighting
     private static float k_diff =  15.0f;
@@ -104,10 +105,10 @@ public class Rain {
     private static TimerCaller tc = new TimerCaller();
     //view
     private static float fps;
-    private static Vector3f fogThickness = new Vector3f(0.05f, 0.05f, 0.05f);
+    private static Vector3f fogThickness = new Vector3f(0.07f, 0.07f, 0.07f);
 
     /**
-     * main
+     * Main method.
      * @param argv
      */
     public static void main(String[] argv) {
@@ -130,7 +131,7 @@ public class Rain {
             
             //create light sources
             //sun
-            sun = new Sun(new Vector3f(1.0f, 1.0f, 1.0f), new Vector3f(20.0f, 20.0f, 20.0f), 0.1f);
+            sun = new Sun(new Vector3f(1.0f, 1.0f, 1.0f), new Vector3f(30.0f, 30.0f, 30.0f), 0.1f);
             //point light(s)
             orbSP = new ShaderProgram("./shader/Orb.vsh", "./shader/Orb.fsh");
             orb = new PointLightOrb();
@@ -160,6 +161,10 @@ public class Rain {
         }
     }
     
+    /**
+     * Create the rain-water-system.
+     * @throws LWJGLException
+     */
     private static void createRainsys() throws LWJGLException
     {
     	
@@ -207,7 +212,7 @@ public class Rain {
      * @throws LWJGLException
      */
     public static void render() throws LWJGLException {
-        glClearColor(0.3f, 0.3f, 0.3f, 1.0f); // background color: grey
+        glClearColor(0.2f, 0.2f, 0.2f, 1.0f); // background color: grey
         
         long last = System.currentTimeMillis();
         long now, millis;
@@ -236,7 +241,6 @@ public class Rain {
             orb.bindLightInformationToShader(raindrops.getShaderProgram().getID());
             
             //sky dome
-           
             if (drawSky)
             {
 	            skySP.use();
@@ -244,13 +248,14 @@ public class Rain {
 	            skySP.setUniform("view", cam.getView());
 	            skySP.setUniform("model", skyMoveMatrix);
 	            skySP.setUniform("textureImage", skyDomeTex);
+	            skySP.setUniform("fogThickness", fogThickness);
 	            glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
 	            skyDome.draw();
             }
 	            
             //TODO: sun cube
             
-            //clouds
+            //TODO: clouds
             if (drawClouds)
             {
 	            glEnable(GL_BLEND);
@@ -284,16 +289,13 @@ public class Rain {
             }
 	            
             //water map
+            //TODO: Draw water on terrain
             if (drawWater)
             {
             	glBlendFunc(GL_ONE, GL_ONE);
             	glEnable(GL_BLEND);
-            	//glDisable(GL_CULL_FACE);
-            	//glDisable(GL_DEPTH_TEST);
             	watermap.draw(cam, points);
             	glDisable(GL_BLEND);
-            	//glEnable(GL_CULL_FACE);
-            	//glEnable(GL_DEPTH_TEST);
             }
             //rain streaks
             if (drawRain)
@@ -305,7 +307,7 @@ public class Rain {
             }
             
             	
-            //TODO: proper integration
+            //TODO: Point lights
 //            glUseProgram(orbSP.getID());
 //            Matrix4f viewProj = new Matrix4f();
 //            Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);  

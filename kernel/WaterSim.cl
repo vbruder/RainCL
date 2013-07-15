@@ -181,7 +181,7 @@ kernel void reduceFlowedWater(
 }
 
 /**
- * Distribute wate with hight field fluids technique
+ * Distribute wate with hight field fluids technique.
  */
 kernel void distributeWater(
 							global float4* 	waterHeight,
@@ -195,7 +195,6 @@ kernel void distributeWater(
 	uint id = get_global_id(0);
 	uint gws = get_global_size(0);
 	uint rowlen = sqrt((float) gws);
-	int border = 0;
 	
 	float heightVal  = heightScaled[id];			// -1..12?
 	float waterVal   = water[id];
@@ -283,7 +282,13 @@ kernel void distributeWater(
 }
 
 
-kernel void blurWater(global float4* src, global float4* dst, global float* mask, const int maskSize)
+/**
+ * Smoothe water surface with Gaus blur function.
+ */
+kernel void blurWater(	global float4* 	src,
+						global float4* 	dst,
+						global float* 	mask,
+						const  int 		maskSize)
 {   
     int x = get_global_id(0);
     int y = get_global_id(1);
@@ -305,7 +310,7 @@ kernel void blurWater(global float4* src, global float4* dst, global float* mask
         
             uint index = (y + row) * w + x + col;
         
-            index = index < 0 ? N-index : (index >= N ? index % N : index);
+            index = index >= N ? index % N : index;
 
             hh += src[index].y * mask[i * maskSize + j];
         }
