@@ -68,11 +68,12 @@ public class Rain {
     private static final Matrix4f viewProjMatrix = new Matrix4f();
         
     //environment
-    private static boolean drawTerrain 	= true;
+    private static boolean drawTerrain 	= false;
     private static boolean drawRain 	= false;
     private static boolean drawWater 	= false;
-    private static boolean drawSky 		= true;
+    private static boolean drawSky 		= false;
     private static boolean drawClouds 	= false;
+    private static boolean drawFog		= true;
     
     private static Rainstreaks raindrops = null;
 
@@ -132,7 +133,7 @@ public class Rain {
             //create light sources
             //sun
             sun = new Sun(new Vector3f(1.0f, 1.0f, 1.0f), new Vector3f(30.0f, 30.0f, 30.0f), 0.1f);
-            //point light(s)
+            //TODO: point light(s)
             orbSP = new ShaderProgram("./shader/Orb.vsh", "./shader/Orb.fsh");
             orb = new PointLightOrb();
             orb.setRadius(0.05f);
@@ -143,9 +144,10 @@ public class Rain {
                        
             createRainsys();
 
-            // starting position
+            //starting position
             cam.move(50.0f, 50.0f, 20.0f);
             
+            //start render loop
             render();
 
             //cleanup
@@ -297,15 +299,23 @@ public class Rain {
             	watermap.draw(cam, points);
             	glDisable(GL_BLEND);
             }
-            //rain streaks
-            if (drawRain)
+            
+            if (drawFog)
             {
-	            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	            glEnable(GL_BLEND);
-	            raindrops.draw(cam);
+            	glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ONE);
+	            //glEnable(GL_BLEND);
+            	raindrops.drawFog();
 	            glDisable(GL_BLEND);
             }
             
+            //rain streaks
+            if (drawRain)
+            {
+            	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            	glEnable(GL_BLEND);
+            	raindrops.draw(cam);
+            	glDisable(GL_BLEND);
+            }
             	
             //TODO: Point lights
 //            glUseProgram(orbSP.getID());
@@ -341,7 +351,7 @@ public class Rain {
                     case Keyboard.KEY_SPACE: moveDir.y += 1.0f; break;
                     case Keyboard.KEY_C: moveDir.y -= 1.0f; break;
                     case Keyboard.KEY_ESCAPE :  bContinue = false; break;
-                    case Keyboard.KEY_R : watermap.compile(); raindrops.compile(); break;
+                    case Keyboard.KEY_R : watermap.compile(); break;
                     case Keyboard.KEY_T : createRainsys(); break;
                     case Keyboard.KEY_UP : watermap.sigma(0.5f); break;
                     case Keyboard.KEY_DOWN : watermap.sigma(-0.5f); break;

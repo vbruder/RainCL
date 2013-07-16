@@ -5,41 +5,44 @@ precision highp float;
 layout (points) in;
 layout (triangle_strip, max_vertices = 4) out;
 
+in float texArrayID[];
+
 uniform mat4 viewProj;
 uniform vec3 eyePosition;
 
-out vec2 fragmentTexCoords;
+out vec3 fragmentTexCoords;
 
 void main(void)
 {
-    vec4 pos = gl_in[0].gl_Position;
-    vec3 toCam = normalize(eyePosition - pos);
+	float sz = 1;
+    vec3 pos = gl_in[0].gl_Position.xyz;
+    vec3 toCam = normalize(eyePosition - pos.xyz);
+    vec3 right = cross(toCam, vec3(0.0, 1.0, 0.0)) * sz; 
 
 	// fade out if close to the near plane        
     float d = 1.0 - clamp(0.1 - toCam.z, 0.0, 1.0);
 
-	float sz = 5.0;
-    vec3 v1 = float3(0,sz,0);
-	vec3 v2 = float3(sz,0,0);
-
-    pos.xyz += v2 - v1;
-    gl_Position = mul(pos, viewProj);
-    fragmentTexCoords = vec2(1, 0);
+    pos -= right;
+    gl_Position = viewProj * vec4(pos, 1.0);
+    fragmentTexCoords = vec3(0, 0, texArrayID[0]);
     EmitVertex();
     
-    pos.xyz += 2.0*v1;    
-    gl_Position = mul(pos, viewProj);
-    fragmentTexCoords = vec2(1, 1);
+    pos.y += sz;    
+    gl_Position = viewProj * vec4(pos, 1.0);
+    fragmentTexCoords = vec3(0, 1, texArrayID[0]);
     EmitVertex();
         
-    pos.xyz -= 2.0*(v1 + v2);
-    gl_Position = mul(pos, viewProj);
-    fragmentTexCoords = vec2(0, 0);
+    pos.y -= sz;
+    pos += right;
+    gl_Position = viewProj * vec4(pos, 1.0);
+    fragmentTexCoords = vec3(1, 0, texArrayID[0]);
     EmitVertex();
         
-    pos.xyz += 2.0*v1;
-    gl_Position = mul(pos, viewProj);
-    fragmentTexCoords = vec2(0, 1);
+    pos.y += sz;
+    gl_Position = viewProj * vec4(pos, 1.0);
+    fragmentTexCoords = vec3(1, 1, texArrayID[0]);
     EmitVertex();
+    
+    EndPrimitive();
 }
 

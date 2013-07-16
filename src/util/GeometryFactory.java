@@ -12,7 +12,7 @@ import org.lwjgl.BufferUtils;
 /**
  * Factory for generating geometries.
  * @author Valentin Bruder
- * Used code of Sascha Kolodzey and Nico Marniok (Computergrafik 2012).
+ * Based on code of Sascha Kolodzey and Nico Marniok (Computergrafik 2012).
  */
 public class GeometryFactory {
     

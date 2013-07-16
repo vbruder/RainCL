@@ -8,7 +8,7 @@ import org.lwjgl.util.vector.Vector3f;
 import org.lwjgl.util.vector.Vector4f;
 
 /**
- * 
+ * Class representing a shader program.
  * @author Valentin Bruder
  * @date 28.02.2013
  *

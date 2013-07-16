@@ -2,14 +2,13 @@
 
 #extension GL_EXT_gpu_shader4 : enable
 
-in vec2 fragmentTexCoords;
+in vec3 fragmentTexCoords;
 
 uniform sampler2DArray fogTex;
-uniform uint texArrayID;
 
 out vec4 fragColor;
 
 void main(void)
 {
-	fragColor = texture2DArray(fogTex, texArrayID);
+	fragColor = vec4( vec3(texture2DArray(fogTex, fragmentTexCoords).r), 1.0);
 }

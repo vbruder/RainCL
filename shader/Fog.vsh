@@ -8,6 +8,6 @@ out float texArrayID;
 
 void main(void)
 {
-	
-	gl_Position = positionMC;
+	texArrayID  = positionMC.w;
+	gl_Position = vec4(positionMC.xyz, 1.0);
 }

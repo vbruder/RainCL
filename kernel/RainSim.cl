@@ -15,32 +15,32 @@ float getRand(int seed)
     return rand;
 }
 
-kernel void rainSim(
-    //position array contains: float4 position, float4 seed, float4 velos
-	global float4* position,
-	global float4* velos,
-	global float4* seed,
-		
-	read_only image2d_t heightmap,
-	read_only image2d_t normalmap,
-	
-	const uint maxParticles,
-	const float dt,
-    const float eyePosX,
-    const float eyePosY,
-    const float eyePosZ,
-    const float windDirX,
-    const float windDirZ)
+/**
+ * Kernel to move rain streaks with camera and according to wind direction.
+ */
+kernel void rainSim	(
+						global float4* position,
+						global float4* velos,
+						global float4* seed,
+						//height map
+						read_only image2d_t heightmap,
+						//constants
+						const uint maxParticles,
+						const float dt,
+					    const float eyePosX,
+					    const float eyePosY,
+					    const float eyePosZ,
+					    const float windDirX,
+					    const float windDirZ
+					 )
 {
     
     uint myId = get_global_id(0);
     
-    //*3, to skip seed and velos??
-    float4 myPos = position[myId];
+    float4 myPos = position[myId].s0123;
 		
 	float2 tc = (float2)(0.5f, 0.5f) + myPos.xz;
 	float4 height = heightScale * read_imagef(heightmap, sampler, (float2)(1-tc.x, tc.y));
-	// float4 normal = read_imagef(normalmap, sampler, myPos.xz);
 
     //myPos.y = height.x;
     height.x = 0.0f;
@@ -52,9 +52,24 @@ kernel void rainSim(
         myPos.y += 1.f;
 	}
 
-    myPos.x += windDirX * dt;
-    myPos.y -= velos[myId].y * dt;
-    myPos.z += windDirZ * dt;
+    myPos.x += windDirX 	* dt;
+    myPos.y -= velos[myId].y* dt;
+    myPos.z += windDirZ 	* dt;
     
-    position[myId].xyz = myPos.xyz;
+    position[myId].s0123 = myPos;
+}
+
+
+/**
+ * move fog clouds
+ */
+kernel void fogSim  (
+						global float4* position,
+						const float dt,
+						const float windDirX,
+						const float windDirZ
+					)
+{
+	uint myID = get_global_id(0);
+	position[myID].z -= 0.001;
 }

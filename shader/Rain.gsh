@@ -21,7 +21,7 @@ out float randEnlight;
 out float texArrayID;
 
 // GS for billboard technique (make two triangles from point).
-void main()                                                                         
+void main(void)                                                                         
 {
     //streak size
     float height = 0.5;
