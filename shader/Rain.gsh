@@ -24,8 +24,8 @@ out float texArrayID;
 void main(void)                                                                         
 {
     //streak size
-    float height = 0.3;
-    float width = height/100.0;
+    float height = 0.2;
+    float width = height/50.0;
                                                                                  
     vec3 pos = gl_in[0].gl_Position.xyz;                                            
     vec3 toCamera = normalize(eyePosition - pos);                                    

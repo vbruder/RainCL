@@ -38,6 +38,7 @@ kernel void rainSim	(
     uint myId = get_global_id(0);
     
     float4 myPos = position[myId].s0123;
+    float3 myVelos = velos[myId].xyz;
 		
 	float2 tc = (float2)(0.5f, 0.5f) + myPos.xz;
 	float4 height = heightScale * read_imagef(heightmap, sampler, (float2)(1-tc.x, tc.y));
@@ -52,9 +53,9 @@ kernel void rainSim	(
         myPos.y += 1.f;
 	}
 
-    myPos.x += windDirX 	* dt;
-    myPos.y -= velos[myId].y* dt;
-    myPos.z += windDirZ 	* dt;
+    myPos.x += (windDirX + myVelos.x) * dt;
+    myPos.y -= 			   myVelos.y  * dt;
+    myPos.z += (windDirZ + myVelos.z) * dt;
     
     position[myId].s0123 = myPos;
 }
@@ -66,10 +67,20 @@ kernel void rainSim	(
 kernel void fogSim  (
 						global float4* position,
 						const float dt,
+						const float eyePosX,
+					    const float eyePosY,
+					    const float eyePosZ,
 						const float windDirX,
 						const float windDirZ
 					)
 {
-	uint myID = get_global_id(0);
-	position[myID].z -= 0.001;
+	uint myId = get_global_id(0);
+	
+	float3 myPos = position[myId].xyz;
+	float3 toCam = (float3)(eyePosX, eyePosY, eyePosZ) - myPos;
+	float3 toCamMove = normalize(toCam) * dt * 1;
+	myPos.x -= dt * 10;// toCamMove;
+	
+	//position[myId].xz = length(toCam) < 20 ? (float2) (0, 0) : myPos.xz;
+	position[myId].xz = myPos.xz;
 }

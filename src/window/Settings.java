@@ -20,7 +20,7 @@ import javax.swing.JLabel;
 import java.awt.GridBagConstraints;
 import javax.swing.JTextField;
 
-import main.Rain;
+import main.Main;
 
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
@@ -32,7 +32,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.JLayeredPane;
 import java.awt.GridLayout;
 
-import apiWrapper.GL;
+import apiWrapper.OpenGL;
 import apiWrapper.OpenCL;
 
 import com.jgoodies.forms.layout.FormLayout;
@@ -116,10 +116,10 @@ public class Settings extends JDialog implements TimerListener
             }
         };
         
-        sysGraphics     = GL.getRenderer();
-        sysDriver       = GL.getDriverversion();
-        sysOpenGL       = GL.getVersion();
-        sysShadingLang  = GL.getShadinglang();
+        sysGraphics     = OpenGL.getRenderer();
+        sysDriver       = OpenGL.getDriverversion();
+        sysOpenGL       = OpenGL.getVersion();
+        sysShadingLang  = OpenGL.getShadinglang();
         sysOpenCL       = OpenCL.getVersion();
         
         settingsPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "closeAction");
@@ -248,7 +248,7 @@ public class Settings extends JDialog implements TimerListener
                     public void stateChanged(ChangeEvent e) {
                         changedFog = true;
                         float newValue = ((float)slrFog.getValue()) / 100.0f;
-                        main.Rain.setFogThickness(new Vector3f(newValue, newValue, newValue));        
+                        main.Main.setFogThickness(new Vector3f(newValue, newValue, newValue));        
                     }
                 });
                 
@@ -263,10 +263,10 @@ public class Settings extends JDialog implements TimerListener
                             sound = true;
                         else
                             sound = false;
-                        main.Rain.setAudio(sound);
+                        main.Main.setAudio(sound);
                     }
                 });
-                cbxSound.setSelected(main.Rain.isAudio());
+                cbxSound.setSelected(main.Main.isAudio());
             }
             
             JLayeredPane lpLighting = new JLayeredPane();
@@ -423,12 +423,12 @@ public class Settings extends JDialog implements TimerListener
         }
         if (changedFog)
         {
-            main.Rain.setFogThickness(new Vector3f(fog, fog, fog));
+            main.Main.setFogThickness(new Vector3f(fog, fog, fog));
             changedFog ^= changedFog;
         }
         if (changedSound)
         {
-            main.Rain.setAudio(!sound);
+            main.Main.setAudio(!sound);
             changedSound ^= changedSound;
         }
     }
@@ -436,7 +436,7 @@ public class Settings extends JDialog implements TimerListener
     @Override
     public void updateTex()
     {
-        txtFPS.setText( NumberFormat.getInstance().format(Rain.getFPS()) );
+        txtFPS.setText( NumberFormat.getInstance().format(Main.getFPS()) );
         //TODO: add sph particles
         txtParticles.setText( NumberFormat.getInstance().format(Rainstreaks.getMaxParticles()) );
     }

@@ -1,11 +1,11 @@
 package main;
 
-import static apiWrapper.GL.*;
-import static apiWrapper.GL.GL_BLEND;
-import static apiWrapper.GL.GL_ONE;
-import static apiWrapper.GL.GL_ONE_MINUS_SRC_COLOR;
-import static apiWrapper.GL.GL_ONE_MINUS_DST_COLOR;
-import static apiWrapper.GL.glBlendFunc;
+import static apiWrapper.OpenGL.*;
+import static apiWrapper.OpenGL.GL_BLEND;
+import static apiWrapper.OpenGL.GL_ONE;
+import static apiWrapper.OpenGL.GL_ONE_MINUS_SRC_COLOR;
+import static apiWrapper.OpenGL.GL_ONE_MINUS_DST_COLOR;
+import static apiWrapper.OpenGL.glBlendFunc;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -41,7 +41,7 @@ import window.TimerCaller;
  * 
  * @author Valentin Bruder (vbruder@uos.de)
  */
-public class Rain {
+public class Main {
    
     // shader programs
     private static ShaderProgram terrainSP;
@@ -159,7 +159,7 @@ public class Rain {
             Settings.destroyInstance();
             destroy();         
         } catch (LWJGLException ex) {
-            Logger.getLogger(Rain.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
@@ -254,6 +254,7 @@ public class Rain {
 	            glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
 	            skyDome.draw();
             }
+            
 	            
             //TODO: sun cube
             
@@ -289,6 +290,13 @@ public class Rain {
 	            terrainSP.setUniform("fogThickness", fogThickness);
 	            terrain.draw();
             }
+            if (drawFog)
+            {
+            	glBlendFunc(GL_ONE_MINUS_SRC_ALPHA, GL_ONE);
+            	glEnable(GL_BLEND);
+            	raindrops.drawFog(cam);
+            	glDisable(GL_BLEND);
+            }
 	            
             //water map
             //TODO: Draw water on terrain
@@ -298,14 +306,6 @@ public class Rain {
             	glEnable(GL_BLEND);
             	watermap.draw(cam, points);
             	glDisable(GL_BLEND);
-            }
-            
-            if (drawFog)
-            {
-            	glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ONE);
-	            //glEnable(GL_BLEND);
-            	raindrops.drawFog();
-	            glDisable(GL_BLEND);
             }
             
             //rain streaks
@@ -372,7 +372,9 @@ public class Rain {
                     case Keyboard.KEY_C: moveDir.y += 1.0f; break;
                     case Keyboard.KEY_F1: setDrawRain(!isDrawRain()); break;
                     case Keyboard.KEY_F2: setDrawTerrain(!isDrawTerrain()); break;
-                    case Keyboard.KEY_F3: setPoints(!isPoints()); break;
+                    case Keyboard.KEY_F3: setDrawSky(!isDrawSky()); break;
+                    case Keyboard.KEY_F4: setDrawFog(!isDrawFog()); break;
+                    case Keyboard.KEY_F5: setPoints(!isPoints()); break;
                     case Keyboard.KEY_UP: break;
                     case Keyboard.KEY_DOWN: break;
                     case Keyboard.KEY_M:
@@ -431,7 +433,7 @@ public class Rain {
      */
     public static void setAudio(boolean audio)
     {
-        Rain.audio = audio;
+        Main.audio = audio;
         if (audio)
             sound.init();
         else
@@ -459,7 +461,7 @@ public class Rain {
      */
     public static void setFogThickness(Vector3f fogThickness)
     {
-        Rain.fogThickness = fogThickness;
+        Main.fogThickness = fogThickness;
     }
     
     /**
@@ -473,7 +475,7 @@ public class Rain {
 	 * @param drawRain the drawRain to set
 	 */
 	public static void setDrawRain(boolean drawRain) {
-		Rain.drawRain = drawRain;
+		Main.drawRain = drawRain;
 	}
 	
     /**
@@ -487,9 +489,41 @@ public class Rain {
 	 * @param drawTerrain the drawTerrain to set
 	 */
 	public static void setDrawTerrain(boolean drawTerrain) {
-		Rain.drawTerrain = drawTerrain;
+		Main.drawTerrain = drawTerrain;
 	}
 	
+	/**
+	 * @return the drawSky
+	 */
+	public static boolean isDrawSky()
+	{
+		return drawSky;
+	}
+
+	/**
+	 * @param drawSky the drawSky to set
+	 */
+	public static void setDrawSky(boolean drawSky)
+	{
+		Main.drawSky = drawSky;
+	}
+
+	/**
+	 * @return the drawFog
+	 */
+	public static boolean isDrawFog()
+	{
+		return drawFog;
+	}
+
+	/**
+	 * @param drawFog the drawFog to set
+	 */
+	public static void setDrawFog(boolean drawFog)
+	{
+		Main.drawFog = drawFog;
+	}
+
 	/**
 	 * @return points 
 	 */
@@ -501,6 +535,6 @@ public class Rain {
      * @param points
      */
 	public static void setPoints(boolean points) {
-		Rain.points = points;
+		Main.points = points;
 	}
 }

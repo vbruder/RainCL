@@ -1,6 +1,6 @@
 package environment;
 
-import static apiWrapper.GL.*;
+import static apiWrapper.OpenGL.*;
 
 import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;

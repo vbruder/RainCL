@@ -1,6 +1,6 @@
 package util;
 
-import static apiWrapper.GL.*;
+import static apiWrapper.OpenGL.*;
 
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;

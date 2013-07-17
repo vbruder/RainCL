@@ -1,6 +1,6 @@
 package util;
 
-import static apiWrapper.GL.*;
+import static apiWrapper.OpenGL.*;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
@@ -21,7 +21,7 @@ import org.lwjgl.util.vector.Vector2f;
 import org.lwjgl.util.vector.Vector3f;
 import org.lwjgl.util.vector.Vector4f;
 
-import apiWrapper.GL;
+import apiWrapper.OpenGL;
 
 /**
  *

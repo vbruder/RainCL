@@ -11,7 +11,7 @@ import org.lwjgl.input.Mouse;
 /**
  * 
  */
-public class GL {
+public class OpenGL {
     /**
      * Breite des OpenGL Fensters
      */
@@ -39,7 +39,7 @@ public class GL {
     private static String driverversion;
 
     public static void init() throws LWJGLException {
-        if(!GL.initialized) {
+        if(!OpenGL.initialized) {
             Display.setDisplayMode(new DisplayMode(WIDTH, HEIGHT));
             Display.setTitle("RainCL");
             boolean supported = true;
@@ -53,10 +53,10 @@ public class GL {
             Mouse.create();
             Keyboard.create();  
             
-            String vendor = GL.glGetString(GL.GL_VENDOR);
-            version = GL.glGetString(GL.GL_VERSION);
-            renderer = GL.glGetString(GL.GL_RENDERER);
-            shadinglang = GL.glGetString(GL.GL_SHADING_LANGUAGE_VERSION);
+            String vendor = OpenGL.glGetString(OpenGL.GL_VENDOR);
+            version = OpenGL.glGetString(OpenGL.GL_VERSION);
+            renderer = OpenGL.glGetString(OpenGL.GL_RENDERER);
+            shadinglang = OpenGL.glGetString(OpenGL.GL_SHADING_LANGUAGE_VERSION);
             driverversion = Display.getVersion();
             String os = System.getProperty("os.name") + " (" + System.getProperty("os.version") + "), " + System.getProperty("os.arch");
             String java = System.getProperty("java.vm.name") + ", runtime version: " + System.getProperty("java.runtime.version");
@@ -67,7 +67,7 @@ public class GL {
                 "Operating system: " + os,
                 "Java: " + java
             };
-            String info = GL.pack("OpenGL info", infoLines);
+            String info = OpenGL.pack("OpenGL info", infoLines);
 //            System.out.println(info);          
             
             if(!supported) {
@@ -76,7 +76,7 @@ public class GL {
             
             glPrimitiveRestartIndex(RESTART_INDEX);
             glEnable(GL_PRIMITIVE_RESTART);
-            GL.initialized = true;
+            OpenGL.initialized = true;
         }
     }
     
@@ -493,7 +493,7 @@ public class GL {
      */
     public static void glActiveTexture(int texture) {
         GL13.glActiveTexture(texture);
-        GL.checkError("glActiveTexture");
+        OpenGL.checkError("glActiveTexture");
     }
     
     /**
@@ -504,7 +504,7 @@ public class GL {
      */
     public static void glAttachShader(int program, int shader) {
         GL20.glAttachShader(program, shader);
-        GL.checkError("glAttachShader");
+        OpenGL.checkError("glAttachShader");
     }
     
     /**
@@ -516,7 +516,7 @@ public class GL {
      */
     public static void glBindAttribLocation(int program, int index, String name) {
         GL20.glBindAttribLocation(program, index, name);
-        GL.checkError("glBindAttribLocation");
+        OpenGL.checkError("glBindAttribLocation");
     }
     
     /**
@@ -527,7 +527,7 @@ public class GL {
      */
     public static void glBindBuffer(int target, int buffer) {
         GL15.glBindBuffer(target, buffer);
-        GL.checkError("glBindBuffer");
+        OpenGL.checkError("glBindBuffer");
     }
     
     /**
@@ -538,7 +538,7 @@ public class GL {
      */
     public static void glBindTexture(int target, int texture) {
         GL11.glBindTexture(target, texture);
-        GL.checkError("glBindTexture");
+        OpenGL.checkError("glBindTexture");
     }
     
     /**
@@ -548,7 +548,7 @@ public class GL {
      */
     public static void glBindVertexArray(int array) {
         GL30.glBindVertexArray(array);
-        GL.checkError("glBindVertexArray");
+        OpenGL.checkError("glBindVertexArray");
     }
     
     /**
@@ -559,7 +559,7 @@ public class GL {
      */
     public static void glBlendFunc(int sfactor, int dfactor) {
         GL11.glBlendFunc(sfactor, dfactor);
-        GL.checkError("glBlendFunc");
+        OpenGL.checkError("glBlendFunc");
     }
     
     /**
@@ -571,7 +571,7 @@ public class GL {
      */
     public static void glBufferData(int target, FloatBuffer data, int usage) {
         GL15.glBufferData(target, data, usage);
-        GL.checkError("glBufferData");
+        OpenGL.checkError("glBufferData");
     }
     
     /**
@@ -583,7 +583,7 @@ public class GL {
      */
     public static void glBufferData(int target, IntBuffer data, int usage) {
         GL15.glBufferData(target, data, usage);
-        GL.checkError("glBufferData");
+        OpenGL.checkError("glBufferData");
     }
 
     /**
@@ -593,7 +593,7 @@ public class GL {
      */
     public static void glClear(int mask) {
         GL11.glClear(mask);
-        GL.checkError("glClear");
+        OpenGL.checkError("glClear");
     }
     
     /**
@@ -602,7 +602,7 @@ public class GL {
      */
     public static void glFinish() {
         GL11.glFinish();
-        GL.checkError("glFinish");
+        OpenGL.checkError("glFinish");
     }
     
     /**
@@ -615,7 +615,7 @@ public class GL {
      */
     public static void glClearColor(float red, float green, float blue, float alpha) {
         GL11.glClearColor(red, green, blue, alpha);
-        GL.checkError("glClearColor");
+        OpenGL.checkError("glClearColor");
     }
     
     /**
@@ -625,7 +625,7 @@ public class GL {
      */
     public static void glCompileShader(int shader) {
         GL20.glCompileShader(shader);
-        GL.checkError("glCompileShader");        
+        OpenGL.checkError("glCompileShader");        
     }
     
     /**
@@ -635,7 +635,7 @@ public class GL {
      */
     public static int glCreateProgram() {
         int id = GL20.glCreateProgram();
-        GL.checkError("glCreateProgram");
+        OpenGL.checkError("glCreateProgram");
         return id;
     }
     
@@ -647,7 +647,7 @@ public class GL {
      */
     public static int glCreateShader(int type) {
         int id = GL20.glCreateShader(type);
-        GL.checkError("glCreateShader");
+        OpenGL.checkError("glCreateShader");
         return id;
     }
     
@@ -658,7 +658,7 @@ public class GL {
      */
     public static void glCullFace(int mode) {
         GL11.glCullFace(mode);
-        GL.checkError("glCullFace");
+        OpenGL.checkError("glCullFace");
     }    
     
     /**
@@ -668,7 +668,7 @@ public class GL {
      */
     public static void glDeleteBuffers(int buffer) {
         GL15.glDeleteBuffers(buffer);
-        GL.checkError("glDeleteBuffers");
+        OpenGL.checkError("glDeleteBuffers");
     }  
     
     /**
@@ -678,7 +678,7 @@ public class GL {
      */
     public static void glDeleteVertexArrays(int array) {
         GL30.glDeleteVertexArrays(array);
-        GL.checkError("glDeleteVertexArrays");
+        OpenGL.checkError("glDeleteVertexArrays");
     }
 
     /**
@@ -688,7 +688,7 @@ public class GL {
      */
     public static void glDisable(int cap) {
         GL11.glDisable(cap);
-        GL.checkError("glDisable");
+        OpenGL.checkError("glDisable");
     }
     
     /**
@@ -700,7 +700,7 @@ public class GL {
      */
     public static void glDrawArrays(int mode, int first, int count) {
         GL11.glDrawArrays(mode, first, count);
-        GL.checkError("glDrawArrays");
+        OpenGL.checkError("glDrawArrays");
     }
     
     /**
@@ -713,7 +713,7 @@ public class GL {
      */
     public static void glDrawElements(int mode, int indices_count, int type, int indices_buffer_offset) {
         GL11.glDrawElements(mode, indices_count, type, indices_buffer_offset);
-        GL.checkError("glDrawElements");
+        OpenGL.checkError("glDrawElements");
     }
 
     /**
@@ -723,7 +723,7 @@ public class GL {
      */
     public static void glEnable(int cap) {
         GL11.glEnable(cap);
-        GL.checkError("glEnable");
+        OpenGL.checkError("glEnable");
     }
     
     /**
@@ -733,7 +733,7 @@ public class GL {
      */
     public static void glEnableVertexAttribArray(int index) {
         GL20.glEnableVertexAttribArray(index);
-        GL.checkError("glEnableVertexAttribArray");
+        OpenGL.checkError("glEnableVertexAttribArray");
     }
     
     /**
@@ -743,7 +743,7 @@ public class GL {
      */
     public static void glFrontFace(int mode) {
         GL11.glFrontFace(mode);
-        GL.checkError("glFrontFace");
+        OpenGL.checkError("glFrontFace");
     }            
     
     /**
@@ -753,7 +753,7 @@ public class GL {
      */
     public static int glGenBuffers() {
         int id = GL15.glGenBuffers();
-        GL.checkError("glGenBuffers");
+        OpenGL.checkError("glGenBuffers");
         return id;
     }
     
@@ -764,7 +764,7 @@ public class GL {
      */
     public static void glGenBuffers(IntBuffer ib) {
         GL15.glGenBuffers(ib);
-        GL.checkError("glGenBuffers");
+        OpenGL.checkError("glGenBuffers");
     }
     
     /**
@@ -774,7 +774,7 @@ public class GL {
      */
     public static void glGenerateMipmap(int target) {
         GL30.glGenerateMipmap(target);
-        GL.checkError("glGenerateMipmap");
+        OpenGL.checkError("glGenerateMipmap");
     }
     
     /**
@@ -784,7 +784,7 @@ public class GL {
      */
     public static int glGenTextures() {
         int texture = GL11.glGenTextures();
-        GL.checkError("glGenTextures");
+        OpenGL.checkError("glGenTextures");
         return texture;
     }
     
@@ -795,7 +795,7 @@ public class GL {
      */
     public static int glGenVertexArrays() {
         int id = GL30.glGenVertexArrays();
-        GL.checkError("glGenVertexArrays");
+        OpenGL.checkError("glGenVertexArrays");
         return id;
     }
     
@@ -817,7 +817,7 @@ public class GL {
      */
     public static String glGetProgramInfoLog(int program, int maxLength) {
         String log = GL20.glGetProgramInfoLog(program, maxLength);
-        GL.checkError("glGetProgramInfoLog");
+        OpenGL.checkError("glGetProgramInfoLog");
         return log;
     }
     
@@ -830,7 +830,7 @@ public class GL {
      */
     public static String glGetShaderInfoLog(int shader, int maxLength) {
         String log = GL20.glGetShaderInfoLog(shader, maxLength);
-        GL.checkError("glGetShaderInfoLog");
+        OpenGL.checkError("glGetShaderInfoLog");
         return log;
     }
     
@@ -842,7 +842,7 @@ public class GL {
      */
     public static String glGetString(int name) {
         String string = GL11.glGetString(name);
-        GL.checkError("glGetString");
+        OpenGL.checkError("glGetString");
         return string;
     }
     
@@ -855,7 +855,7 @@ public class GL {
      */
     public static int glGetUniformLocation(int program, String name) {
         int location = GL20.glGetUniformLocation(program, name);
-        GL.checkError("glGetUniformLocation");
+        OpenGL.checkError("glGetUniformLocation");
         if(location == -1) {
           //  System.err.println("WARNUNG: Uniform location von " + name + " ist -1! (Diese Meldung ist ein Service Ihres CG-Teams ;)");
         }
@@ -869,7 +869,7 @@ public class GL {
      */
     public static void glLineWidth(float width) {
         GL11.glLineWidth(width);
-        GL.checkError("glLineWidth");
+        OpenGL.checkError("glLineWidth");
     }
     
     /**
@@ -879,7 +879,7 @@ public class GL {
      */
     public static void glLinkProgram(int program) {
         GL20.glLinkProgram(program);
-        GL.checkError("glLinkProgram");
+        OpenGL.checkError("glLinkProgram");
     }
     
     /**
@@ -889,7 +889,7 @@ public class GL {
      */
     public static void glPointSize(float size) {
         GL11.glPointSize(size);
-        GL.checkError("glPointSize");
+        OpenGL.checkError("glPointSize");
     }
     
     /**
@@ -900,7 +900,7 @@ public class GL {
      */
     public static void glPolygonMode(int face, int mode) {
         GL11.glPolygonMode(face, mode);
-        GL.checkError("glPolygonMode");
+        OpenGL.checkError("glPolygonMode");
     }
     
     /**
@@ -910,7 +910,7 @@ public class GL {
      */
     public static void glPrimitiveRestartIndex(int index) {
         GL31.glPrimitiveRestartIndex(index);
-        GL.checkError("glPrimitiveRestartIndex");
+        OpenGL.checkError("glPrimitiveRestartIndex");
     }
     
     /**
@@ -921,7 +921,7 @@ public class GL {
      */
     public static void glShaderSource(int shader, String string) {
         GL20.glShaderSource(shader, string);
-        GL.checkError("glShaderSource");
+        OpenGL.checkError("glShaderSource");
     }
     
     /**
@@ -939,7 +939,7 @@ public class GL {
      */
     public static void glTexImage2D(int target, int level, int internalFormat, int width, int height, int border, int format, int type, FloatBuffer pixels) {
         GL11.glTexImage2D(target, level, internalFormat, width, height, border, format, type, pixels);
-        GL.checkError("glTexImage2D");
+        OpenGL.checkError("glTexImage2D");
     }
     
     /**
@@ -956,7 +956,7 @@ public class GL {
      */
     public static void glTexImage1D(int target, int level, int internalFormat, int width, int border, int format, int type, FloatBuffer pixels) {
         GL11.glTexImage1D(target, level, internalFormat, width, border, format, type, pixels);
-        GL.checkError("glTexImage2D");
+        OpenGL.checkError("glTexImage2D");
     }
     
     /**
@@ -975,7 +975,7 @@ public class GL {
      */
     public static void glTexImage3D(int target, int level, int internalFormat, int width, int height, int depth, int border, int format, int type, FloatBuffer pixels) {
         GL12.glTexImage3D(target, level, internalFormat, width, height, depth, border, format, type, pixels);
-        GL.checkError("glTexImage2D");
+        OpenGL.checkError("glTexImage2D");
     }
     
     /**
@@ -994,7 +994,7 @@ public class GL {
      */
     public static void glTexSubImage3D(int target, int level, int xoffset, int yoffset, int zoffset, int width, int height, int depth, int format,int type, FloatBuffer data) {
         GL12.glTexSubImage3D(target, level, xoffset, yoffset, zoffset, width, height, depth, format, type, data);
-        GL.checkError("glTexSubImage3D");
+        OpenGL.checkError("glTexSubImage3D");
     }
     
     /**
@@ -1006,7 +1006,7 @@ public class GL {
      */
     public static void glTexParameteri(int target, int pname, int param) {
         GL11.glTexParameteri(target, pname, param);
-        GL.checkError("glTexParameteri");
+        OpenGL.checkError("glTexParameteri");
     }
     
     /**
@@ -1017,7 +1017,7 @@ public class GL {
      */
     public static void glUniform1f(int location, float v0) {
         GL20.glUniform1f(location, v0);
-        GL.checkError("glUniform");
+        OpenGL.checkError("glUniform");
     }
     
     /**
@@ -1028,7 +1028,7 @@ public class GL {
      */
     public static void glUniform1i(int location, int v0) {
         GL20.glUniform1i(location, v0);
-        GL.checkError("glUniform");
+        OpenGL.checkError("glUniform");
     }
     
     /**
@@ -1041,7 +1041,7 @@ public class GL {
      */
     public static void glUniform3f(int location, float v0, float v1, float v2) {
         GL20.glUniform3f(location, v0, v1, v2);
-        GL.checkError("glUniform");
+        OpenGL.checkError("glUniform");
     }
     
     /**
@@ -1055,7 +1055,7 @@ public class GL {
      */
     public static void glUniform4f(int location, float v0, float v1, float v2, float v3) {
         GL20.glUniform4f(location, v0, v1, v2, v3);
-        GL.checkError("glUniform");
+        OpenGL.checkError("glUniform");
     }
     
     /**
@@ -1067,7 +1067,7 @@ public class GL {
      */
     public static void glUniformMatrix4(int location, boolean transpose, FloatBuffer matrices) {
         GL20.glUniformMatrix4(location, transpose, matrices);
-        GL.checkError("glUniform");
+        OpenGL.checkError("glUniform");
     }
     
     /**
@@ -1077,7 +1077,7 @@ public class GL {
      */
     public static void glUseProgram(int program) {
         GL20.glUseProgram(program);
-        GL.checkError("glUseProgram");
+        OpenGL.checkError("glUseProgram");
     }
     
     /**
@@ -1092,7 +1092,7 @@ public class GL {
      */
     public static void glVertexAttribPointer(int index, int size, int type, boolean normalized, int stride, long buffer_buffer_offset) {
         GL20.glVertexAttribPointer(index, size, type, normalized, stride, buffer_buffer_offset);
-        GL.checkError("glVertexAttribPointer");
+        OpenGL.checkError("glVertexAttribPointer");
     }
 
     /**
@@ -1102,7 +1102,7 @@ public class GL {
      */
     public static void glBeginTransformFeedback(int primitiveMode){
     	GL30.glBeginTransformFeedback(primitiveMode);
-    	GL.checkError("glBeginTransformFeedback");
+    	OpenGL.checkError("glBeginTransformFeedback");
     }   
     
     /**
@@ -1112,7 +1112,7 @@ public class GL {
      */
     public static int glGenTransformFeedbacks(){
     	int value = GL40.glGenTransformFeedbacks();
-    	GL.checkError("glGenTransformFeedbacks");
+    	OpenGL.checkError("glGenTransformFeedbacks");
     	return value;
     }
     
@@ -1122,7 +1122,7 @@ public class GL {
      */
     public static void glGenTransformFeedbacks(IntBuffer ib){
         GL40.glGenTransformFeedbacks(ib);
-        GL.checkError("glGenTransformFeedbacks");
+        OpenGL.checkError("glGenTransformFeedbacks");
     }
 
     /**
@@ -1131,7 +1131,7 @@ public class GL {
      */
     public static void glEndTransformFeedback(){
     	GL30.glEndTransformFeedback();
-    	GL.checkError("glEndTransformFeedback");
+    	OpenGL.checkError("glEndTransformFeedback");
     }
     
     /**
@@ -1142,7 +1142,7 @@ public class GL {
      */
     public static void glDrawTransformFeedback(int mode, int id){
     	GL40.glDrawTransformFeedback(mode, id);
-    	GL.checkError("glDrawTransformFeedback");
+    	OpenGL.checkError("glDrawTransformFeedback");
     }   
     
     /**
@@ -1153,7 +1153,7 @@ public class GL {
      */
     public static void glBindTransformFeedback(int target, int id){
     	GL40.glBindTransformFeedback(target, id);
-    	GL.checkError("glBindTransformFeedback");
+    	OpenGL.checkError("glBindTransformFeedback");
     }
     
     /**
@@ -1166,7 +1166,7 @@ public class GL {
      */
     public static void glTransformFeedbackVaryings(int program, int count, java.nio.ByteBuffer varyings, int bufferMode) {
         GL30.glTransformFeedbackVaryings(program, count, varyings, bufferMode);
-        GL.checkError("glTransformFeedbackVaryings");
+        OpenGL.checkError("glTransformFeedbackVaryings");
     }
     
     /**
@@ -1178,7 +1178,7 @@ public class GL {
      */
     public static void glTransformFeedbackVaryings(int program, java.lang.CharSequence[] varyings, int bufferMode) {
         GL30.glTransformFeedbackVaryings(program, varyings, bufferMode);
-        GL.checkError("glTransformFeedbackVaryings");
+        OpenGL.checkError("glTransformFeedbackVaryings");
     }
     
     /**
@@ -1190,7 +1190,7 @@ public class GL {
      */
     public static void glBindBufferBase(int target, int index, int buffer){
         GL30.glBindBufferBase(target, index, buffer);
-        GL.checkError("glBindBufferBase");
+        OpenGL.checkError("glBindBufferBase");
     }
     
     /**
@@ -1200,7 +1200,7 @@ public class GL {
      */
     public static void glDeleteRenderbuffers(int target){
         GL30.glDeleteRenderbuffers(target);
-        GL.checkError("glDeleteRenderbuffers");
+        OpenGL.checkError("glDeleteRenderbuffers");
     }
     
     /**
@@ -1210,7 +1210,7 @@ public class GL {
      */
     public static void glDeleteFramebuffers(int target){
         GL30.glDeleteFramebuffers(target);
-        GL.checkError("glDeleteFramebuffers");
+        OpenGL.checkError("glDeleteFramebuffers");
     }
     
     /**
@@ -1220,7 +1220,7 @@ public class GL {
      */
     public static void glDisableVertexAttribArray(int index){
     	GL20.glDisableVertexAttribArray(index);
-    	GL.checkError("glDisableVertexAttribArray");
+    	OpenGL.checkError("glDisableVertexAttribArray");
     }
     
     public static void checkError(String source) {

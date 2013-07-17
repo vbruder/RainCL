@@ -1,8 +1,8 @@
 package util;
 
-import static apiWrapper.GL.*;
-import static apiWrapper.GL.GL_TRIANGLE_STRIP;
-import static apiWrapper.GL.RESTART_INDEX;
+import static apiWrapper.OpenGL.*;
+import static apiWrapper.OpenGL.GL_TRIANGLE_STRIP;
+import static apiWrapper.OpenGL.RESTART_INDEX;
 
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
