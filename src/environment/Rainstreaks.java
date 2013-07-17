@@ -191,9 +191,9 @@ public class Rainstreaks
         this.orb = orb;
         this.sun = sun;
         //range of cylinder around cam
-        clusterScale = 12.0f;
+        clusterScale = 15.0f;
         //velocity factor
-        veloFactor = 150.0f;
+        veloFactor = 100.0f;
         
         this.gws.put(0, maxParticles);
         
@@ -317,7 +317,7 @@ public class Rainstreaks
                     y = (r.nextFloat() + 0.1f) * (clusterScale + lodLvl);  
                     z = (r.nextFloat() - 0.5f) * (clusterScale + lodLvl);
     		    }
-                while ((z < 0.1f && z > -0.1f) && (x < 0.1f && x > -0.1f));
+                while ((z < 0.2f && z > -0.2f) && (x < 0.2f && x > -0.2f));
     		    //respawn if particle is too close to viewer
                 
                 //add to seed buffer
