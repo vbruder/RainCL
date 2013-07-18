@@ -290,12 +290,15 @@ public class Main {
 	            terrainSP.setUniform("fogThickness", fogThickness);
 	            terrain.draw();
             }
+            
             if (drawFog)
             {
             	glBlendFunc(GL_ONE_MINUS_SRC_ALPHA, GL_ONE);
             	glEnable(GL_BLEND);
+            	glDisable(GL_DEPTH_TEST);
             	raindrops.drawFog(cam);
             	glDisable(GL_BLEND);
+            	glEnable(GL_DEPTH_TEST);
             }
 	            
             //water map
@@ -374,7 +377,8 @@ public class Main {
                     case Keyboard.KEY_F2: setDrawTerrain(!isDrawTerrain()); break;
                     case Keyboard.KEY_F3: setDrawSky(!isDrawSky()); break;
                     case Keyboard.KEY_F4: setDrawFog(!isDrawFog()); break;
-                    case Keyboard.KEY_F5: setPoints(!isPoints()); break;
+                    case Keyboard.KEY_F5: setDrawWater(!isDrawWater()); break;
+                    case Keyboard.KEY_F6: setPoints(!isPoints()); break;
                     case Keyboard.KEY_UP: break;
                     case Keyboard.KEY_DOWN: break;
                     case Keyboard.KEY_M:
@@ -514,6 +518,22 @@ public class Main {
 	public static boolean isDrawFog()
 	{
 		return drawFog;
+	}
+	
+	/**
+	 * @return the drawWater
+	 */
+	public static boolean isDrawWater()
+	{
+		return drawWater;
+	}
+
+	/**
+	 * @param drawWater the drawWater to set
+	 */
+	public static void setDrawWater(boolean drawWater)
+	{
+		Main.drawWater = drawWater;
 	}
 
 	/**

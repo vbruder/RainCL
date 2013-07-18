@@ -76,11 +76,8 @@ kernel void fogSim  (
 {
 	uint myId = get_global_id(0);
 	
-	float3 myPos = position[myId].xyz;
-	float3 toCam = (float3)(eyePosX, eyePosY, eyePosZ) - myPos;
-	float3 toCamMove = normalize(toCam) * dt * 1;
-	myPos.x -= dt * 10;// toCamMove;
+	float4 myPos = position[myId].xyzw;
+	myPos.z += dt * 50;
 	
-	//position[myId].xz = length(toCam) < 20 ? (float2) (0, 0) : myPos.xz;
-	position[myId].xz = myPos.xz;
+	position[myId].xzw = myPos.z > 1000 ? (float3) (10, -1000, myPos.w) : myPos.xzw;
 }

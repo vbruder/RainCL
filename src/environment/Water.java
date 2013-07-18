@@ -169,7 +169,7 @@ public class Water {
 	{		
 		this.terrain = terrain;
 		rainfactor = 0.075f;
-		oozingfactor = 0.075f;
+		oozingfactor = 0.095f;
 		dampingfactor = 0.005f;
 		
         createCLContext(device_type, Util.getFileContents("./kernel/WaterSim.cl"), drawable);
@@ -204,7 +204,7 @@ public class Water {
 	private void createWaterData()
 	{
         //load height map data
-        ImageContents contentHeight = Util.loadImage("media/terrain/terrainHeight01.png");
+        ImageContents contentHeight = Util.loadImage("media/terrain/terrainHeight02.png");
         int terrainDim = contentHeight.height * contentHeight.width;
         heightDataBuffer = BufferUtils.createFloatBuffer(terrainDim);
         for(int i = 0; i < heightDataBuffer.capacity(); ++i)
@@ -215,7 +215,7 @@ public class Water {
         memHeight = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, heightDataBuffer);
                         
         //load normal map data
-        ImageContents contentNorm = Util.loadImage("media/terrain/terrainNormal01.png");
+        ImageContents contentNorm = Util.loadImage("media/terrain/terrainNormal02.png");
         normalDataBuffer = BufferUtils.createFloatBuffer(terrainDim * 4);
         for(int i = 0; i < (normalDataBuffer.capacity()/4); ++i)
         {
@@ -228,7 +228,7 @@ public class Water {
         memNormal = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, normalDataBuffer);
         
         //load attribute map data
-        ImageContents contentAttrib = Util.loadImage("media/terrain/terrainAttribute01.png");
+        ImageContents contentAttrib = Util.loadImage("media/terrain/terrainAttribute02.png");
         attributeDataBuffer = BufferUtils.createFloatBuffer(terrainDim);
         for(int i = 0; i < attributeDataBuffer.capacity(); ++i)
         {

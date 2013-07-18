@@ -114,6 +114,7 @@ public class Rainstreaks
     
     private static final int NUM_RAIN_TEXTURES = 370;
     private static final int NUM_FOG_TEXTURES = 8;
+    private static final int NUM_FOG_SPRITES = 2;
     
     //OpenCL pointer
     private static CLContext context;
@@ -405,12 +406,12 @@ public class Rainstreaks
      */
     private void createFogData()
     {
-    	fogDataBuffer = BufferUtils.createFloatBuffer(4*4);
-    	for (int i = 0; i < 4; i++)
+    	fogDataBuffer = BufferUtils.createFloatBuffer(4*NUM_FOG_SPRITES);
+    	for (int i = 0; i < NUM_FOG_SPRITES; i++)
     	{
-    		fogDataBuffer.put(r.nextFloat()*100);
-    		fogDataBuffer.put(10.f);
-    		fogDataBuffer.put(r.nextFloat()*100);
+    		fogDataBuffer.put(10.f + i*20);
+    		fogDataBuffer.put(20.f);
+    		fogDataBuffer.put(10.f - i*1000);
     		//random texture out of 8
     		fogDataBuffer.put(r.nextInt(NUM_FOG_TEXTURES));
 		}
@@ -587,7 +588,7 @@ public class Rainstreaks
         kernelMoveStreaks.setArg( 9, windDir[windPtr].x);
         kernelMoveStreaks.setArg(10, windDir[windPtr].z);
         clEnqueueNDRangeKernel(queue, kernelMoveStreaks, 1, null, gws, null, null, null);  
-        gws.put(0, 4);
+        gws.put(0, NUM_FOG_SPRITES);
         kernelMoveFog.setArg(1, dt);
         kernelMoveFog.setArg(2, eyePos.x);
         kernelMoveFog.setArg(3, eyePos.y);
@@ -667,14 +668,19 @@ public class Rainstreaks
         fogRenderSP.use();
         
     	eyePos = new Vector3f(cam.getCamPos().x, cam.getCamPos().y, cam.getCamPos().z);
-        Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);
-        fogRenderSP.setUniform("viewProj", viewProj);
+    	
+//        Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);
+//        fogRenderSP.setUniform("viewProj", viewProj);
+        
+    	fogRenderSP.setUniform("view", cam.getView());
+    	fogRenderSP.setUniform("proj", cam.getProjection());
+    	
         fogRenderSP.setUniform("eyePosition", eyePos);
         fogRenderSP.setUniform("fogTex", fogTex);
         fogRenderSP.setUniform("texArrayID", r.nextInt(8));
         
         glBindVertexArray(vertArrayFogID);
-        glDrawArrays(GL_POINTS, 0, 2);
+        glDrawArrays(GL_POINTS, 0, NUM_FOG_SPRITES);
     }
     
     /**

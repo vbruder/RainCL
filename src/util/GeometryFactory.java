@@ -212,7 +212,7 @@ public class GeometryFactory {
         glBindVertexArray(vaid);
 
         // load height map
-        float[][][] ic = Util.getImageContents(path + "terrainHeight01.png");
+        float[][][] ic = Util.getImageContents(path + "terrainHeight02.png");
         FloatBuffer vertexData = BufferUtils.createFloatBuffer(ic[0].length*ic.length*4);
         for (int h = 0; h < ic.length; h++) {
             for (int w = 0; w < ic[0].length; w++) {                
@@ -239,10 +239,10 @@ public class GeometryFactory {
         indexData.position(0);      
         
         // create textures
-        Texture normalTex = Texture.generateTexture(path   + "terrainNormal01.png",   TERRAIN_TEX_UNIT);
-        Texture lightTex = Texture.generateTexture(path    + "terrainLight01.png",    TERRAIN_TEX_UNIT + 1);
-        Texture specularTex = Texture.generateTexture(path + "terrainSpecular01.png", TERRAIN_TEX_UNIT + 2);
-        Texture colorTex = Texture.generateTexture(path    + "terrainTex01.png",      TERRAIN_TEX_UNIT + 3);
+        Texture normalTex = Texture.generateTexture(path   + "terrainNormal02.png",   TERRAIN_TEX_UNIT);
+        Texture lightTex = Texture.generateTexture(path    + "terrainLight02.png",    TERRAIN_TEX_UNIT + 1);
+        Texture specularTex = Texture.generateTexture(path + "terrainSpecular02.png", TERRAIN_TEX_UNIT + 2);
+        Texture colorTex = Texture.generateTexture(path    + "terrainTex02.png",      TERRAIN_TEX_UNIT + 3);
              
         // create geometry
         Geometry geo = new Geometry();
