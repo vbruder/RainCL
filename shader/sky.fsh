@@ -10,5 +10,5 @@ uniform vec3 fogThickness;
 void main(void)
 {
      vec4 skyColor = texture(textureImage, fragmentTexCoords);
-     fragColor = mix(skyColor, vec4(0.3), 10*fogThickness.x);
+     fragColor = mix(skyColor, vec4(0.7), 10*fogThickness.x);
 }

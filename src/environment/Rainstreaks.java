@@ -194,7 +194,7 @@ public class Rainstreaks
         //range of cylinder around cam
         clusterScale = 30.0f;
         //velocity factor
-        veloFactor = 200.0f;
+        veloFactor = 250.0f;
         
         this.gws.put(0, maxParticles);
         
@@ -341,9 +341,9 @@ public class Rainstreaks
                 veloBuffer.put(veloFactor*(r.nextFloat() / 100.f));
                 //add random number in w coordinate, used to light up random streaks
                 float tmpR = r.nextFloat();
-                if (tmpR > 0.75f)
+                if (tmpR > 0.9f)
                 {
-                    veloBuffer.put(1.f + tmpR);
+                    veloBuffer.put(1.f + (1.f - tmpR*0.1f));
                 }
                 else
                 {
@@ -558,14 +558,12 @@ public class Rainstreaks
         kernelMoveStreaks.setArg( 9, 0.f);
         kernelMoveStreaks.setArg(10, 0.f);
         
+        //TODO: Fog kernel with wind direction
         kernelMoveFog = clCreateKernel(program, "fogSim");
         kernelMoveFog.setArg(0, memFogPos);
         kernelMoveFog.setArg(1, 0.f);
         kernelMoveFog.setArg(2, 0.f);
         kernelMoveFog.setArg(3, 0.f);
-        kernelMoveFog.setArg(4, 0.f);
-        kernelMoveFog.setArg(5, 0.f);
-        kernelMoveFog.setArg(6, 0.f);
     }
     
     /**
@@ -590,11 +588,8 @@ public class Rainstreaks
         clEnqueueNDRangeKernel(queue, kernelMoveStreaks, 1, null, gws, null, null, null);  
         gws.put(0, NUM_FOG_SPRITES);
         kernelMoveFog.setArg(1, dt);
-        kernelMoveFog.setArg(2, eyePos.x);
-        kernelMoveFog.setArg(3, eyePos.y);
-        kernelMoveFog.setArg(4, eyePos.z);
-        kernelMoveFog.setArg(5, windDir[windPtr].x);
-        kernelMoveFog.setArg(6, windDir[windPtr].z);
+        kernelMoveFog.setArg(2, windDir[windPtr].x);
+        kernelMoveFog.setArg(3, windDir[windPtr].z);
         clEnqueueNDRangeKernel(queue, kernelMoveFog, 1, null, gws, null, null, null);
         gws.put(0, maxParticles);        
         

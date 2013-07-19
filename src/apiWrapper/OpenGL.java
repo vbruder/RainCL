@@ -1,9 +1,5 @@
 package apiWrapper;
 
-import static apiWrapper.OpenGL.GL_DEPTH_ATTACHMENT;
-import static apiWrapper.OpenGL.GL_FRAMEBUFFER;
-import static apiWrapper.OpenGL.GL_RENDERBUFFER;
-
 import org.lwjgl.opengl.*;
 
 import java.nio.FloatBuffer;

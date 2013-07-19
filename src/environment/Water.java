@@ -377,7 +377,7 @@ public class Water {
 	 */
 	private void createKernels()
 	{
-		// TODO kernel to accumulate data (a sort of grid)
+		// TODO kernel to accumulate data (sort of grid)
 				
 		//kernel for rain and oozing
 		kernelRainOozing = clCreateKernel(program, "rainOozing");

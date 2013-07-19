@@ -36,10 +36,26 @@ import window.Settings;
 import window.TimerCaller;
 
 /**
- * Main class
- * This framework uses LWJGL (www.lwjgl.org)
- * 
- * @author Valentin Bruder (vbruder@uos.de)
+ ******************************   RainCL   **********************************
+ * This framework simulates and renders a rain system.						*
+ * It uses LWJGL (Light Weight Java Game Library), for more information	see	*
+ * <http://www.lwjgl.org/>													*
+ * 																			*
+ * Copyright (C) 2013  Valentin Bruder <vbruder@gmail.com>					*
+ *																			*
+ * This program is free software: you can redistribute it and/or modify		*
+ * it under the terms of the GNU General Public License as published by		*
+ * the Free Software Foundation, either version 3 of the License, or		*
+ * (at your option) any later version.										*
+ *																			*
+ * This program is distributed in the hope that it will be useful,			*
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of			*
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the			*
+ * GNU General Public License for more details.								*
+ *																			*
+ * You should have received a copy of the GNU General Public License		*
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>. 	*
+ ****************************************************************************
  */
 public class Main {
    
@@ -68,12 +84,12 @@ public class Main {
     private static final Matrix4f viewProjMatrix = new Matrix4f();
         
     //environment
-    private static boolean drawTerrain 	= false;
+    private static boolean drawTerrain 	= true;
     private static boolean drawRain 	= false;
     private static boolean drawWater 	= false;
     private static boolean drawSky 		= false;
     private static boolean drawClouds 	= false;
-    private static boolean drawFog		= true;
+    private static boolean drawFog		= false;
     
     private static Rainstreaks raindrops = null;
 
@@ -97,7 +113,7 @@ public class Main {
 
 	//lighting
     private static float k_diff =  15.0f;
-    private static float k_spec =  25.0f;
+    private static float k_spec =  20.0f;
     private static float k_ambi =  0.1f;
     
     //sound
@@ -134,7 +150,7 @@ public class Main {
             
             //create light sources
             //sun
-            sun = new Sun(new Vector3f(1.0f, 1.0f, 1.0f), new Vector3f(30.0f, 30.0f, 30.0f), 0.1f);
+            sun = new Sun(new Vector3f(1.0f, 1.0f, 1.0f), new Vector3f(-30.0f, 50.0f, -30.0f), 0.09f);
             //TODO: point light(s)
             orbSP = new ShaderProgram("./shader/Orb.vsh", "./shader/Orb.fsh");
             orb = new PointLightOrb();

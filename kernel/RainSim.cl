@@ -67,9 +67,6 @@ kernel void rainSim	(
 kernel void fogSim  (
 						global float4* position,
 						const float dt,
-						const float eyePosX,
-					    const float eyePosY,
-					    const float eyePosZ,
 						const float windDirX,
 						const float windDirZ
 					)
@@ -81,6 +78,8 @@ kernel void fogSim  (
 
 	if ( fabs(fmod(myPos.z, 0.3f)) < 0.1 )
 		myPos.w = myPos.w < 255 ? ++myPos.w : 0;
-		
+	
+	//myPos.xz += 0.1 * (float2)(windDirX, windDirZ);
+	
 	position[myId].xzw = myPos.z > 1000 ? (float3) (10, -1000, myPos.w) : myPos.xzw;
 }

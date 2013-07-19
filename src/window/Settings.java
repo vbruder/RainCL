@@ -473,20 +473,53 @@ public class Settings extends JDialog implements TimerListener
             
             JLabel lblNewLabel = new JLabel("RainCL - A rain simulation framework.");
             lblNewLabel.setFont(new Font("Tahoma", Font.BOLD, 11));
-            lblNewLabel.setBounds(10, 11, 384, 20);
+            lblNewLabel.setBounds(10, 10, 384, 20);
             lpAbout.add(lblNewLabel);
             
-            JLabel lblVersionprealpha = new JLabel("Version: 0.2 (Alpha)");
-            lblVersionprealpha.setBounds(10, 42, 384, 14);
-            lpAbout.add(lblVersionprealpha);
+            JLabel lblVersion = new JLabel("Version: 0.2 (Alpha)");
+            lblVersion.setBounds(10, 40, 384, 14);
+            lpAbout.add(lblVersion);
             
-            JLabel lblNewLabel_1 = new JLabel("(c) Valentin Bruder, Universit\u00E4t Osnabr\u00FCck, 2013");
-            lblNewLabel_1.setBounds(10, 67, 384, 14);
+            JLabel lblNewLabel_1 = new JLabel("Copyright (C) 2013  Valentin Bruder <vbruder@gmail.com>");
+            lblNewLabel_1.setBounds(10, 60, 384, 14);
             lpAbout.add(lblNewLabel_1);
             
             JLabel lblNewLabel_2 = new JLabel("This framework uses LWJGL (www.lwjgl.org) and slick-util libraries.");
-            lblNewLabel_2.setBounds(10, 92, 384, 14);
+            lblNewLabel_2.setBounds(8, 80, 384, 14);
             lpAbout.add(lblNewLabel_2);
+            
+            JLabel lblNewLabel_3 = new JLabel("This program is free software: you can redistribute it and/or modify");
+            lblNewLabel_3.setBounds(8, 100, 384, 14);
+            lpAbout.add(lblNewLabel_3);
+            JLabel lblNewLabel_4 = new JLabel("it under the terms of the GNU General Public License as published by");
+            lblNewLabel_4.setBounds(10, 115, 384, 14);
+            lpAbout.add(lblNewLabel_4);
+            JLabel lblNewLabel_5 = new JLabel("the Free Software Foundation, either version 3 of the License, or");
+            lblNewLabel_5.setBounds(10, 130, 384, 14);
+            lpAbout.add(lblNewLabel_5);
+            JLabel lblNewLabel_6 = new JLabel("(at your option) any later version.");
+            lblNewLabel_6.setBounds(10, 145, 384, 14);
+            
+            lpAbout.add(lblNewLabel_6);
+            JLabel lblNewLabel_7 = new JLabel("This program is distributed in the hope that it will be useful,");
+            lblNewLabel_7.setBounds(10, 165, 384, 14);
+            lpAbout.add(lblNewLabel_7);
+            JLabel lblNewLabel_8 = new JLabel("but WITHOUT ANY WARRANTY; without even the implied warranty of");
+            lblNewLabel_8.setBounds(10, 180, 384, 14);
+            lpAbout.add(lblNewLabel_8);
+            JLabel lblNewLabel_9 = new JLabel("MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the");
+            lblNewLabel_9.setBounds(10, 195, 384, 14);
+            lpAbout.add(lblNewLabel_9);
+            JLabel lblNewLabel_10 = new JLabel("GNU General Public License for more details.");
+            lblNewLabel_10.setBounds(10, 210, 384, 14);
+            lpAbout.add(lblNewLabel_10);
+            
+            JLabel lblNewLabel_11 = new JLabel("You should have received a copy of the GNU General Public License");
+            lblNewLabel_11.setBounds(10, 230, 384, 14);
+            lpAbout.add(lblNewLabel_11);
+            JLabel lblNewLabel_12 = new JLabel("along with this program.  If not, see <http://www.gnu.org/licenses/>.");
+            lblNewLabel_12.setBounds(10, 245, 384, 14);
+            lpAbout.add(lblNewLabel_12);
         }
         {
             JPanel buttonPane = new JPanel();
