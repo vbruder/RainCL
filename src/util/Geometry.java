@@ -13,7 +13,7 @@ import org.lwjgl.opengl.GL33;
 
 
 /**
- * Kapselt ein Vertexarray Object.
+ * Class for vertex array objects.
  * @author Sascha Kolodzey, Nico Marniok
  */
 public class Geometry {

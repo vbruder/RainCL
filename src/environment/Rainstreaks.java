@@ -113,7 +113,7 @@ public class Rainstreaks
     private static final int FOGTEX_UNIT 		= 8;
     
     private static final int NUM_RAIN_TEXTURES = 370;
-    private static final int NUM_FOG_TEXTURES = 8;
+    private static final int NUM_FOG_TEXTURES = 256;
     private static final int NUM_FOG_SPRITES = 2;
     
     //OpenCL pointer
@@ -418,7 +418,7 @@ public class Rainstreaks
     	fogDataBuffer.rewind();
     	
         //load the 8 fog textures into a texture array
-        ImageContents content = Util.loadImage("media/fogTex/fog000.png");       
+        ImageContents content = Util.loadImage("media/fogTex/Smoke0000.bmp");       
         fogTex = new Texture(GL_TEXTURE_2D_ARRAY, FOGTEX_UNIT);
         fogTex.bind();
         glTexImage3D(   GL_TEXTURE_2D_ARRAY,
@@ -428,14 +428,14 @@ public class Rainstreaks
                         content.height,
                         NUM_FOG_TEXTURES,
                         0,
-                        GL_RGB,
+                        GL_RED,
                         GL_FLOAT,
                         null);
 
         for (int i = 0; i < NUM_FOG_TEXTURES; i++)
         {
-            DecimalFormat df = new DecimalFormat( "000" );
-            content = Util.loadImage("media/fogTex/fog" + df.format(i) + ".png");
+            DecimalFormat df = new DecimalFormat( "0000" );
+            content = Util.loadImage("media/fogTex/Smoke" + df.format(i) + ".bmp");
             glTexSubImage3D(GL_TEXTURE_2D_ARRAY,
                             0,
                             0,
@@ -444,7 +444,7 @@ public class Rainstreaks
                             content.width,
                             content.height,
                             1,
-                            GL_RGB,
+                            GL_RED,
                             GL_FLOAT,
                             content.data);
         }

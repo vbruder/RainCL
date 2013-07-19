@@ -83,9 +83,11 @@ public class Main {
     //sky
     private static Geometry skyDome;
     private static Geometry skyCloud;
+    private static Geometry floorQuad;
     private static Texture skyDomeTex;
     private static Texture sunTexture;
     private static Texture skyCloudTex;
+    private static Texture floorTex;
     private static Matrix4f skyMoveMatrix = new Matrix4f();
     private static Matrix4f  cloudModelMatrix = new Matrix4f();
     //terrain
@@ -191,13 +193,15 @@ public class Main {
     {
         skyDome   = GeometryFactory.createSkyDome(100, 75, 75);
         skyCloud  = GeometryFactory.createSkyDome( 95, 75, 75);
+        floorQuad = GeometryFactory.createFloorQuad(100.f);
         
-        skyDomeTex  = Texture.generateTexture("./media/sky/sky02.png", 5);
-        sunTexture  = Texture.generateTexture("./media/sky/sun.jpg", 6);
-        skyCloudTex = Texture.generateTexture("./media/sky/sky_sw.jpg", 9);
+        //TODO: Texture units
+        skyDomeTex  = Texture.generateTexture("./media/skyTex/sky05.png", 5);
+        sunTexture  = Texture.generateTexture("./media/skyTex/sun.jpg", 6);
+        //skyCloudTex = Texture.generateTexture("./media/skyTex/sky_sw.jpg", 7);
+        floorTex = Texture.generateTexture("./media/textures/floor01.png", 8);
         
         skySP = new ShaderProgram("shader/Sky.vsh", "shader/Sky.fsh");
-        
     }
 
     /**
@@ -251,16 +255,17 @@ public class Main {
 	            skySP.setUniform("model", skyMoveMatrix);
 	            skySP.setUniform("textureImage", skyDomeTex);
 	            skySP.setUniform("fogThickness", fogThickness);
-	            glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
 	            skyDome.draw();
+	            skySP.setUniform("textureImage", floorTex);
+	            floorQuad.draw();
             }
             
-	            
             //TODO: sun cube
             
             //TODO: clouds
             if (drawClouds)
             {
+            	glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
 	            glEnable(GL_BLEND);
 	            skySP.setUniform("model", cloudModelMatrix);
 	            skySP.setUniform("textureImage", skyCloudTex);

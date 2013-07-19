@@ -11,7 +11,7 @@ import org.lwjgl.util.vector.Vector4f;
  * Class representing a shader program.
  * @author Valentin Bruder
  * @date 28.02.2013
- *
+ * Based on code of Nico Marniok and Sascha Kolodzey (Computergrafik 2012)
  */
 public class ShaderProgram {
     private int id, vs, fs, gs;

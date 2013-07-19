@@ -9,8 +9,9 @@ import org.lwjgl.opengl.GL30;
 import org.lwjgl.opengl.GL33;
 
 /**
+ * Class representing a OpenGL texture object.
  * @author Valentin Bruder
- * based on code created by Nico Marniok
+ * based on code by Nico Marniok (Computergrafik 2012)
  */
 public class Texture {
     private int id;
@@ -23,23 +24,32 @@ public class Texture {
         this.target = target;
     }
 
+    /**
+     * @return the OpenGL texture id
+     */
     public int getId() {
         return id;
     }
 
+    /**
+     * @return the texture unit
+     */
     public int getUnit() {
         return unit;
     }
     
+    /**
+     * Bind the texture.
+     */
     public void bind() {
         glActiveTexture(GL_TEXTURE0 + this.unit);
         glBindTexture(this.target, this.id);
     }
     
     /**
-     * Laedt eine Bilddatei und erzeugt daraus eine OpenGL Textur
-     * @param filename Pfad zu einer Bilddatei
-     * @return ID der erstellten Textur
+     * Loads an image file and creates an OpenGL texture from it.
+     * @param filename path to image file
+     * @return ID of the created texture
      */
     public static Texture generateTexture(String filename, int unit) {
         Util.ImageContents contents = Util.loadImage(filename);
@@ -65,6 +75,9 @@ public class Texture {
         return tex;
     }
     
+    /**
+     * Delete texture object.
+     */
     public void delete() {
         GL11.glDeleteTextures(this.id);
     }

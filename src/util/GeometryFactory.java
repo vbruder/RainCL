@@ -16,16 +16,82 @@ import org.lwjgl.BufferUtils;
  */
 public class GeometryFactory {
     
-    // uses Texture units 10, 11, 12, 13
+    // TODO: uses Texture units 10, 11, 12, 13
     final static public int TERRAIN_TEX_UNIT = 10;
     
     /**
-     * Erzeugt eine Kugel.
-     * @param r Radius der Kugel
-     * @param n Anzahl der vertikalen Streifen
-     * @param k Anzahl der horizontalen Streifen
-     * @param imageFile Pfad zu einer Bilddatei
-     * @return Geometrie der Kugel
+     * Creates a quad in xy-plane. Can be used as screen quad for deferred shading.
+     * @return quad geometry
+     */
+    public static Geometry createScreenQuad()
+    {        
+        int vaid = glGenVertexArrays();
+        glBindVertexArray(vaid);        
+        
+        // vertex buffer
+        FloatBuffer vertexData = BufferUtils.createFloatBuffer(8);
+        vertexData.put(new float[]
+        		{
+		            -1.0f, -1.0f,
+		            +1.0f, -1.0f,
+		            -1.0f, +1.0f,
+		            +1.0f, +1.0f,
+		        });
+        vertexData.position(0);
+        
+        // index buffer
+        IntBuffer indexData = BufferUtils.createIntBuffer(4);
+        indexData.put(new int[] { 0, 1, 2, 3 });
+        indexData.position(0);
+        
+        Geometry geo = new Geometry();
+        geo.setIndices(indexData, GL_TRIANGLE_STRIP);
+        geo.setVertices(vertexData);
+        geo.addVertexAttribute(ShaderProgram.ATTR_POS, 2, 0);
+        return geo;
+    }
+    
+    /**
+     * Creates a quad in xz-plane with texture coordinates. Can be used as a floor quad.
+     * @param scale size scaling factor
+     * @return quad geometry
+     */
+    public static Geometry createFloorQuad(float scale)
+    {        
+        int vaid = glGenVertexArrays();
+        glBindVertexArray(vaid);        
+        
+        // vertex buffer: xyz-position, st-texture coordinates
+        FloatBuffer vertexData = BufferUtils.createFloatBuffer(3*4*2);
+        vertexData.put(new float[]
+        		{
+		            scale * +1.f, 0.f, scale * -1.f, 1.f, 1.f,
+		            scale * -1.f, 0.f, scale * -1.f, 0.f, 1.f,
+		            scale * +1.f, 0.f, scale * +1.f, 1.f, 0.f,
+		            scale * -1.f, 0.f, scale * +1.f, 0.f, 0.f
+		        });
+        vertexData.position(0);
+        
+        // index buffer
+        IntBuffer indexData = BufferUtils.createIntBuffer(4);
+        indexData.put(new int[] { 0, 1, 2, 3 });
+        indexData.position(0);
+        
+        Geometry geo = new Geometry();
+        geo.setIndices(indexData, GL_TRIANGLE_STRIP);
+        geo.setVertices(vertexData);
+        geo.addVertexAttribute(ShaderProgram.ATTR_POS, 3, 0);
+        geo.addVertexAttribute(ShaderProgram.ATTR_TEX, 2, 12);
+        return geo;
+    }
+    
+    /**
+     * Creates a sphere with texture on it.
+     * @param r Radius of the Sphere
+     * @param n Number of vertical stripes
+     * @param k Number of horizontal stripes
+     * @param imageFile Path to image file for texture
+     * @return Sphere geometry
      */
     public static Geometry createSphere(float r, int n, int k, String imageFile) {
         float[][][] image = Util.getImageContents(imageFile);
@@ -83,11 +149,11 @@ public class GeometryFactory {
     }
     
     /**
-     * Erzeugt eine Kugel mit Texturekoordinaten und Normalen.
-     * @param r Radius der Kugel
-     * @param n Anzahl der vertikalen Streifen
-     * @param k Anzahl der horizontalen Streifen
-     * @return Geometrie der Kugel
+     * Creates a sphere with texture coordinates and normals.
+     * @param r Radius of the sphere
+     * @param n Number of vertical stripes
+     * @param k Number of horizontal stripes
+     * @return Sphere geometry
      */
     public static Geometry createSphere(float r, int n, int k) {
         
@@ -144,7 +210,7 @@ public class GeometryFactory {
     }   
 
     /**
-     * Create a sky dome around view position
+     * Creates a sky dome.
      * @param r radius of dome
      * @param n number of vertical stripes
      * @param k number of horizontal stripes
@@ -169,7 +235,7 @@ public class GeometryFactory {
                 fb.put(r*cosTheta);
                 fb.put(r*sinTheta*sinPhi);
                 
-                // tex coords
+                // texture coordinates
                 fb.put(phi / Util.PI_MUL2);
                 fb.put(theta / Util.PI);
                                 
@@ -200,11 +266,11 @@ public class GeometryFactory {
     }
     
     /**
-     * @brief Creates a terrain out of a height map.
-     * @param path path of terrain data pictures
-     * @param amplitude scaling factor for height
-     * @param scale scaling factor for size
-     * @return the created terrain geometry
+     * Creates a terrain out of a height map.
+     * @param path to terrain data maps
+     * @param amplitude as scaling factor for height
+     * @param scale - scaling factor for size
+     * @return terrain geometry 
      */
     static public Geometry createTerrainFromMap(String path, float amplitude, int scale) {
         // vertex array id
@@ -224,7 +290,7 @@ public class GeometryFactory {
         }
         vertexData.rewind();
         
-        // indexbuffer
+        // index buffer
         IntBuffer indexData = BufferUtils.createIntBuffer((ic.length-1)*2*ic[0].length+(ic.length-2));
         for (int y = 0; y < ic.length-1; y++)
         {
@@ -250,6 +316,7 @@ public class GeometryFactory {
         geo.setVertices(vertexData);
         geo.addVertexAttribute(ShaderProgram.ATTR_POS, 4, 0);
         
+        // set textures
         geo.setNormalTex(normalTex);
         geo.setLightTex(lightTex);
         geo.setSpecularTex(specularTex);

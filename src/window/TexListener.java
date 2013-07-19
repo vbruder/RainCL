@@ -1,5 +1,8 @@
 package window;
 
+/**
+ * @author Valentin Bruder
+ */
 public class TexListener implements TimerListener
 {
 

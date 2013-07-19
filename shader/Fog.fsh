@@ -11,6 +11,6 @@ out vec4 fragColor;
 
 void main(void)
 {
-//	fragColor = vec4(1,0,0,1);
-	fragColor = vec4( vec3(texture2DArray(fogTex, fragmentTexCoords).r), opacity);
+	vec4 fogColor = vec4( vec3(texture2DArray(fogTex, fragmentTexCoords).r), opacity);
+	fragColor = mix(fogColor, vec4(0.0), 0.8);
 }

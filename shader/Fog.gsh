@@ -40,19 +40,16 @@ void main(void)
     posWC.xyz += 2.0*v1;    
     gl_Position = proj * posWC;
     fragmentTexCoords = vec3(1, 1, texArrayID[0]);
-    //opacity = d;
     EmitVertex();
         
     posWC.xyz -= 2.0*(v1 + v2);
     gl_Position = proj * posWC;
     fragmentTexCoords = vec3(0, 0, texArrayID[0]);
-    //opacity = d;
     EmitVertex();
         
     posWC.xyz += 2.0*v1;
     gl_Position = proj * posWC;
     fragmentTexCoords = vec3(0, 1, texArrayID[0]);
-    //opacity = d;
     EmitVertex();
     
     EndPrimitive();

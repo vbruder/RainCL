@@ -1,5 +1,9 @@
 package apiWrapper;
 
+import static apiWrapper.OpenGL.GL_DEPTH_ATTACHMENT;
+import static apiWrapper.OpenGL.GL_FRAMEBUFFER;
+import static apiWrapper.OpenGL.GL_RENDERBUFFER;
+
 import org.lwjgl.opengl.*;
 
 import java.nio.FloatBuffer;
@@ -9,16 +13,18 @@ import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
 /**
- * 
+ * Wrapper class for OpenGL API.
+ * @author Valentin Bruder
+ * based on code of Sascha Kolodzey and Nico Marniok (Computergrafik 2012)
  */
 public class OpenGL {
     /**
-     * Breite des OpenGL Fensters
+     * Width of OpenGL window.
      */
     public static final int WIDTH = 800;
     
     /**
-     * Hoehe des OpenGL Fensters
+     * Height of OpenGL window.
      */
     public static final int HEIGHT = 800;
     
@@ -105,6 +111,11 @@ public class OpenGL {
      * GL11.GL_COLOR_BUFFER_BIT
      */
     public static final int GL_COLOR_BUFFER_BIT = GL11.GL_COLOR_BUFFER_BIT;
+    
+    /**
+     * GL30.GL_COLOR_ATTACHMENT0
+     */
+    public static final int GL_COLOR_ATTACHMENT0 = GL30.GL_COLOR_ATTACHMENT0;
     
     /**
      * GL11.GL_CULL_FACE
@@ -282,6 +293,26 @@ public class OpenGL {
     public static final int GL_R = GL11.GL_R;  
     
     /**
+     * GL30.GL_RENDERBUFFER
+     */
+    public static final int GL_RENDERBUFFER = GL30.GL_RENDERBUFFER;  
+    
+    /**
+     * GL30.GL_FRAMEBUFFER
+     */
+    public static final int GL_FRAMEBUFFER = GL30.GL_FRAMEBUFFER;
+    
+    /**
+     * GL30.GL_DEPTH_ATTACHMENT
+     */
+    public static final int GL_DEPTH_ATTACHMENT = GL30.GL_DEPTH_ATTACHMENT;
+    
+    /**
+     * GL30.GL_DEPTH_COMPONENT32F
+     */
+    public static final int GL_DEPTH_COMPONENT32F = GL30.GL_DEPTH_COMPONENT32F;
+    
+    /**
      * GL30.GL_R8
      */
     public static final int GL_R8 = GL30.GL_R8;    
@@ -335,6 +366,11 @@ public class OpenGL {
      * GL11.GL_RGBA8
      */
     public static final int GL_RGBA8 = GL11.GL_RGBA8;
+    
+    /**
+     * GL30.GL_RGBA16F
+     */
+    public static final int GL_RGBA16F = GL30.GL_RGBA16F;
     
     /**
      * GL20.GL_SHADING_LANGUAGE_VERSION
@@ -486,6 +522,36 @@ public class OpenGL {
      */
     public static final int GL_INTERLEAVED_ATTRIBS = GL30.GL_INTERLEAVED_ATTRIBS;
     
+    /**
+     * GL30.GL_FRAMEBUFFER_COMPLETE
+     */
+    public static final int GL_FRAMEBUFFER_COMPLETE = GL30.GL_FRAMEBUFFER_COMPLETE;
+    
+    /**
+     * GL30.GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT
+     */
+    public static final int GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT = GL30.GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT;
+    
+    /**
+     * GL30.GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER
+     */
+    public static final int GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER = GL30.GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER;
+    
+    /**
+     * GL30.GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT
+     */
+    public static final int GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT = GL30.GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT;
+    
+    /**
+     * GL30.GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE
+     */
+    public static final int GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE = GL30.GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE;
+    
+    /**
+     * GL30.GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER
+     */
+    public static final int GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER = GL30.GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER;
+     
     /**
      * OpenGL 1.3
      * @see <a href="http://www.opengl.org/sdk/docs/man4/xhtml/glActiveTexture.xml">glActiveTexture</a>
@@ -848,6 +914,16 @@ public class OpenGL {
     
     /**
      * OpenGL 2.0
+     * @see <a href="http://www.opengl.org/sdk/docs/man4/xhtml/glDrawBuffers.xml">glDrawBuffers</a>
+     * @param buffer
+     */
+    public static void glDrawBuffers(java.nio.IntBuffer buffers) {
+    	GL20.glDrawBuffers(buffers);
+    	checkError("glDrawBuffers");
+    }
+    
+    /**
+     * OpenGL 2.0
      * @see <a href="http://www.opengl.org/sdk/docs/man4/xhtml/glGetUniformLocation.xml">glGetUniformLocation</a>
      * @param program
      * @param name
@@ -1007,6 +1083,31 @@ public class OpenGL {
     public static void glTexParameteri(int target, int pname, int param) {
         GL11.glTexParameteri(target, pname, param);
         OpenGL.checkError("glTexParameteri");
+    }
+    
+    /**
+     * OpenGL 1.1
+     * @see <a href="http://www.opengl.org/sdk/docs/man4/xhtml/glTexParameterf.xml">glTexParameterf</a>
+     * @param target
+     * @param pname
+     * @param param 
+     */
+    public static void glTexParameterf(int target, int pname, float param) {
+    	GL11.glTexParameterf(target, pname, param);
+    	checkError("glTexParameterf");
+    }
+    
+    /**
+     * GL 1.1
+     * @see <a href="http://www.opengl.org/sdk/docs/man4/xhtml/glViewport.xml">glViewport</a>
+     * @param x
+     * @param y
+     * @param width
+     * @param height
+     */
+    public static void glViewport(int x, int y, int width, int height) {
+    	GL11.glViewport(x, y, width, height);
+    	checkError("glViewport");
     }
     
     /**
@@ -1205,12 +1306,117 @@ public class OpenGL {
     
     /**
      * OpenGL 3.0
+     * @see <a href="http://www.opengl.org/sdk/docs/man4/xhtml/glGenRenderbuffers.xml">glDeleteRenderbuffers</a>
+     * @return id of render buffer object
+     */
+    public static int glGenRenderbuffers(){
+        int id = GL30.glGenRenderbuffers();
+        OpenGL.checkError("glGenRenderbuffers");
+        return id;
+    }
+    
+    /**
+     * OpenGL 3.0
+     * @see <a href="http://www.opengl.org/sdk/docs/man4/xhtml/glBindRenderbuffer.xml">glDeleteRenderbuffers</a>
+     * @param renderbuffer
+     * @param target
+     */
+    public static void glBindRenderbuffer(int renderbuffer, int target){
+        GL30.glBindRenderbuffer(renderbuffer, target);
+        OpenGL.checkError("glBindRenderbuffer");
+    }
+    
+    /**
+     * OpenGL 3.0
+     * @see <a href="http://www.opengl.org/sdk/docs/man4/xhtml/glRenderbufferStorage.xml">glDeleteRenderbuffers</a>
+     * @param renderbuffer
+     * @param depth
+     * @param width
+     * @param height
+     */
+    public static void glRenderbufferStorage(int renderbuffer, int depth, int width, int height){
+        GL30.glRenderbufferStorage(renderbuffer, depth, width, height);
+        OpenGL.checkError("glRenderbufferStorage");
+    }
+    
+    
+    /**
+     * OpenGL 3.0
+     * @see <a href="http://www.opengl.org/sdk/docs/man4/xhtml/glGenFramebuffers.xml">glDeleteRenderbuffers</a>
+     * @return id of frame buffer object
+     */
+    public static int glGenFramebuffers(){
+        int id = GL30.glGenFramebuffers();
+        OpenGL.checkError("glDeleteRenderbuffers");
+		return id;
+    }
+    
+    /**
+     * OpenGL 3.0
+     * @see <a href="http://www.opengl.org/sdk/docs/man4/xhtml/glBindFramebuffer.xml">glDeleteRenderbuffers</a>
+     * @param framebuffer
+     * @param target
+     */
+    public static void glBindFramebuffer(int framebuffer, int target){
+        GL30.glBindFramebuffer(framebuffer, target);
+        OpenGL.checkError("glBindFramebuffer");
+    }
+    
+    /**
+     * OpenGL 3.0
+     * @see <a href="http://www.opengl.org/sdk/docs/man4/xhtml/glFramebufferTexture2D.xml">glFramebufferTexture2D</a>
+     * @param target
+     * @param attachment
+     * @param textarget
+     * @param texture
+     * @param level
+     */
+    public static void glFramebufferTexture2D(int target, int attachment, int textarget, int texture, int level) {
+    	GL30.glFramebufferTexture2D(target, attachment, textarget, texture, level);
+    	checkError("glFramebufferTexture2D");
+    }
+    
+    /**
+     * OpenGL 3.0
+     * @see <a href="http://www.opengl.org/sdk/docs/man4/xhtml/glFramebufferTexture2D.xml">glCheckFramebufferStatus</a>
+     * @param target
+     * @return error code
+     */
+    public static int glCheckFramebufferStatus(int target) {
+    	int error = GL30.glCheckFramebufferStatus(target);
+    	checkError("glCheckFramebufferStatus");
+    	return error;
+    }
+    
+    /**
+     * OpenGL 3.0
+     * @see <a href="http://www.opengl.org/sdk/docs/man4/xhtml/glFramebufferRenderbuffer.xml">glDeleteRenderbuffers</a>
+     */
+    public static void glFramebufferRenderbuffer(int framebuffer, int depthAttachment, int renderbuffer, int renderBufferObjectId){
+    	GL30.glFramebufferRenderbuffer(framebuffer, depthAttachment, renderbuffer, renderBufferObjectId);
+    	OpenGL.checkError("glFramebufferRenderbuffer");
+    }
+    
+    /**
+     * OpenGL 3.0
      * @see <a href="http://www.opengl.org/sdk/docs/man4/xhtml/glDeleteFramebuffers.xml">glDeleteFramebuffers</a>
      * @param target
      */
     public static void glDeleteFramebuffers(int target){
         GL30.glDeleteFramebuffers(target);
         OpenGL.checkError("glDeleteFramebuffers");
+    }
+    
+    /**
+     * OpenGL 3.0
+     * @see <a href="http://www.opengl.org/sdk/docs/man4/xhtml/glBindFragDataLocation.xml">glBindFragDataLocation</a>
+     * @param program
+     * @param colorNumber
+     * @param name
+     */
+    public static void glBindFragDataLocation(int program, int colorNumber, CharSequence name) {
+    	GL30.glBindFragDataLocation(program, colorNumber, name);
+    	checkError("glBindFragDataLocation");
     }
     
     /**
