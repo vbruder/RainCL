@@ -16,7 +16,7 @@ import org.newdawn.slick.util.ResourceLoader;
  * @date 12.05.2013
  *
  * Class for audio handling.
- * This class uses the slick-util Library for sound play back.
+ * This class uses the "slick-util" library for sound play back.
  */
 public class OpenAL
 {

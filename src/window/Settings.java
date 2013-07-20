@@ -20,7 +20,7 @@ import javax.swing.JLabel;
 import java.awt.GridBagConstraints;
 import javax.swing.JTextField;
 
-import main.Rain;
+import main.Main;
 
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
@@ -32,7 +32,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.JLayeredPane;
 import java.awt.GridLayout;
 
-import apiWrapper.GL;
+import apiWrapper.OpenGL;
 import apiWrapper.OpenCL;
 
 import com.jgoodies.forms.layout.FormLayout;
@@ -51,6 +51,10 @@ import javax.swing.JCheckBox;
 
 import org.lwjgl.util.vector.Vector3f;
 
+/**
+ * Class representing a settings GUI. Singleton pattern.
+ * @author Valentin Bruder
+ */
 public class Settings extends JDialog implements TimerListener
 {
     private static final long serialVersionUID = 1L;
@@ -75,7 +79,14 @@ public class Settings extends JDialog implements TimerListener
     private int particles;
     private float windForce;
     private float fog;
+    
     private boolean sound;
+    private boolean rain;
+    private boolean volumetricFog;
+    private boolean terrain;
+    private boolean background;
+    private boolean water;
+    private boolean waterHeight;
     
     private boolean changedParticles = false;
     private boolean changedWind = false;
@@ -116,10 +127,10 @@ public class Settings extends JDialog implements TimerListener
             }
         };
         
-        sysGraphics     = GL.getRenderer();
-        sysDriver       = GL.getDriverversion();
-        sysOpenGL       = GL.getVersion();
-        sysShadingLang  = GL.getShadinglang();
+        sysGraphics     = OpenGL.getRenderer();
+        sysDriver       = OpenGL.getDriverversion();
+        sysOpenGL       = OpenGL.getVersion();
+        sysShadingLang  = OpenGL.getShadinglang();
         sysOpenCL       = OpenCL.getVersion();
         
         settingsPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "closeAction");
@@ -137,7 +148,7 @@ public class Settings extends JDialog implements TimerListener
         gbl_contentPanel.rowWeights = new double[]{0.0, 1.0, 0.0, Double.MIN_VALUE};
         settingsPanel.setLayout(gbl_contentPanel);
         {
-            JLabel lblParticles = new JLabel("Particles:");
+            JLabel lblParticles = new JLabel("Rain Particles:");
             GridBagConstraints gbc_lblParticles = new GridBagConstraints();
             gbc_lblParticles.anchor = GridBagConstraints.EAST;
             gbc_lblParticles.insets = new Insets(0, 0, 5, 5);
@@ -202,6 +213,7 @@ public class Settings extends JDialog implements TimerListener
                 slrParticles.setSnapToTicks(true);
                 slrParticles.setPaintTicks(true);
                 slrParticles.setBounds(66, 28, 328, 26);
+                slrParticles.setValue((int) ((double) Math.log(environment.Rainstreaks.getMaxParticles()) / Math.log(2)) );
                 lpEnvironment.add(slrParticles);
                 particles = slrParticles.getValue();
                 slrParticles.addChangeListener(new ChangeListener(){
@@ -217,16 +229,19 @@ public class Settings extends JDialog implements TimerListener
                 lpEnvironment.add(lblWind);
                 
                 final JSlider slrWind = new JSlider();
-                slrWind.setMinorTickSpacing(10);
+                slrWind.setMinorTickSpacing(2);
+                slrWind.setMinimum( 0);
+                slrWind.setMaximum(20);
                 slrWind.setPaintTicks(true);
                 slrWind.setBackground(Color.WHITE);
                 slrWind.setBounds(66, 83, 328, 26);
+                slrWind.setValue((int) (environment.Rainstreaks.getWindForce()) );
                 lpEnvironment.add(slrWind);
-                windForce = slrWind.getValue() / 10.0f;
+                windForce = slrWind.getValue();
                 slrWind.addChangeListener(new ChangeListener(){
                     public void stateChanged(ChangeEvent e) {
                         changedWind = true;
-                        float newValue = slrWind.getValue() / 5.0f;
+                        float newValue = slrWind.getValue();
                         environment.Rainstreaks.setWindForce(newValue);                 
                     }
                 });
@@ -236,37 +251,135 @@ public class Settings extends JDialog implements TimerListener
                 lpEnvironment.add(lblFog);
                 
                 final JSlider slrFog = new JSlider();
-                slrFog.setValue(5);
                 slrFog.setMinorTickSpacing(1);
                 slrFog.setMaximum(10);
                 slrFog.setPaintTicks(true);
                 slrFog.setBackground(Color.WHITE);
                 slrFog.setBounds(66, 140, 328, 26);
+                slrFog.setValue((int) (main.Main.getFogThickness().x * 100.f) );
                 lpEnvironment.add(slrFog);
                 fog = ((float)slrFog.getValue()) / 100.0f;
                 slrFog.addChangeListener(new ChangeListener(){
                     public void stateChanged(ChangeEvent e) {
                         changedFog = true;
                         float newValue = ((float)slrFog.getValue()) / 100.0f;
-                        main.Rain.setFogThickness(new Vector3f(newValue, newValue, newValue));        
+                        main.Main.setFogThickness(new Vector3f(newValue, newValue, newValue));        
                     }
                 });
+
+                JCheckBox cbxRain = new JCheckBox("Rain");
+                cbxRain.setBackground(Color.WHITE);
+                cbxRain.setBounds(10, 202, 100, 23);
+                lpEnvironment.add(cbxRain);
+                cbxRain.addItemListener(new ItemListener() {
+                	public void itemStateChanged(ItemEvent e) {
+                		if (e.getStateChange() == 1)
+                			rain = true;
+                		else
+                			rain = false;
+                		main.Main.setDrawRain(rain);
+                	}
+                });
+                cbxRain.setSelected(main.Main.isDrawRain());
+                
+                JCheckBox cbxFog = new JCheckBox("Fog");
+                cbxFog.setBackground(Color.WHITE);
+                cbxFog.setBounds(10, 232, 100, 23);
+                lpEnvironment.add(cbxFog);
+                cbxFog.addItemListener(new ItemListener() {
+                	public void itemStateChanged(ItemEvent e) {
+                		if (e.getStateChange() == 1)
+                			volumetricFog = true;
+                		else
+                			volumetricFog = false;
+                		main.Main.setDrawFog(volumetricFog);
+                	}
+                });
+                cbxFog.setSelected(main.Main.isDrawFog());
+                
+                final JCheckBox cbxWaterHeight = new JCheckBox("Water Height");
+                cbxWaterHeight.setBackground(Color.WHITE);
+                cbxWaterHeight.setBounds(110, 232, 100, 23);
+                cbxWaterHeight.setVisible(false);
+                //cbxWaterHeight.setFocusable(false);
+                lpEnvironment.add(cbxWaterHeight);
+                cbxWaterHeight.addItemListener(new ItemListener() {
+                	public void itemStateChanged(ItemEvent e) {
+                		if (e.getStateChange() == 1)
+                			waterHeight = true;
+                		else
+                			waterHeight = false;
+                		main.Main.setPoints(waterHeight);
+                	}
+                });
+                cbxWaterHeight.setSelected(main.Main.isPoints());
+                
+                JCheckBox cbxWater = new JCheckBox("Water");
+                cbxWater.setBackground(Color.WHITE);
+                cbxWater.setBounds(110, 202, 100, 23);
+                lpEnvironment.add(cbxWater);
+                cbxWater.addItemListener(new ItemListener() {
+                	public void itemStateChanged(ItemEvent e) {
+                		if (e.getStateChange() == 1)
+                		{
+                			water = true;
+                			cbxWaterHeight.setVisible(water);
+                		}
+                		else
+                		{
+                			water = false;
+                			cbxWaterHeight.setVisible(water);
+                		}
+                		main.Main.setDrawWater(water);
+                	}
+                });
+                cbxWater.setSelected(main.Main.isDrawWater());
+                
+                JCheckBox cbxTerrain = new JCheckBox("Terrain");
+                cbxTerrain.setBackground(Color.WHITE);
+                cbxTerrain.setBounds(210, 202, 100, 23);
+                lpEnvironment.add(cbxTerrain);
+                cbxTerrain.addItemListener(new ItemListener() {
+                    public void itemStateChanged(ItemEvent e) {
+                        if (e.getStateChange() == 1)
+                        	terrain = true;
+                        else
+                        	terrain = false;
+                        main.Main.setDrawTerrain(terrain);
+                    }
+                });
+                cbxTerrain.setSelected(main.Main.isDrawTerrain());
+                                
+                JCheckBox cbxBackground = new JCheckBox("Background");
+                cbxBackground.setBackground(Color.WHITE);
+                cbxBackground.setBounds(210, 232, 100, 23);
+                lpEnvironment.add(cbxBackground);
+                cbxBackground.addItemListener(new ItemListener() {
+                    public void itemStateChanged(ItemEvent e) {
+                        if (e.getStateChange() == 1)
+                            background = true;
+                        else
+                        	background = false;
+                        main.Main.setDrawSky(background);
+                    }
+                });
+                cbxBackground.setSelected(main.Main.isDrawSky());
                 
                 JCheckBox cbxSound = new JCheckBox("Sound");
                 cbxSound.setBackground(Color.WHITE);
-                cbxSound.setBounds(10, 202, 91, 23);
+                cbxSound.setBounds(310, 202, 100, 23);
                 lpEnvironment.add(cbxSound);
                 cbxSound.addItemListener(new ItemListener() {
-                    public void itemStateChanged(ItemEvent e) {
-                        changedSound = true;
-                        if (e.getStateChange() == 1)
-                            sound = true;
-                        else
-                            sound = false;
-                        main.Rain.setAudio(sound);
-                    }
+                	public void itemStateChanged(ItemEvent e) {
+                		changedSound = true;
+                		if (e.getStateChange() == 1)
+                			sound = true;
+                		else
+                			sound = false;
+                		main.Main.setAudio(sound);
+                	}
                 });
-                cbxSound.setSelected(main.Rain.isAudio());
+                cbxSound.setSelected(main.Main.isAudio());
             }
             
             JLayeredPane lpLighting = new JLayeredPane();
@@ -360,20 +473,53 @@ public class Settings extends JDialog implements TimerListener
             
             JLabel lblNewLabel = new JLabel("RainCL - A rain simulation framework.");
             lblNewLabel.setFont(new Font("Tahoma", Font.BOLD, 11));
-            lblNewLabel.setBounds(10, 11, 384, 20);
+            lblNewLabel.setBounds(10, 10, 384, 20);
             lpAbout.add(lblNewLabel);
             
-            JLabel lblVersionprealpha = new JLabel("Version: 0.1 (Pre-Alpha)");
-            lblVersionprealpha.setBounds(10, 42, 384, 14);
-            lpAbout.add(lblVersionprealpha);
+            JLabel lblVersion = new JLabel("Version: 0.2 (Alpha)");
+            lblVersion.setBounds(10, 40, 384, 14);
+            lpAbout.add(lblVersion);
             
-            JLabel lblNewLabel_1 = new JLabel("(c) Valentin Bruder, Universit\u00E4t Osnabr\u00FCck, 2013");
-            lblNewLabel_1.setBounds(10, 67, 384, 14);
+            JLabel lblNewLabel_1 = new JLabel("Copyright (C) 2013  Valentin Bruder <vbruder@gmail.com>");
+            lblNewLabel_1.setBounds(10, 60, 384, 14);
             lpAbout.add(lblNewLabel_1);
             
             JLabel lblNewLabel_2 = new JLabel("This framework uses LWJGL (www.lwjgl.org) and slick-util libraries.");
-            lblNewLabel_2.setBounds(10, 92, 384, 14);
+            lblNewLabel_2.setBounds(8, 80, 384, 14);
             lpAbout.add(lblNewLabel_2);
+            
+            JLabel lblNewLabel_3 = new JLabel("This program is free software: you can redistribute it and/or modify");
+            lblNewLabel_3.setBounds(8, 100, 384, 14);
+            lpAbout.add(lblNewLabel_3);
+            JLabel lblNewLabel_4 = new JLabel("it under the terms of the GNU General Public License as published by");
+            lblNewLabel_4.setBounds(10, 115, 384, 14);
+            lpAbout.add(lblNewLabel_4);
+            JLabel lblNewLabel_5 = new JLabel("the Free Software Foundation, either version 3 of the License, or");
+            lblNewLabel_5.setBounds(10, 130, 384, 14);
+            lpAbout.add(lblNewLabel_5);
+            JLabel lblNewLabel_6 = new JLabel("(at your option) any later version.");
+            lblNewLabel_6.setBounds(10, 145, 384, 14);
+            
+            lpAbout.add(lblNewLabel_6);
+            JLabel lblNewLabel_7 = new JLabel("This program is distributed in the hope that it will be useful,");
+            lblNewLabel_7.setBounds(10, 165, 384, 14);
+            lpAbout.add(lblNewLabel_7);
+            JLabel lblNewLabel_8 = new JLabel("but WITHOUT ANY WARRANTY; without even the implied warranty of");
+            lblNewLabel_8.setBounds(10, 180, 384, 14);
+            lpAbout.add(lblNewLabel_8);
+            JLabel lblNewLabel_9 = new JLabel("MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the");
+            lblNewLabel_9.setBounds(10, 195, 384, 14);
+            lpAbout.add(lblNewLabel_9);
+            JLabel lblNewLabel_10 = new JLabel("GNU General Public License for more details.");
+            lblNewLabel_10.setBounds(10, 210, 384, 14);
+            lpAbout.add(lblNewLabel_10);
+            
+            JLabel lblNewLabel_11 = new JLabel("You should have received a copy of the GNU General Public License");
+            lblNewLabel_11.setBounds(10, 230, 384, 14);
+            lpAbout.add(lblNewLabel_11);
+            JLabel lblNewLabel_12 = new JLabel("along with this program.  If not, see <http://www.gnu.org/licenses/>.");
+            lblNewLabel_12.setBounds(10, 245, 384, 14);
+            lpAbout.add(lblNewLabel_12);
         }
         {
             JPanel buttonPane = new JPanel();
@@ -423,12 +569,12 @@ public class Settings extends JDialog implements TimerListener
         }
         if (changedFog)
         {
-            main.Rain.setFogThickness(new Vector3f(fog, fog, fog));
+            main.Main.setFogThickness(new Vector3f(fog, fog, fog));
             changedFog ^= changedFog;
         }
         if (changedSound)
         {
-            main.Rain.setAudio(!sound);
+            main.Main.setAudio(!sound);
             changedSound ^= changedSound;
         }
     }
@@ -436,8 +582,7 @@ public class Settings extends JDialog implements TimerListener
     @Override
     public void updateTex()
     {
-        txtFPS.setText( NumberFormat.getInstance().format(Rain.getFPS()) );
-        //TODO: add sph particles
+        txtFPS.setText( NumberFormat.getInstance().format(Main.getFPS()) );
         txtParticles.setText( NumberFormat.getInstance().format(Rainstreaks.getMaxParticles()) );
     }
     

@@ -3,27 +3,27 @@
  */
 package environment;
 
-import static apiWrapper.GL.GL_ARRAY_BUFFER;
-import static apiWrapper.GL.GL_DYNAMIC_DRAW;
-import static apiWrapper.GL.GL_STATIC_DRAW;
-import static apiWrapper.GL.GL_FLOAT;
-import static apiWrapper.GL.GL_POINTS;
-import static apiWrapper.GL.GL_R16F;
-import static apiWrapper.GL.GL_RED;
-import static apiWrapper.GL.GL_RGBA;
-import static apiWrapper.GL.GL_TEXTURE_2D;
-import static apiWrapper.GL.GL_TRIANGLE_STRIP;
-import static apiWrapper.GL.glBindBuffer;
-import static apiWrapper.GL.glBindVertexArray;
-import static apiWrapper.GL.glBufferData;
-import static apiWrapper.GL.glDrawArrays;
-import static apiWrapper.GL.glEnableVertexAttribArray;
-import static apiWrapper.GL.glGenBuffers;
-import static apiWrapper.GL.glGenVertexArrays;
-import static apiWrapper.GL.glGenerateMipmap;
-import static apiWrapper.GL.glTexImage2D;
-import static apiWrapper.GL.glVertexAttribPointer;
-import static apiWrapper.GL.glFinish;
+import static apiWrapper.OpenGL.GL_ARRAY_BUFFER;
+import static apiWrapper.OpenGL.GL_DYNAMIC_DRAW;
+import static apiWrapper.OpenGL.GL_STATIC_DRAW;
+import static apiWrapper.OpenGL.GL_FLOAT;
+import static apiWrapper.OpenGL.GL_POINTS;
+import static apiWrapper.OpenGL.GL_R16F;
+import static apiWrapper.OpenGL.GL_RED;
+import static apiWrapper.OpenGL.GL_RGBA;
+import static apiWrapper.OpenGL.GL_TEXTURE_2D;
+import static apiWrapper.OpenGL.GL_TRIANGLE_STRIP;
+import static apiWrapper.OpenGL.glBindBuffer;
+import static apiWrapper.OpenGL.glBindVertexArray;
+import static apiWrapper.OpenGL.glBufferData;
+import static apiWrapper.OpenGL.glDrawArrays;
+import static apiWrapper.OpenGL.glEnableVertexAttribArray;
+import static apiWrapper.OpenGL.glGenBuffers;
+import static apiWrapper.OpenGL.glGenVertexArrays;
+import static apiWrapper.OpenGL.glGenerateMipmap;
+import static apiWrapper.OpenGL.glTexImage2D;
+import static apiWrapper.OpenGL.glVertexAttribPointer;
+import static apiWrapper.OpenGL.glFinish;
 import static apiWrapper.OpenCL.clBuildProgram;
 import static apiWrapper.OpenCL.clCreateCommandQueue;
 import static apiWrapper.OpenCL.clCreateProgramWithSource;
@@ -169,7 +169,7 @@ public class Water {
 	{		
 		this.terrain = terrain;
 		rainfactor = 0.075f;
-		oozingfactor = 0.075f;
+		oozingfactor = 0.095f;
 		dampingfactor = 0.005f;
 		
         createCLContext(device_type, Util.getFileContents("./kernel/WaterSim.cl"), drawable);
@@ -204,7 +204,7 @@ public class Water {
 	private void createWaterData()
 	{
         //load height map data
-        ImageContents contentHeight = Util.loadImage("media/terrain/terrainHeight01.png");
+        ImageContents contentHeight = Util.loadImage("media/terrain/terrainHeight02.png");
         int terrainDim = contentHeight.height * contentHeight.width;
         heightDataBuffer = BufferUtils.createFloatBuffer(terrainDim);
         for(int i = 0; i < heightDataBuffer.capacity(); ++i)
@@ -215,7 +215,7 @@ public class Water {
         memHeight = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, heightDataBuffer);
                         
         //load normal map data
-        ImageContents contentNorm = Util.loadImage("media/terrain/terrainNormal01.png");
+        ImageContents contentNorm = Util.loadImage("media/terrain/terrainNormal02.png");
         normalDataBuffer = BufferUtils.createFloatBuffer(terrainDim * 4);
         for(int i = 0; i < (normalDataBuffer.capacity()/4); ++i)
         {
@@ -228,7 +228,7 @@ public class Water {
         memNormal = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, normalDataBuffer);
         
         //load attribute map data
-        ImageContents contentAttrib = Util.loadImage("media/terrain/terrainAttribute01.png");
+        ImageContents contentAttrib = Util.loadImage("media/terrain/terrainAttribute02.png");
         attributeDataBuffer = BufferUtils.createFloatBuffer(terrainDim);
         for(int i = 0; i < attributeDataBuffer.capacity(); ++i)
         {
@@ -377,7 +377,7 @@ public class Water {
 	 */
 	private void createKernels()
 	{
-		// TODO kernel to accumulate data (a sort of grid)
+		// TODO kernel to accumulate data (sort of grid)
 				
 		//kernel for rain and oozing
 		kernelRainOozing = clCreateKernel(program, "rainOozing");

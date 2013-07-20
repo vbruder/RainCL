@@ -1,51 +1,51 @@
 package environment;
 
-import static apiWrapper.GL.GL_ARRAY_BUFFER;
-import static apiWrapper.GL.GL_DYNAMIC_DRAW;
-import static apiWrapper.GL.GL_FLOAT;
-import static apiWrapper.GL.GL_POINTS;
-import static apiWrapper.GL.GL_R8;
-import static apiWrapper.GL.GL_RED;
-import static apiWrapper.GL.GL_R16;
-import static apiWrapper.GL.GL_R16F;
-import static apiWrapper.GL.GL_R32F;
-import static apiWrapper.GL.GL_RG;
-import static apiWrapper.GL.GL_RG8;
-import static apiWrapper.GL.GL_RGB;
-import static apiWrapper.GL.GL_RGB8;
-import static apiWrapper.GL.GL_RGBA;
-import static apiWrapper.GL.GL_RGBA8;
-import static apiWrapper.GL.GL_SHORT;
-import static apiWrapper.GL.GL_STATIC_DRAW;
-import static apiWrapper.GL.GL_TEXTURE_1D;
-import static apiWrapper.GL.GL_TEXTURE_2D;
-import static apiWrapper.GL.GL_TEXTURE_2D_ARRAY;
-import static apiWrapper.GL.GL_UNSIGNED_BYTE;
-import static apiWrapper.GL.GL_UNSIGNED_INT;
-import static apiWrapper.GL.glFinish;
-import static apiWrapper.GL.glBindBuffer;
-import static apiWrapper.GL.glBindTexture;
-import static apiWrapper.GL.glBindVertexArray;
-import static apiWrapper.GL.glBufferData;
-import static apiWrapper.GL.glDrawArrays;
-import static apiWrapper.GL.glDrawElements;
-import static apiWrapper.GL.glEnable;
-import static apiWrapper.GL.glEnableVertexAttribArray;
-import static apiWrapper.GL.glGenBuffers;
-import static apiWrapper.GL.glGenVertexArrays;
-import static apiWrapper.GL.glGenerateMipmap;
-import static apiWrapper.GL.glGetUniformLocation;
-import static apiWrapper.GL.glTexImage1D;
-import static apiWrapper.GL.glTexImage2D;
-import static apiWrapper.GL.glTexImage3D;
-import static apiWrapper.GL.glTexSubImage3D;
-import static apiWrapper.GL.glUniform1f;
-import static apiWrapper.GL.glUniform3f;
-import static apiWrapper.GL.glVertexAttribPointer;
-import static apiWrapper.GL.glDeleteFramebuffers;
-import static apiWrapper.GL.glDeleteRenderbuffers;
-import static apiWrapper.GL.glDeleteBuffers;
-import static apiWrapper.GL.glDeleteVertexArrays;
+import static apiWrapper.OpenGL.GL_ARRAY_BUFFER;
+import static apiWrapper.OpenGL.GL_DYNAMIC_DRAW;
+import static apiWrapper.OpenGL.GL_FLOAT;
+import static apiWrapper.OpenGL.GL_POINTS;
+import static apiWrapper.OpenGL.GL_R8;
+import static apiWrapper.OpenGL.GL_RED;
+import static apiWrapper.OpenGL.GL_R16;
+import static apiWrapper.OpenGL.GL_R16F;
+import static apiWrapper.OpenGL.GL_R32F;
+import static apiWrapper.OpenGL.GL_RG;
+import static apiWrapper.OpenGL.GL_RG8;
+import static apiWrapper.OpenGL.GL_RGB;
+import static apiWrapper.OpenGL.GL_RGB8;
+import static apiWrapper.OpenGL.GL_RGBA;
+import static apiWrapper.OpenGL.GL_RGBA8;
+import static apiWrapper.OpenGL.GL_SHORT;
+import static apiWrapper.OpenGL.GL_STATIC_DRAW;
+import static apiWrapper.OpenGL.GL_TEXTURE_1D;
+import static apiWrapper.OpenGL.GL_TEXTURE_2D;
+import static apiWrapper.OpenGL.GL_TEXTURE_2D_ARRAY;
+import static apiWrapper.OpenGL.GL_UNSIGNED_BYTE;
+import static apiWrapper.OpenGL.GL_UNSIGNED_INT;
+import static apiWrapper.OpenGL.glFinish;
+import static apiWrapper.OpenGL.glBindBuffer;
+import static apiWrapper.OpenGL.glBindTexture;
+import static apiWrapper.OpenGL.glBindVertexArray;
+import static apiWrapper.OpenGL.glBufferData;
+import static apiWrapper.OpenGL.glDrawArrays;
+import static apiWrapper.OpenGL.glDrawElements;
+import static apiWrapper.OpenGL.glEnable;
+import static apiWrapper.OpenGL.glEnableVertexAttribArray;
+import static apiWrapper.OpenGL.glGenBuffers;
+import static apiWrapper.OpenGL.glGenVertexArrays;
+import static apiWrapper.OpenGL.glGenerateMipmap;
+import static apiWrapper.OpenGL.glGetUniformLocation;
+import static apiWrapper.OpenGL.glTexImage1D;
+import static apiWrapper.OpenGL.glTexImage2D;
+import static apiWrapper.OpenGL.glTexImage3D;
+import static apiWrapper.OpenGL.glTexSubImage3D;
+import static apiWrapper.OpenGL.glUniform1f;
+import static apiWrapper.OpenGL.glUniform3f;
+import static apiWrapper.OpenGL.glVertexAttribPointer;
+import static apiWrapper.OpenGL.glDeleteFramebuffers;
+import static apiWrapper.OpenGL.glDeleteRenderbuffers;
+import static apiWrapper.OpenGL.glDeleteBuffers;
+import static apiWrapper.OpenGL.glDeleteVertexArrays;
 import static apiWrapper.OpenCL.CL_MEM_COPY_HOST_PTR;
 import static apiWrapper.OpenCL.CL_MEM_READ_ONLY;
 import static apiWrapper.OpenCL.CL_MEM_READ_WRITE;
@@ -113,7 +113,8 @@ public class Rainstreaks
     private static final int FOGTEX_UNIT 		= 8;
     
     private static final int NUM_RAIN_TEXTURES = 370;
-    private static final int NUM_FOG_TEXTURES = 8;
+    private static final int NUM_FOG_TEXTURES = 256;
+    private static final int NUM_FOG_SPRITES = 2;
     
     //OpenCL pointer
     private static CLContext context;
@@ -191,9 +192,9 @@ public class Rainstreaks
         this.orb = orb;
         this.sun = sun;
         //range of cylinder around cam
-        clusterScale = 15.0f;
+        clusterScale = 30.0f;
         //velocity factor
-        veloFactor = 100.0f;
+        veloFactor = 250.0f;
         
         this.gws.put(0, maxParticles);
         
@@ -335,14 +336,14 @@ public class Rainstreaks
                 posBuffer.put(1.f);
                 
                 //add spawning velocity (small random velocity in x- and z-direction for variety and AA 
-                veloBuffer.put(veloFactor*(r.nextFloat() / 20.f));
+                veloBuffer.put(veloFactor*(r.nextFloat() / 100.f));
                 veloBuffer.put(veloFactor*((r.nextFloat() + 0.75f) / 20.f));
-                veloBuffer.put(veloFactor*(r.nextFloat() / 20.f));
+                veloBuffer.put(veloFactor*(r.nextFloat() / 100.f));
                 //add random number in w coordinate, used to light up random streaks
                 float tmpR = r.nextFloat();
-                if (tmpR > 0.75f)
+                if (tmpR > 0.9f)
                 {
-                    veloBuffer.put(1.f + tmpR);
+                    veloBuffer.put(1.f + (1.f - tmpR*0.1f));
                 }
                 else
                 {
@@ -405,19 +406,19 @@ public class Rainstreaks
      */
     private void createFogData()
     {
-    	fogDataBuffer = BufferUtils.createFloatBuffer(8);
-    	for (int i = 0; i < 2; i++)
+    	fogDataBuffer = BufferUtils.createFloatBuffer(4*NUM_FOG_SPRITES);
+    	for (int i = 0; i < NUM_FOG_SPRITES; i++)
     	{
-    		fogDataBuffer.put(0.f);
-    		fogDataBuffer.put(0.f);
-    		fogDataBuffer.put(0.f);
+    		fogDataBuffer.put(10.f + i*20);
+    		fogDataBuffer.put(20.f);
+    		fogDataBuffer.put(10.f - i*1000);
     		//random texture out of 8
     		fogDataBuffer.put(r.nextInt(NUM_FOG_TEXTURES));
 		}
     	fogDataBuffer.rewind();
     	
         //load the 8 fog textures into a texture array
-        ImageContents content = Util.loadImage("media/fogTex/fog000.png");       
+        ImageContents content = Util.loadImage("media/fogTex/Smoke0000.bmp");       
         fogTex = new Texture(GL_TEXTURE_2D_ARRAY, FOGTEX_UNIT);
         fogTex.bind();
         glTexImage3D(   GL_TEXTURE_2D_ARRAY,
@@ -427,14 +428,14 @@ public class Rainstreaks
                         content.height,
                         NUM_FOG_TEXTURES,
                         0,
-                        GL_RGB,
+                        GL_RED,
                         GL_FLOAT,
                         null);
 
         for (int i = 0; i < NUM_FOG_TEXTURES; i++)
         {
-            DecimalFormat df = new DecimalFormat( "000" );
-            content = Util.loadImage("media/fogTex/fog" + df.format(i) + ".png");
+            DecimalFormat df = new DecimalFormat( "0000" );
+            content = Util.loadImage("media/fogTex/Smoke" + df.format(i) + ".bmp");
             glTexSubImage3D(GL_TEXTURE_2D_ARRAY,
                             0,
                             0,
@@ -443,14 +444,33 @@ public class Rainstreaks
                             content.width,
                             content.height,
                             1,
-                            GL_RGB,
+                            GL_RED,
                             GL_FLOAT,
                             content.data);
         }
         glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
+        
+        createFogGL();
     }
     
+    /**
+     * Create GL buffer for fog and share with OpenCL.
+     */
+    private static void createFogGL()
+    {
+        //create OpenGL -CL buffer for fog
+        vertArrayFogID = glGenVertexArrays();
+        glBindVertexArray(vertArrayFogID);
+        vertBufferFogID = glGenBuffers();
+        
+        glBindBuffer(GL_ARRAY_BUFFER, vertBufferFogID);
+        glBufferData(GL_ARRAY_BUFFER, fogDataBuffer, GL_DYNAMIC_DRAW);
 
+        glEnableVertexAttribArray(ShaderProgram.ATTR_POS);
+        glVertexAttribPointer(ShaderProgram.ATTR_POS, 4, GL_FLOAT, false, 16,  0);
+        memFogPos = clCreateFromGLBuffer(context, CL_MEM_READ_WRITE, vertBufferFogID);
+    }
+    
     /**
      * Creates all significant OpenCL buffers.
      */
@@ -478,18 +498,6 @@ public class Rainstreaks
         memRainPos = clCreateFromGLBuffer(context, CL_MEM_READ_WRITE, vertBufferID);
         memSeed  = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, seedBuffer); 
         memVelos = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, veloBuffer);
-
-        //create OpenGL -CL buffer for fog
-        vertArrayFogID = glGenVertexArrays();
-        glBindVertexArray(vertArrayFogID);
-        vertBufferFogID = glGenBuffers();
-        
-        glBindBuffer(GL_ARRAY_BUFFER, vertBufferFogID);
-        glBufferData(GL_ARRAY_BUFFER, fogDataBuffer, GL_DYNAMIC_DRAW);
-
-        glEnableVertexAttribArray(ShaderProgram.ATTR_POS);
-        glVertexAttribPointer(ShaderProgram.ATTR_POS, 4, GL_FLOAT, false, 16,  0);
-        memFogPos = clCreateFromGLBuffer(context, CL_MEM_READ_WRITE, vertBufferFogID);
         
         loadTexturesCL();
         createKernels();
@@ -550,11 +558,12 @@ public class Rainstreaks
         kernelMoveStreaks.setArg( 9, 0.f);
         kernelMoveStreaks.setArg(10, 0.f);
         
+        //TODO: Fog kernel with wind direction
         kernelMoveFog = clCreateKernel(program, "fogSim");
         kernelMoveFog.setArg(0, memFogPos);
-        kernelMoveFog.setArg(1, 0.0f);
-        kernelMoveFog.setArg(2, 0.0f);
-        kernelMoveFog.setArg(3, 0.0f);
+        kernelMoveFog.setArg(1, 0.f);
+        kernelMoveFog.setArg(2, 0.f);
+        kernelMoveFog.setArg(3, 0.f);
     }
     
     /**
@@ -577,7 +586,10 @@ public class Rainstreaks
         kernelMoveStreaks.setArg( 9, windDir[windPtr].x);
         kernelMoveStreaks.setArg(10, windDir[windPtr].z);
         clEnqueueNDRangeKernel(queue, kernelMoveStreaks, 1, null, gws, null, null, null);  
-        gws.put(0, 2);
+        gws.put(0, NUM_FOG_SPRITES);
+        kernelMoveFog.setArg(1, dt);
+        kernelMoveFog.setArg(2, windDir[windPtr].x);
+        kernelMoveFog.setArg(3, windDir[windPtr].z);
         clEnqueueNDRangeKernel(queue, kernelMoveFog, 1, null, gws, null, null, null);
         gws.put(0, maxParticles);        
         
@@ -645,18 +657,25 @@ public class Rainstreaks
     /**
      * Draw fog sprites.
      */
-    public void drawFog()
+    public void drawFog(Camera cam)
     {
         //render fog
         fogRenderSP.use();
         
-        fogRenderSP.setUniform("viewProj", viewProj);
+    	eyePos = new Vector3f(cam.getCamPos().x, cam.getCamPos().y, cam.getCamPos().z);
+    	
+//        Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);
+//        fogRenderSP.setUniform("viewProj", viewProj);
+        
+    	fogRenderSP.setUniform("view", cam.getView());
+    	fogRenderSP.setUniform("proj", cam.getProjection());
+    	
         fogRenderSP.setUniform("eyePosition", eyePos);
         fogRenderSP.setUniform("fogTex", fogTex);
         fogRenderSP.setUniform("texArrayID", r.nextInt(8));
         
         glBindVertexArray(vertArrayFogID);
-        glDrawArrays(GL_POINTS, 0, 2);
+        glDrawArrays(GL_POINTS, 0, NUM_FOG_SPRITES);
     }
     
     /**

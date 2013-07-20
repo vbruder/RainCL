@@ -38,6 +38,7 @@ kernel void rainSim	(
     uint myId = get_global_id(0);
     
     float4 myPos = position[myId].s0123;
+    float3 myVelos = velos[myId].xyz;
 		
 	float2 tc = (float2)(0.5f, 0.5f) + myPos.xz;
 	float4 height = heightScale * read_imagef(heightmap, sampler, (float2)(1-tc.x, tc.y));
@@ -52,9 +53,9 @@ kernel void rainSim	(
         myPos.y += 1.f;
 	}
 
-    myPos.x += windDirX 	* dt;
-    myPos.y -= velos[myId].y* dt;
-    myPos.z += windDirZ 	* dt;
+    myPos.x += (windDirX + myVelos.x) * dt;
+    myPos.y -= 			   myVelos.y  * dt;
+    myPos.z += (windDirZ + myVelos.z) * dt;
     
     position[myId].s0123 = myPos;
 }
@@ -70,6 +71,15 @@ kernel void fogSim  (
 						const float windDirZ
 					)
 {
-	uint myID = get_global_id(0);
-	position[myID].z -= 0.001;
+	uint myId = get_global_id(0);
+	
+	float4 myPos = position[myId].xyzw;
+	myPos.z += dt * 50;
+
+	if ( fabs(fmod(myPos.z, 0.3f)) < 0.1 )
+		myPos.w = myPos.w < 255 ? myPos.w + 1.0 : 0.0;
+	
+	//myPos.xz += 0.1 * (float2)(windDirX, windDirZ);
+	
+	position[myId].xzw = myPos.z > 1000 ? (float3) (10, -1000, myPos.w) : myPos.xzw;
 }

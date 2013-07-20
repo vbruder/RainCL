@@ -4,7 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
- 
+
+/**
+ * @author Valentin Bruder
+ */
 public class TimerCaller implements Runnable
 {
     private boolean terminate;

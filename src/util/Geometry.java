@@ -1,6 +1,6 @@
 package util;
 
-import static apiWrapper.GL.*;
+import static apiWrapper.OpenGL.*;
 
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
@@ -13,7 +13,7 @@ import org.lwjgl.opengl.GL33;
 
 
 /**
- * Kapselt ein Vertexarray Object.
+ * Class for vertex array objects.
  * @author Sascha Kolodzey, Nico Marniok
  */
 public class Geometry {

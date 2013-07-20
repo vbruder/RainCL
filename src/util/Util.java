@@ -1,6 +1,6 @@
 package util;
 
-import static apiWrapper.GL.*;
+import static apiWrapper.OpenGL.*;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
@@ -21,7 +21,7 @@ import org.lwjgl.util.vector.Vector2f;
 import org.lwjgl.util.vector.Vector3f;
 import org.lwjgl.util.vector.Vector4f;
 
-import apiWrapper.GL;
+import apiWrapper.OpenGL;
 
 /**
  *
@@ -29,7 +29,7 @@ import apiWrapper.GL;
  */
 public class Util {
     /**
-     * FloatBuffer, der gross genug fuer eine 4x4 Matrix ist.
+     * FloatBuffer for 4x4 matrix.
      */
     public static final FloatBuffer MAT_BUFFER = BufferUtils.createFloatBuffer(16);
     
@@ -54,7 +54,7 @@ public class Util {
     public static final float PI_MUL2 = 2.0f * (float)Math.PI;
     
     /**
-     * Temporaere Matrix fuer einige Methoden.
+     * Temporary matrix
      */
     private static final Matrix4f TEMP = new Matrix4f();
     

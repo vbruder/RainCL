@@ -4,35 +4,41 @@ import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
 
 /**
- *
- * @author nico3000
+ * Class representing a camera.
+ * @author Valentin Bruder
  */
-public final class Camera {
+public final class Camera
+{
     private float phi = 0, theta = 0;
+    
     private final Vector3f viewDir = new Vector3f(0,0,1);
     private final Vector3f upDir = new Vector3f(0,1,0);
     private final Vector3f sideDir = new Vector3f(1,0,0);
     private final Vector3f camPos = new Vector3f(0,0,-1);
+    
     private final Matrix4f view = new Matrix4f();
     private final Matrix4f projection = new Matrix4f();
-    private boolean perspective = true;
-
+    
+    // near and far plane
     private float near = 1e-2f;
     private float far = 1e3f;
+    
     /**
-     * Default Constructor.
+     * Default constructor.
      */
-    public Camera() {
+    public Camera()
+    {
         this.updateView();
         this.updateProjection();
     }
     
     /**
-     * Rotiert die Kamera horizontal und vertikal.
-     * @param dPhi horizontale Rotation
-     * @param dTheta vertikale Rotation
+     * Rotates horizontal and vertical.
+     * @param dPhi horizontal rotation
+     * @param dTheta vertical rotation
      */
-    public void rotate(float dPhi, float dTheta) {
+    public void rotate(float dPhi, float dTheta)
+    {
         phi += dPhi;
         theta = Util.clamp(theta + dTheta, -Util.PI_DIV2, +Util.PI_DIV2);
         
@@ -45,62 +51,58 @@ public final class Camera {
     }
     
     /**
-     * Bewegt die Kamera.
-     * @param fb Bewegung in Sichtrichtung
-     * @param lr Bewegung in seitliche Richtung
-     * @param ud Bewegung nach oben/unten
+     * Moves the camera.
+     * @param fb Move in view direction.
+     * @param lr Move in side direction.
+     * @param ud Move up or down.
      */
-    public void move(float fb, float lr, float ud) {
+    public void move(float fb, float lr, float ud)
+    {
         camPos.x += fb * viewDir.x + lr * sideDir.x;
         camPos.y += fb * viewDir.y + lr * sideDir.y + ud;
         camPos.z += fb * viewDir.z + lr * sideDir.z;
     }
     
     /**
-     * Aktualisiert die Viewmatrix.
+     * Update the view matrix.
      */
-    public void updateView() {
+    public void updateView()
+    {
         Vector3f lookAt = Vector3f.add(camPos, viewDir, null);
         Util.lookAtRH(camPos, lookAt, upDir, view);
     }
     
     /**
-     * Aktualisiert die Projektionsmatrix.
+     * Update the projection matrix.
      */
-    public void updateProjection() {
-        if(perspective) {
-            Util.frustum(-1e-2f, 1e-2f, -1e-2f, 1e-2f, near, far, projection);
-        } else {
-            Util.ortho(-1.0f, 1.0f, -1.0f, 1.0f, 1e-2f, 1e+2f, projection);
-        }
-    }
-    
-    /**
-     * Aendert die Projektion (perspektivisch vs. parellel).
-     */
-    public void changeProjection() {
-        perspective ^= true;
+    public void updateProjection()
+    {
+    	Util.frustum(-1e-2f, 1e-2f, -1e-2f, 1e-2f, near, far, projection);
     }
 
     /**
-     * Getter fuer die Projektionsmatrix.
-     * @return Projektionsmatrix
+     * @return the projection matrix
      */
-    public Matrix4f getProjection() {
+    public Matrix4f getProjection()
+    {
         this.updateProjection();
         return projection;
     }
 
     /**
-     * Getter fuer die Viewmatrix.
-     * @return Viewmatrix
+     * @return the view matrix
      */
-    public Matrix4f getView() {
+    public Matrix4f getView()
+    {
         this.updateView();
         return view;
     }
 
-    public Vector3f getCamPos() {
+    /**
+     * @return the camera position
+     */
+    public Vector3f getCamPos()
+    {
         return camPos;
     }
     
