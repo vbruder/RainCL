@@ -172,11 +172,7 @@ vec4 rainResponse(vec3 lightVec, vec3 lightColor, float lightIntensity, bool fal
 void main(void)
 {
     //sun (directional) lighting
-<<<<<<< HEAD
     vec4 sunLight = rainResponse(sunDir, sunColor, sunIntensity * randEnlight, false);
-=======
-    vec4 sunLight = rainResponse(sunDir, sunColor, sunIntensity*randEnlight* 0.25, false);
->>>>>>> 37a0894132cf0d04fd58c3699773e444f674c8c4
 
     //TODO: point lighting
     vec4 pointLight = vec4(0,0,0,0); 

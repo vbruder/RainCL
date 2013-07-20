@@ -344,7 +344,6 @@ public class Settings extends JDialog implements TimerListener
                         if (e.getStateChange() == 1)
                         	terrain = true;
                         else
-<<<<<<< HEAD
                         	terrain = false;
                         main.Main.setDrawTerrain(terrain);
                     }
@@ -380,12 +379,6 @@ public class Settings extends JDialog implements TimerListener
                 		main.Main.setAudio(sound);
                 	}
                 });
-=======
-                            sound = false;
-                        main.Main.setAudio(sound);
-                    }
-                });
->>>>>>> 37a0894132cf0d04fd58c3699773e444f674c8c4
                 cbxSound.setSelected(main.Main.isAudio());
             }
             
@@ -590,10 +583,6 @@ public class Settings extends JDialog implements TimerListener
     public void updateTex()
     {
         txtFPS.setText( NumberFormat.getInstance().format(Main.getFPS()) );
-<<<<<<< HEAD
-=======
-        //TODO: add sph particles
->>>>>>> 37a0894132cf0d04fd58c3699773e444f674c8c4
         txtParticles.setText( NumberFormat.getInstance().format(Rainstreaks.getMaxParticles()) );
     }
     

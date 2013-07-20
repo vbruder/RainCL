@@ -276,10 +276,6 @@ public class Main {
 	            floorQuad.draw();
             }
             
-<<<<<<< HEAD:src/main/Main.java
-=======
-	            
->>>>>>> 37a0894132cf0d04fd58c3699773e444f674c8c4:src/main/Main.java
             //TODO: sun cube
             
             //TODO: clouds
@@ -315,23 +311,15 @@ public class Main {
 	            terrainSP.setUniform("fogThickness", fogThickness);
 	            terrain.draw();
             }
-<<<<<<< HEAD:src/main/Main.java
             
-=======
->>>>>>> 37a0894132cf0d04fd58c3699773e444f674c8c4:src/main/Main.java
             if (drawFog)
             {
             	glBlendFunc(GL_ONE_MINUS_SRC_ALPHA, GL_ONE);
             	glEnable(GL_BLEND);
-<<<<<<< HEAD:src/main/Main.java
             	glDisable(GL_DEPTH_TEST);
             	raindrops.drawFog(cam);
             	glDisable(GL_BLEND);
             	glEnable(GL_DEPTH_TEST);
-=======
-            	raindrops.drawFog(cam);
-            	glDisable(GL_BLEND);
->>>>>>> 37a0894132cf0d04fd58c3699773e444f674c8c4:src/main/Main.java
             }
 	            
             //water map
@@ -410,12 +398,8 @@ public class Main {
                     case Keyboard.KEY_F2: setDrawTerrain(!isDrawTerrain()); break;
                     case Keyboard.KEY_F3: setDrawSky(!isDrawSky()); break;
                     case Keyboard.KEY_F4: setDrawFog(!isDrawFog()); break;
-<<<<<<< HEAD:src/main/Main.java
                     case Keyboard.KEY_F5: setDrawWater(!isDrawWater()); break;
                     case Keyboard.KEY_F6: setPoints(!isPoints()); break;
-=======
-                    case Keyboard.KEY_F5: setPoints(!isPoints()); break;
->>>>>>> 37a0894132cf0d04fd58c3699773e444f674c8c4:src/main/Main.java
                     case Keyboard.KEY_UP: break;
                     case Keyboard.KEY_DOWN: break;
                     case Keyboard.KEY_M:
@@ -531,7 +515,6 @@ public class Main {
 	 */
 	public static void setDrawTerrain(boolean drawTerrain) {
 		Main.drawTerrain = drawTerrain;
-<<<<<<< HEAD:src/main/Main.java
 	}
 	
 	/**
@@ -572,32 +555,6 @@ public class Main {
 	public static void setDrawWater(boolean drawWater)
 	{
 		Main.drawWater = drawWater;
-=======
-	}
-	
-	/**
-	 * @return the drawSky
-	 */
-	public static boolean isDrawSky()
-	{
-		return drawSky;
-	}
-
-	/**
-	 * @param drawSky the drawSky to set
-	 */
-	public static void setDrawSky(boolean drawSky)
-	{
-		Main.drawSky = drawSky;
-	}
-
-	/**
-	 * @return the drawFog
-	 */
-	public static boolean isDrawFog()
-	{
-		return drawFog;
->>>>>>> 37a0894132cf0d04fd58c3699773e444f674c8c4:src/main/Main.java
 	}
 
 	/**

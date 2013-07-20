@@ -194,11 +194,7 @@ public class Rainstreaks
         //range of cylinder around cam
         clusterScale = 30.0f;
         //velocity factor
-<<<<<<< HEAD
         veloFactor = 250.0f;
-=======
-        veloFactor = 200.0f;
->>>>>>> 37a0894132cf0d04fd58c3699773e444f674c8c4
         
         this.gws.put(0, maxParticles);
         
@@ -410,21 +406,12 @@ public class Rainstreaks
      */
     private void createFogData()
     {
-<<<<<<< HEAD
     	fogDataBuffer = BufferUtils.createFloatBuffer(4*NUM_FOG_SPRITES);
     	for (int i = 0; i < NUM_FOG_SPRITES; i++)
     	{
     		fogDataBuffer.put(10.f + i*20);
     		fogDataBuffer.put(20.f);
     		fogDataBuffer.put(10.f - i*1000);
-=======
-    	fogDataBuffer = BufferUtils.createFloatBuffer(4*4);
-    	for (int i = 0; i < 4; i++)
-    	{
-    		fogDataBuffer.put(r.nextFloat()*100);
-    		fogDataBuffer.put(10.f);
-    		fogDataBuffer.put(r.nextFloat()*100);
->>>>>>> 37a0894132cf0d04fd58c3699773e444f674c8c4
     		//random texture out of 8
     		fogDataBuffer.put(r.nextInt(NUM_FOG_TEXTURES));
 		}
@@ -577,12 +564,6 @@ public class Rainstreaks
         kernelMoveFog.setArg(1, 0.f);
         kernelMoveFog.setArg(2, 0.f);
         kernelMoveFog.setArg(3, 0.f);
-<<<<<<< HEAD
-=======
-        kernelMoveFog.setArg(4, 0.f);
-        kernelMoveFog.setArg(5, 0.f);
-        kernelMoveFog.setArg(6, 0.f);
->>>>>>> 37a0894132cf0d04fd58c3699773e444f674c8c4
     }
     
     /**
@@ -605,20 +586,10 @@ public class Rainstreaks
         kernelMoveStreaks.setArg( 9, windDir[windPtr].x);
         kernelMoveStreaks.setArg(10, windDir[windPtr].z);
         clEnqueueNDRangeKernel(queue, kernelMoveStreaks, 1, null, gws, null, null, null);  
-<<<<<<< HEAD
         gws.put(0, NUM_FOG_SPRITES);
         kernelMoveFog.setArg(1, dt);
         kernelMoveFog.setArg(2, windDir[windPtr].x);
         kernelMoveFog.setArg(3, windDir[windPtr].z);
-=======
-        gws.put(0, 4);
-        kernelMoveFog.setArg(1, dt);
-        kernelMoveFog.setArg(2, eyePos.x);
-        kernelMoveFog.setArg(3, eyePos.y);
-        kernelMoveFog.setArg(4, eyePos.z);
-        kernelMoveFog.setArg(5, windDir[windPtr].x);
-        kernelMoveFog.setArg(6, windDir[windPtr].z);
->>>>>>> 37a0894132cf0d04fd58c3699773e444f674c8c4
         clEnqueueNDRangeKernel(queue, kernelMoveFog, 1, null, gws, null, null, null);
         gws.put(0, maxParticles);        
         
@@ -692,7 +663,6 @@ public class Rainstreaks
         fogRenderSP.use();
         
     	eyePos = new Vector3f(cam.getCamPos().x, cam.getCamPos().y, cam.getCamPos().z);
-<<<<<<< HEAD
     	
 //        Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);
 //        fogRenderSP.setUniform("viewProj", viewProj);
@@ -700,10 +670,6 @@ public class Rainstreaks
     	fogRenderSP.setUniform("view", cam.getView());
     	fogRenderSP.setUniform("proj", cam.getProjection());
     	
-=======
-        Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);
-        fogRenderSP.setUniform("viewProj", viewProj);
->>>>>>> 37a0894132cf0d04fd58c3699773e444f674c8c4
         fogRenderSP.setUniform("eyePosition", eyePos);
         fogRenderSP.setUniform("fogTex", fogTex);
         fogRenderSP.setUniform("texArrayID", r.nextInt(8));
