@@ -67,12 +67,16 @@ kernel void rainSim	(
 kernel void fogSim  (
 						global float4* position,
 						const float dt,
+						const float eyePosX,
+					    const float eyePosY,
+					    const float eyePosZ,
 						const float windDirX,
 						const float windDirZ
 					)
 {
 	uint myId = get_global_id(0);
 	
+<<<<<<< HEAD
 	float4 myPos = position[myId].xyzw;
 	myPos.z += dt * 50;
 
@@ -82,4 +86,13 @@ kernel void fogSim  (
 	//myPos.xz += 0.1 * (float2)(windDirX, windDirZ);
 	
 	position[myId].xzw = myPos.z > 1000 ? (float3) (10, -1000, myPos.w) : myPos.xzw;
+=======
+	float3 myPos = position[myId].xyz;
+	float3 toCam = (float3)(eyePosX, eyePosY, eyePosZ) - myPos;
+	float3 toCamMove = normalize(toCam) * dt * 1;
+	myPos.x -= dt * 10;// toCamMove;
+	
+	//position[myId].xz = length(toCam) < 20 ? (float2) (0, 0) : myPos.xz;
+	position[myId].xz = myPos.xz;
+>>>>>>> 37a0894132cf0d04fd58c3699773e444f674c8c4
 }

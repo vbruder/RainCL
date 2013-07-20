@@ -1079,6 +1079,7 @@ public class OpenGL {
     public static void glTexParameteri(int target, int pname, int param) {
         GL11.glTexParameteri(target, pname, param);
         OpenGL.checkError("glTexParameteri");
+<<<<<<< HEAD:src/apiWrapper/OpenGL.java
     }
     
     /**
@@ -1104,6 +1105,8 @@ public class OpenGL {
     public static void glViewport(int x, int y, int width, int height) {
     	GL11.glViewport(x, y, width, height);
     	checkError("glViewport");
+=======
+>>>>>>> 37a0894132cf0d04fd58c3699773e444f674c8c4:src/apiWrapper/OpenGL.java
     }
     
     /**
@@ -1298,6 +1301,7 @@ public class OpenGL {
     public static void glDeleteRenderbuffers(int target){
         GL30.glDeleteRenderbuffers(target);
         OpenGL.checkError("glDeleteRenderbuffers");
+<<<<<<< HEAD:src/apiWrapper/OpenGL.java
     }
     
     /**
@@ -1391,6 +1395,8 @@ public class OpenGL {
     public static void glFramebufferRenderbuffer(int framebuffer, int depthAttachment, int renderbuffer, int renderBufferObjectId){
     	GL30.glFramebufferRenderbuffer(framebuffer, depthAttachment, renderbuffer, renderBufferObjectId);
     	OpenGL.checkError("glFramebufferRenderbuffer");
+=======
+>>>>>>> 37a0894132cf0d04fd58c3699773e444f674c8c4:src/apiWrapper/OpenGL.java
     }
     
     /**
@@ -1401,6 +1407,7 @@ public class OpenGL {
     public static void glDeleteFramebuffers(int target){
         GL30.glDeleteFramebuffers(target);
         OpenGL.checkError("glDeleteFramebuffers");
+<<<<<<< HEAD:src/apiWrapper/OpenGL.java
     }
     
     /**
@@ -1413,6 +1420,8 @@ public class OpenGL {
     public static void glBindFragDataLocation(int program, int colorNumber, CharSequence name) {
     	GL30.glBindFragDataLocation(program, colorNumber, name);
     	checkError("glBindFragDataLocation");
+=======
+>>>>>>> 37a0894132cf0d04fd58c3699773e444f674c8c4:src/apiWrapper/OpenGL.java
     }
     
     /**

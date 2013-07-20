@@ -24,7 +24,11 @@ out float texArrayID;
 void main(void)                                                                         
 {
     //streak size
+<<<<<<< HEAD
     float height = 0.25;
+=======
+    float height = 0.2;
+>>>>>>> 37a0894132cf0d04fd58c3699773e444f674c8c4
     float width = height/50.0;
                                                                                  
     vec3 pos = gl_in[0].gl_Position.xyz;                                            
