@@ -34,7 +34,7 @@ void main(void)
     posWC.xyz += v2 - v1;
     gl_Position = proj * posWC;
     fragmentTexCoords = vec3(1, 0, texArrayID[0]);
-    opacity *= d;
+    opacity = d;
     EmitVertex();
     
     posWC.xyz += 2.0*v1;    
