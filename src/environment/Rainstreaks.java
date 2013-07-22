@@ -74,6 +74,8 @@ import java.nio.IntBuffer;
 import java.text.DecimalFormat;
 import java.util.Random;
 
+import main.Main;
+
 import org.lwjgl.BufferUtils;
 import org.lwjgl.LWJGLException;
 import org.lwjgl.PointerBuffer;
@@ -106,11 +108,10 @@ import util.Util.ImageContents;
 public class Rainstreaks
 {
     //TODO: implement proper texture unit count
-    private static final int NORMALTEX_UNIT 	= 4;
-    private static final int HEIGHTTEX_UNIT 	= 5;
-    private static final int RAINTEX_UNIT 		= 6;
-    private static final int RAINFACTORS_UNIT 	= 7;
-    private static final int FOGTEX_UNIT 		= 8;
+    private static final int HEIGHTTEX_UNIT 	= 11;
+    private static final int RAINTEX_UNIT 		= 12;
+    private static final int RAINFACTORS_UNIT 	= 13;
+    private static final int FOGTEX_UNIT 		= 14;
     
     private static final int NUM_RAIN_TEXTURES = 370;
     private static final int NUM_FOG_TEXTURES = 256;
@@ -804,6 +805,8 @@ public class Rainstreaks
     public static void setMaxParticles(int maxParticles)
     {
        Rainstreaks.maxParticles = maxParticles;
+       Vector3f vec = new Vector3f(1.f, 1.f, 1.f);
+       Main.setFogThickness( (Vector3f) vec.scale(0.03f + getLogMaxParticles()*0.05f) );
     }
     
     /**
@@ -812,6 +815,14 @@ public class Rainstreaks
     public ShaderProgram getShaderProgram()
     {
         return this.streakRenderSP;
+    }
+    
+    /**
+     * @return the binary logarithm of the current amount of rain particles. Between 0 and 1.
+     */
+    public static float getLogMaxParticles()
+    {
+    	return ((float) Math.log( ((double) maxParticles) / Math.log(2))/ 10.f - 1.f) ;
     }
 }
 

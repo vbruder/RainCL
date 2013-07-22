@@ -77,11 +77,7 @@ kernel void fogSim  (
 	myPos.z += dt * 50;
 
 	if ( fabs(fmod(myPos.z, 0.3f)) < 0.1 )
-<<<<<<< HEAD
 		myPos.w = myPos.w < 255 ? ++myPos.w : 0;
-=======
-		myPos.w = myPos.w < 255 ? myPos.w + 1.0 : 0.0;
->>>>>>> 383a5a0c41279a8fceb17aa183f7a540671604c6
 	
 	//myPos.xz += 0.1 * (float2)(windDirX, windDirZ);
 	
