@@ -3,7 +3,9 @@
 in vec2 texCoords;
 in vec3 positionFS;
 
-out vec4 fragColor;
+out vec4 color;
+out vec4 normal;
+out vec4 position;
 
 uniform sampler2D normalTex;
 uniform sampler2D lightTex;
@@ -49,6 +51,6 @@ void main(void)
     vec3 spec   = texture(specularTex, texCoords.st).rgb;
     vec3 ambi   = texture(lightTex, texCoords.st).rgb;
 
-    fragColor = vec4(calcLighting(normal.xyz, diff, spec, ambi), 1.0);
+    color = vec4(calcLighting(normal.xyz, diff, spec, ambi), 1.0);
     //fragColor = vec4(vec3(k_diff), 1.0);
 }

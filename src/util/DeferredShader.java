@@ -4,7 +4,6 @@ import static apiWrapper.OpenGL.WIDTH;
 import static apiWrapper.OpenGL.HEIGHT;
 import static apiWrapper.OpenGL.GL_TEXTURE_2D;
 import static apiWrapper.OpenGL.GL_RGBA;
-import static apiWrapper.OpenGL.GL_RGBA8;
 import static apiWrapper.OpenGL.GL_RGBA16F;
 
 /**
@@ -28,18 +27,20 @@ public class DeferredShader
 	}
 	
 	/**
-	 * Initialize
+	 * Initialize deferred shader.
+	 * @param texture unit offset
 	 */
-	public void init()
+	public void init(int offsetTU)
 	{    	
 		frameBuffer.init(true, WIDTH, HEIGHT);            	
-		// generate textures    	
-		texPosition = 	 new Texture(GL_TEXTURE_2D, 0);    	
-		texVertexColor = new Texture(GL_TEXTURE_2D, 1);    	
-		texNormal = 	 new Texture(GL_TEXTURE_2D, 2);    	    	    	
-		frameBuffer.addTexture(texPosition, GL_RGBA16F, GL_RGBA);    	
-		frameBuffer.addTexture(texVertexColor, GL_RGBA8, GL_RGBA);    	
-		frameBuffer.addTexture(texNormal, GL_RGBA16F, GL_RGBA);    	    	
+		//generate textures    	
+		texPosition 	= new Texture(GL_TEXTURE_2D, offsetTU + 0);
+		texVertexColor 	= new Texture(GL_TEXTURE_2D, offsetTU + 1);
+		texNormal 		= new Texture(GL_TEXTURE_2D, offsetTU + 2);
+		
+		frameBuffer.addTexture(texPosition, 	GL_RGBA16F, GL_RGBA);
+		frameBuffer.addTexture(texNormal, 		GL_RGBA16F, GL_RGBA);
+		frameBuffer.addTexture(texVertexColor, 	GL_RGBA,	GL_RGBA);
 		frameBuffer.drawBuffers();
 	}
 	

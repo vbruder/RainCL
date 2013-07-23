@@ -3,7 +3,7 @@
  */
 package environment;
 
-import static apiWrapper.OpenGL.GL_ARRAY_BUFFER;
+import static apiWrapper.OpenGL.*;
 import static apiWrapper.OpenGL.GL_DYNAMIC_DRAW;
 import static apiWrapper.OpenGL.GL_STATIC_DRAW;
 import static apiWrapper.OpenGL.GL_FLOAT;
@@ -11,6 +11,7 @@ import static apiWrapper.OpenGL.GL_POINTS;
 import static apiWrapper.OpenGL.GL_R16F;
 import static apiWrapper.OpenGL.GL_RED;
 import static apiWrapper.OpenGL.GL_RGBA;
+import static apiWrapper.OpenGL.GL_BLEND;
 import static apiWrapper.OpenGL.GL_TEXTURE_2D;
 import static apiWrapper.OpenGL.GL_TRIANGLE_STRIP;
 import static apiWrapper.OpenGL.glBindBuffer;
@@ -281,7 +282,7 @@ public class Water {
         GL11.glPointSize(2f);
                
         //create water surface mesh
-        // indexbuffer
+        // index buffer
         int size = (int) Math.sqrt(terrainDim);
         IntBuffer indexData = BufferUtils.createIntBuffer((size-1)*2*size+(size-2));
         for (int y = 0; y < size-1; y++)
@@ -542,11 +543,12 @@ public class Water {
         
         Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);  
         WaterRenderSP.setUniform("viewProj", viewProj);
-        WaterRenderSP.setUniform("color", new Vector4f(0.1f, 0.1f, 0.1f, 1.0f));
+        WaterRenderSP.setUniform("color", new Vector4f(0.85f, 0.85f, 0.85f, 1.0f));
 //        WaterRenderSP.setUniform("colorTex", waterMap.getColorTex());
 		
         if (points)
         {
+        	glDisable(GL_BLEND);
         	WaterRenderSP.setUniform("color", new Vector4f(1.0f, 1.0f, 1.0f, 1.0f));
         	glBindVertexArray(vertexArray);
         	glDrawArrays(GL_POINTS, 0, (int)gws.get(0));

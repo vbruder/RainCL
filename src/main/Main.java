@@ -1,11 +1,6 @@
 package main;
 
 import static apiWrapper.OpenGL.*;
-import static apiWrapper.OpenGL.GL_BLEND;
-import static apiWrapper.OpenGL.GL_ONE;
-import static apiWrapper.OpenGL.GL_ONE_MINUS_SRC_COLOR;
-import static apiWrapper.OpenGL.GL_ONE_MINUS_DST_COLOR;
-import static apiWrapper.OpenGL.glBlendFunc;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -27,6 +22,8 @@ import environment.Sun;
 import environment.Water;
 
 import util.Camera;
+import util.DeferredShader;
+import util.FrameBuffer;
 import util.Geometry;
 import util.GeometryFactory;
 import util.ShaderProgram;
@@ -35,11 +32,10 @@ import util.Util;
 import window.Settings;
 import window.TimerCaller;
 
-/**
- ******************************   RainCL   **********************************
+/******************************   RainCL   **********************************
  * This framework simulates and renders a rain system.						*
- * It uses LWJGL (Light Weight Java Game Library), for more information	see	*
- * <http://www.lwjgl.org/>													*
+ * LWJGL (Light Weight Java Game Library) is used for OpenGL, OpenCL and 	*
+ * OpenAL access. For more information see <http://www.lwjgl.org/>.			*
  * 																			*
  * Copyright (C) 2013  Valentin Bruder <vbruder@gmail.com>					*
  *																			*
@@ -54,12 +50,15 @@ import window.TimerCaller;
  * GNU General Public License for more details.								*
  *																			*
  * You should have received a copy of the GNU General Public License		*
- * along with this program.  If not, see <http://www.gnu.org/licenses/>. 	*
- ****************************************************************************
- */
+ * along with this program. If not, see <http://www.gnu.org/licenses/>. 	*
+ ****************************************************************************/
 public class Main {
    
+	//Deferred shading
+    private static Geometry screenQuad;	
+
     // shader programs
+    private static ShaderProgram defShadingSP;
     private static ShaderProgram terrainSP;
     private static ShaderProgram orbSP;
     private static ShaderProgram skySP;
@@ -76,7 +75,7 @@ public class Main {
     private static final Vector3f moveDir = new Vector3f(0.0f, 0.0f, 0.0f);
     private static final Camera cam = new Camera(); 
     
-    // animation params
+    // animation parameters
     private static float ingameTime = 0;
     private static float ingameTimePerSecond = 1.0f;
     
@@ -127,24 +126,33 @@ public class Main {
     private static Vector3f fogThickness = new Vector3f(0.07f, 0.07f, 0.07f);
 
     /**
-     * Main method.
+     * Main method as entry point into the framework.
      * @param argv
      */
-    public static void main(String[] argv) {
-        try {
+    public static void main(String[] argv)
+    {
+        try
+        {
             init();
             OpenCL.init();
             sound = new OpenAL();
             
-            if (audio) {
+            if (audio)
+            {
                 sound.init();
             }
-                
+            
+            //OpenGL scene parameters
             glEnable(GL_CULL_FACE);
             glFrontFace(GL_CCW);
             glCullFace(GL_BACK);
             glEnable(GL_DEPTH_TEST);   
             
+            //deferred shading
+            screenQuad = GeometryFactory.createScreenQuad();
+            defShadingSP = new ShaderProgram("./shader/ScreenQuad.vsh", "./shader/CopyTexture.fsh");
+            
+            //create environment
             createTerrain();            
             createSky();
             
@@ -176,7 +184,9 @@ public class Main {
             tc.stop();
             Settings.destroyInstance();
             destroy();         
-        } catch (LWJGLException ex) {
+        }
+        catch (LWJGLException ex)
+        {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -187,7 +197,6 @@ public class Main {
      */
     private static void createRainsys() throws LWJGLException
     {
-    	
     	if (raindrops != null)
     	{
     		raindrops.destroy();
@@ -233,22 +242,34 @@ public class Main {
      * Render the scene.
      * @throws LWJGLException
      */
-    public static void render() throws LWJGLException {
-        glClearColor(0.2f, 0.2f, 0.2f, 1.0f); // background color: grey
+    public static void render() throws LWJGLException
+    {
+    	//background color
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        
+        DeferredShader defShader = new DeferredShader();
+        defShader.init(0);
+        defShader.registerShaderProgram(defShadingSP);
+        
+        FrameBuffer fbo = new FrameBuffer();
+        fbo.init(true, WIDTH, HEIGHT);
         
         long last = System.currentTimeMillis();
         long now, millis;
         long frameTimeDelta = 0;
         int frames = 0;
        
-        while(bContinue && !Display.isCloseRequested()) {
+        // render loop
+        while(bContinue && !Display.isCloseRequested())
+        {
             // time handling
             now = System.currentTimeMillis();
             millis = now - last;
             last = now;     
             frameTimeDelta += millis;
             ++frames;
-            if(frameTimeDelta > 1000) {
+            if(frameTimeDelta > 1000)
+            {
                 fps = 1e3f * (float)frames / (float)frameTimeDelta;
                 frameTimeDelta -= 1000;
                 frames = 0;
@@ -260,7 +281,13 @@ public class Main {
             // clear screen
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             
-            orb.bindLightInformationToShader(raindrops.getShaderProgram().getID());
+            // enable deferred shading
+            defShader.bind();
+            defShader.clear();
+            
+            fbo.bind();
+            
+            //orb.bindLightInformationToShader(raindrops.getShaderProgram().getID());
             
             //sky dome
             if (drawSky)
@@ -278,7 +305,7 @@ public class Main {
             
             //TODO: sun cube
             
-            //TODO: clouds
+            //TODO: clouds?
             if (drawClouds)
             {
             	glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
@@ -326,7 +353,7 @@ public class Main {
             //TODO: Draw water on terrain
             if (drawWater)
             {
-            	glBlendFunc(GL_ONE, GL_ONE);
+            	glBlendFunc(GL_DST_COLOR, GL_ZERO);
             	glEnable(GL_BLEND);
             	watermap.draw(cam, points);
             	glDisable(GL_BLEND);
@@ -347,13 +374,22 @@ public class Main {
 //            Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);  
 //            orbSP.setUniform("viewProj", viewProj);
 //            orb.draw(orbSP.getID());
-                  
+            
+            defShadingSP.use();
+            screenQuad.draw();
+            
+            fbo.unbind();
+            
+            defShader.finish();
+            defShader.DrawTexture(fbo.getTexture(0));
+            
             // present screen
             Display.update();
             Display.sync(60);
         }
         terrainSP.delete();
         raindrops.getShaderProgram().delete();
+        defShader.delete();
     }
     
     /**
@@ -361,13 +397,17 @@ public class Main {
      * @param millis milliseconds, passed since last update
      * @throws LWJGLException 
      */
-    public static void handleInput(long millis) throws LWJGLException {
+    public static void handleInput(long millis) throws LWJGLException
+    {
         float moveSpeed = 2e-3f*(Keyboard.isKeyDown(Keyboard.KEY_LSHIFT) ? 5.0f : 1.0f)*(float)millis;
         float camSpeed = 5e-3f;
         
-        while(Keyboard.next()) {
-            if(Keyboard.getEventKeyState()) {
-                switch(Keyboard.getEventKey()) {
+        while(Keyboard.next())
+        {
+            if(Keyboard.getEventKeyState())
+            {
+                switch(Keyboard.getEventKey())
+                {
                     case Keyboard.KEY_W: moveDir.z += 1.0f; break;
                     case Keyboard.KEY_S: moveDir.z -= 1.0f; break;
                     case Keyboard.KEY_A: moveDir.x += 1.0f; break;
@@ -386,8 +426,11 @@ public class Main {
                     case Keyboard.KEY_NUMPAD6 : Rainstreaks.setWindForce(Rainstreaks.getWindForce() + 1.0f); break;
                     case Keyboard.KEY_NUMPAD4 : Rainstreaks.setWindForce(Rainstreaks.getWindForce() - 1.0f); break;
                 }
-            } else {
-                switch(Keyboard.getEventKey()) {
+            }
+            else
+            {
+                switch(Keyboard.getEventKey())
+                {
                     case Keyboard.KEY_W: moveDir.z -= 1.0f; break;
                     case Keyboard.KEY_S: moveDir.z += 1.0f; break;
                     case Keyboard.KEY_A: moveDir.x -= 1.0f; break;
@@ -415,20 +458,22 @@ public class Main {
         
         cam.move(moveSpeed * moveDir.z, moveSpeed * moveDir.x, moveSpeed * moveDir.y);
         
-        while(Mouse.next()) {
-            if(Mouse.getEventButton() == 0) {
+        while(Mouse.next())
+        {
+            if(Mouse.getEventButton() == 0)
+            {
                 Mouse.setGrabbed(Mouse.getEventButtonState());
             }
-            if(Mouse.isGrabbed()) {
+            if(Mouse.isGrabbed())
+            {
                 cam.rotate(-camSpeed*Mouse.getEventDX(), -camSpeed*Mouse.getEventDY());
             }
         }
-
         Matrix4f.mul(cam.getProjection(), cam.getView(), viewProjMatrix);        
     }
     
     /**
-     * updates all moving particles
+     * Update all moving particles.
      * @param millis milliseconds, passed since last update
      */
     private static void animate(long millis)
@@ -444,6 +489,8 @@ public class Main {
         watermap.updateSimulation(millis);
         orb.animate(millis);
     }
+    
+    //Getters and setters
     
     /**
      * @return true if audio

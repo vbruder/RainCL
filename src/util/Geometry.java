@@ -166,7 +166,7 @@ public class Geometry {
     
     /**
      * Erzeugt die Geometrie, falls noch nicht geschehen und zeichnet sie
-     * anschließend.
+     * anschliessend.
      */
     public void draw() {
         if(vaid == -1) {

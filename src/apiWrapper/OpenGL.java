@@ -114,6 +114,11 @@ public class OpenGL {
     public static final int GL_COLOR_ATTACHMENT0 = GL30.GL_COLOR_ATTACHMENT0;
     
     /**
+     * GL30.GL_COLOR
+     */
+    public static final int GL_COLOR = GL11.GL_COLOR;
+    
+    /**
      * GL11.GL_CULL_FACE
      */
     public static final int GL_CULL_FACE = GL11.GL_CULL_FACE;
@@ -244,6 +249,11 @@ public class OpenGL {
     public static final int GL_ONE_MINUS_CONSTANT_COLOR = GL11.GL_ONE_MINUS_CONSTANT_COLOR;
     
     /**
+     * GL11.GL_SRC_COLOR
+     */
+    public static final int GL_SRC_COLOR = GL11.GL_SRC_COLOR;
+    
+    /**
      * GL11.GL_ONE_MINUS_DST_ALPHA
      */
     public static final int GL_ONE_MINUS_DST_ALPHA = GL11.GL_ONE_MINUS_DST_ALPHA;
@@ -262,6 +272,11 @@ public class OpenGL {
      * GL11.GL_ONE_MINUS_SRC_COLOR
      */
     public static final int GL_ONE_MINUS_SRC_COLOR = GL11.GL_ONE_MINUS_SRC_COLOR;
+    
+    /**
+     * GL11.GL_DST_COLOR
+     */
+    public static final int GL_DST_COLOR = GL11.GL_DST_COLOR;
     
     /**
      * GL11.GL_SRC_ALPHA
@@ -916,6 +931,17 @@ public class OpenGL {
     public static void glDrawBuffers(java.nio.IntBuffer buffers) {
     	GL20.glDrawBuffers(buffers);
     	checkError("glDrawBuffers");
+    }
+    
+    /**
+     * OpenGL 3.0
+     * @param buffer
+     * @param drawbuffer
+     * @param value
+     */
+    public static void glClearBuffer(int buffer, int drawbuffer, FloatBuffer value) {
+    	GL30.glClearBuffer(buffer, drawbuffer, value);
+    	checkError("glClearBuffer");
     }
     
     /**

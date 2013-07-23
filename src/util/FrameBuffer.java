@@ -23,6 +23,7 @@ import static apiWrapper.OpenGL.glFramebufferTexture2D;
 import static apiWrapper.OpenGL.glCheckFramebufferStatus;
 import static apiWrapper.OpenGL.glBindFragDataLocation;
 import static apiWrapper.OpenGL.glDrawBuffers;
+import static apiWrapper.OpenGL.glClearBuffer;
 import static apiWrapper.OpenGL.GL_RENDERBUFFER;
 import static apiWrapper.OpenGL.GL_DEPTH_COMPONENT32F;
 import static apiWrapper.OpenGL.GL_FLOAT;
@@ -30,6 +31,7 @@ import static apiWrapper.OpenGL.WIDTH;
 import static apiWrapper.OpenGL.HEIGHT;
 import static apiWrapper.OpenGL.GL_FRAMEBUFFER;
 import static apiWrapper.OpenGL.GL_DEPTH_ATTACHMENT;
+import static apiWrapper.OpenGL.GL_COLOR;
 import static apiWrapper.OpenGL.GL_COLOR_ATTACHMENT0;
 import static apiWrapper.OpenGL.GL_COLOR_BUFFER_BIT;
 import static apiWrapper.OpenGL.GL_DEPTH_BUFFER_BIT;
@@ -58,6 +60,12 @@ public class FrameBuffer
 	private int renderBufferObjectId;
     private int width, height;
 
+    /**
+     * Initialise the frame buffer object.
+     * @param depthTest 
+     * @param width of window
+     * @param height of window
+     */
 	public void init(boolean depthTest, int width, int height)
 	{
         this.width = width;
@@ -74,8 +82,8 @@ public class FrameBuffer
             glBindRenderbuffer(GL_RENDERBUFFER, 0);
             glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, renderBufferObjectId);
             this.unbind();
-            this.checkForErrors();
         }
+        this.checkForErrors();
 	}
 	
 	public void addTexture(Texture tex, int internalFormat, int format)
@@ -108,6 +116,13 @@ public class FrameBuffer
     
     public void clearColor() {
     	// set clear color
+    	this.bind();
+    	FloatBuffer color = BufferUtils.createFloatBuffer(4);
+    	color.put(new float[] { 0, 0, 0, 0 });
+    	color.position(0);
+    	for(int i=0; i < this.textureList.size(); ++i) {
+    		glClearBuffer(GL_COLOR, i, color);
+    	}
     	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
     
