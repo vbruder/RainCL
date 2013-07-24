@@ -100,7 +100,6 @@ public class Main {
     private static Geometry skyCloud;
     private static Geometry floorQuad;
     private static Texture skyDomeTex;
-    private static Texture sunTexture;
     private static Texture skyCloudTex;
     private static Texture floorTex;
     private static Matrix4f skyMoveMatrix = new Matrix4f();
@@ -150,7 +149,7 @@ public class Main {
             
             //deferred shading
             screenQuad = GeometryFactory.createScreenQuad();
-            defShadingSP = new ShaderProgram("./shader/ScreenQuad.vsh", "./shader/CopyTexture.fsh");
+            defShadingSP = new ShaderProgram("./shader/Main_VS.glsl", "./shader/Main_FS.glsl");
             
             //create environment
             createTerrain();            
@@ -222,9 +221,8 @@ public class Main {
         
         //TODO: Texture units
         skyDomeTex  = Texture.generateTexture("./media/skyTex/sky05.png", 5);
-        sunTexture  = Texture.generateTexture("./media/skyTex/sun.jpg", 6);
         //skyCloudTex = Texture.generateTexture("./media/skyTex/sky_sw.jpg", 7);
-        floorTex = Texture.generateTexture("./media/textures/floor01.png", 8);
+        floorTex = Texture.generateTexture("./media/textures/floor01.png", 6);
         
         skySP = new ShaderProgram("shader/Sky.vsh", "shader/Sky.fsh");
     }
@@ -247,9 +245,13 @@ public class Main {
     	//background color
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         
-        DeferredShader defShader = new DeferredShader();
-        defShader.init(0);
-        defShader.registerShaderProgram(defShadingSP);
+        DeferredShader reflectShader = new DeferredShader();
+        reflectShader.init(0);
+        reflectShader.registerShaderProgram(defShadingSP);
+        
+        DeferredShader sceneShader = new DeferredShader();
+        sceneShader.init(0);
+        sceneShader.registerShaderProgram(defShadingSP);
         
         FrameBuffer fbo = new FrameBuffer();
         fbo.init(true, WIDTH, HEIGHT);
@@ -282,11 +284,17 @@ public class Main {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             
             // enable deferred shading
-            defShader.bind();
-            defShader.clear();
+            reflectShader.bind();
+            reflectShader.clear();
+
+            reflectScene();
+            Texture reflected = reflectShader.getDiffuseTexture();
+            reflectShader.finish();
+//            reflectShader.DrawTexture(reflectShader.getDiffuseTexture());
             
-            fbo.bind();
-            
+            sceneShader.bind();
+            sceneShader.clear();
+
             //orb.bindLightInformationToShader(raindrops.getShaderProgram().getID());
             
             //sky dome
@@ -302,9 +310,7 @@ public class Main {
 	            skySP.setUniform("textureImage", floorTex);
 	            floorQuad.draw();
             }
-            
-            //TODO: sun cube
-            
+                        
             //TODO: clouds?
             if (drawClouds)
             {
@@ -319,7 +325,7 @@ public class Main {
             //terrain
             if (drawTerrain)
             {
-	            terrainSP.use();
+            	terrainSP.use();
 	            //VS
 	            terrainSP.setUniform("proj", cam.getProjection());
 	            terrainSP.setUniform("view", cam.getView());
@@ -336,6 +342,7 @@ public class Main {
 	            terrainSP.setUniform("k_ambi", k_ambi);
 	            terrainSP.setUniform("eyePosition", cam.getCamPos());
 	            terrainSP.setUniform("fogThickness", fogThickness);
+	            
 	            terrain.draw();
             }
             
@@ -353,9 +360,9 @@ public class Main {
             //TODO: Draw water on terrain
             if (drawWater)
             {
-            	glBlendFunc(GL_DST_COLOR, GL_ZERO);
+            	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             	glEnable(GL_BLEND);
-            	watermap.draw(cam, points);
+            	watermap.draw(cam, points, reflected, scaleTerrain);
             	glDisable(GL_BLEND);
             }
             
@@ -375,13 +382,10 @@ public class Main {
 //            orbSP.setUniform("viewProj", viewProj);
 //            orb.draw(orbSP.getID());
             
-            defShadingSP.use();
-            screenQuad.draw();
             
-            fbo.unbind();
+            sceneShader.finish();
             
-            defShader.finish();
-            defShader.DrawTexture(fbo.getTexture(0));
+            sceneShader.DrawTexture(sceneShader.getDiffuseTexture());
             
             // present screen
             Display.update();
@@ -389,10 +393,62 @@ public class Main {
         }
         terrainSP.delete();
         raindrops.getShaderProgram().delete();
-        defShader.delete();
+        sceneShader.delete();
     }
     
-    /**
+    private static void reflectScene()
+	{
+    	//reflection matrix
+        Matrix4f reflMat = new Matrix4f();
+        reflMat.m00 = 1.f; reflMat.m10 =  0.f; reflMat.m20 =  0.f; reflMat.m30 = 0.f;
+        reflMat.m01 = 0.f; reflMat.m11 =  1.f; reflMat.m21 =  0.f; reflMat.m31 = 0.f;
+        reflMat.m02 = 0.f; reflMat.m12 =  0.f; reflMat.m22 = -1.f; reflMat.m32 = 0.f;
+        reflMat.m03 = 0.f; reflMat.m13 =  0.f; reflMat.m23 =  0.f; reflMat.m33 = 1.f;
+        
+        Matrix4f view = new Matrix4f();
+        Matrix4f.mul(reflMat, cam.getView(), view);
+		
+        //sky dome
+        skySP.use();
+        skySP.setUniform("proj", cam.getProjection());
+        skySP.setUniform("view", view);
+        skySP.setUniform("model", skyMoveMatrix);
+        skySP.setUniform("textureImage", skyDomeTex);
+        skySP.setUniform("fogThickness", fogThickness);
+        glFrontFace(GL_CW);
+        skyDome.draw();
+        skySP.setUniform("textureImage", floorTex);
+        floorQuad.draw();
+        glFrontFace(GL_CCW);
+        
+        //terrain
+        if (drawTerrain)
+        {
+        	terrainSP.use();
+            //VS
+            terrainSP.setUniform("proj", cam.getProjection());
+            terrainSP.setUniform("view", view);
+            terrainSP.setUniform("scale", scaleTerrain);
+            //FS
+            terrainSP.setUniform("normalTex", terrain.getNormalTex());
+            terrainSP.setUniform("lightTex", terrain.getLightTex());
+            terrainSP.setUniform("specularTex", terrain.getSpecularTex());
+            terrainSP.setUniform("colorTex", terrain.getColorTex());
+            terrainSP.setUniform("sunIntensity", sun.getIntensity());
+            terrainSP.setUniform("sunDir", sun.getDirection());
+            terrainSP.setUniform("k_diff", k_diff);
+            terrainSP.setUniform("k_spec", k_spec);
+            terrainSP.setUniform("k_ambi", k_ambi);
+            terrainSP.setUniform("eyePosition", cam.getCamPos());
+            terrainSP.setUniform("fogThickness", fogThickness);
+            
+            glFrontFace(GL_CW);
+            //terrain.draw();
+            glFrontFace(GL_CCW);
+        }
+	}
+
+	/**
      * Handle input and change camera accordingly.
      * @param millis milliseconds, passed since last update
      * @throws LWJGLException 

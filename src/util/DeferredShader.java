@@ -16,8 +16,10 @@ public class DeferredShader
 	private ShaderProgram drawTextureSP = new ShaderProgram("./shader/ScreenQuad.vsh", "./shader/CopyTexture.fsh");    
 	private Geometry screenQuadGeo = GeometryFactory.createScreenQuad();        
 	private FrameBuffer frameBuffer = new FrameBuffer();
+	
 	private Texture texPosition;	
-	private Texture texNormal;	private Texture texVertexColor;        
+	private Texture texNormal;
+	private Texture texVertexColor;        
 	
 	/**
 	 * Default constructor.
@@ -35,8 +37,8 @@ public class DeferredShader
 		frameBuffer.init(true, WIDTH, HEIGHT);            	
 		//generate textures    	
 		texPosition 	= new Texture(GL_TEXTURE_2D, offsetTU + 0);
-		texVertexColor 	= new Texture(GL_TEXTURE_2D, offsetTU + 1);
-		texNormal 		= new Texture(GL_TEXTURE_2D, offsetTU + 2);
+		texNormal 		= new Texture(GL_TEXTURE_2D, offsetTU + 1);
+		texVertexColor 	= new Texture(GL_TEXTURE_2D, offsetTU + 2);
 		
 		frameBuffer.addTexture(texPosition, 	GL_RGBA16F, GL_RGBA);
 		frameBuffer.addTexture(texNormal, 		GL_RGBA16F, GL_RGBA);

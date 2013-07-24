@@ -9,6 +9,6 @@ out vec4 fragColor;
 
 void main(void)
 {
-    //fragColor = vec4(texture(colorTex, texCoords.st).rgb, 1.0);
-    fragColor = color;
+    fragColor = vec4(texture(colorTex, texCoords.st).rgb, 0.3);
+    //fragColor = color;
 }

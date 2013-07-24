@@ -61,7 +61,7 @@ public class FrameBuffer
     private int width, height;
 
     /**
-     * Initialise the frame buffer object.
+     * Initialize the frame buffer object.
      * @param depthTest 
      * @param width of window
      * @param height of window
@@ -95,11 +95,12 @@ public class FrameBuffer
 		this.unbind();
 	}
 	
-	public void drawBuffers() {
-	     // draw buffers
+	public void drawBuffers()
+	{
 	     int[] buffersArray = new int[count];
-	     for(int i = 0; i < buffersArray.length; i++) {
-	     buffersArray[i] = GL_COLOR_ATTACHMENT0 + i;
+	     for(int i = 0; i < buffersArray.length; i++)
+	     {
+	    	 buffersArray[i] = GL_COLOR_ATTACHMENT0 + i;
 	     }
 	     IntBuffer buffers = BufferUtils.createIntBuffer(buffersArray.length);
 	     buffers.put(buffersArray);
@@ -110,41 +111,50 @@ public class FrameBuffer
 	     this.unbind();
 	}
 	
-    public Texture getTexture(int i) {
+    public Texture getTexture(int i)
+    {
         return textureList.get(i);
     }
     
-    public void clearColor() {
+    public void clearColor()
+    {
     	// set clear color
     	this.bind();
     	FloatBuffer color = BufferUtils.createFloatBuffer(4);
     	color.put(new float[] { 0, 0, 0, 0 });
     	color.position(0);
-    	for(int i=0; i < this.textureList.size(); ++i) {
+    	for(int i=0; i < this.textureList.size(); ++i)
+    	{
     		glClearBuffer(GL_COLOR, i, color);
     	}
     	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
     
-    public void bind() {
+    public void bind()
+    {
     	glBindFramebuffer(GL_FRAMEBUFFER, frameBufferObjectId);
         glViewport(0, 0, this.width, this.height);
 
-        if(renderBufferObjectId == -1) {
+        if(renderBufferObjectId == -1)
+        {
             glDisable(GL_DEPTH_TEST);
-        } else {
+        }
+        else
+        {
             glEnable(GL_DEPTH_TEST);
         }
         
     }
     
-    public void unbind() {
+    public void unbind()
+    {
     	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    	glViewport(0, 0, WIDTH, HEIGHT);
     }
     
-    public void BindFragDataLocations(ShaderProgram program, String ...fsOutVarNames) {
-        for(int i=0; i < fsOutVarNames.length; ++i) {
+    public void BindFragDataLocations(ShaderProgram program, String ...fsOutVarNames)
+    {
+        for(int i=0; i < fsOutVarNames.length; ++i)
+        {
             glBindFragDataLocation(program.getID(), i, fsOutVarNames[i]);
         }
     }
@@ -156,7 +166,8 @@ public class FrameBuffer
 	* @param internalFormat GL internal Format
 	* @param format GL Format
 	*/
-    private void bindTexture(Texture texture, int attachment, int internalFormat, int format) {
+    private void bindTexture(Texture texture, int attachment, int internalFormat, int format)
+    {
 	     // bind texture
 	     texture.bind();
 	    
@@ -176,9 +187,11 @@ public class FrameBuffer
     /**
      * Check for errors.
      */
-    public void checkForErrors() {
+    public void checkForErrors()
+    {
         int error = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-        switch(error) {
+        switch(error)
+        {
             case GL_FRAMEBUFFER_COMPLETE: break;
             case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT: System.err.println("GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT"); break;
             case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER: System.err.println("GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER"); break;
@@ -188,7 +201,8 @@ public class FrameBuffer
         }
     }
     
-    public void reset(){
-    	count=0;
+    public void reset()
+    {
+    	count = 0;
     }
 }

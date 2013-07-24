@@ -537,14 +537,15 @@ public class Water {
 	 * Draw the water on the scene.
 	 * @param cam Camera object
 	 */
-	public void draw(Camera cam, boolean points)
+	public void draw(Camera cam, boolean points, Texture reflected, int scaleTerrain)
 	{
     	WaterRenderSP.use();
         
         Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);  
         WaterRenderSP.setUniform("viewProj", viewProj);
+        WaterRenderSP.setUniform("scale", scaleTerrain);
         WaterRenderSP.setUniform("color", new Vector4f(0.85f, 0.85f, 0.85f, 1.0f));
-//        WaterRenderSP.setUniform("colorTex", waterMap.getColorTex());
+        WaterRenderSP.setUniform("colorTex", reflected);
 		
         if (points)
         {
