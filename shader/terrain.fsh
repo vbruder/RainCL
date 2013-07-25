@@ -52,5 +52,5 @@ void main(void)
     vec3 ambi   = texture(lightTex, texCoords.st).rgb;
 
     color = vec4(calcLighting(normal.xyz, diff, spec, ambi), 1.0);
-    //fragColor = vec4(vec3(k_diff), 1.0);
+    //color = normal;
 }

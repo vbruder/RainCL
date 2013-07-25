@@ -207,7 +207,7 @@ public class Main {
         //create rain streaks
         raindrops = new Rainstreaks(Device_Type.GPU, Display.getDrawable(), cam, orb, sun);
         //create water map
-        watermap = new Water(Device_Type.GPU, Display.getDrawable(), terrain);
+        watermap = new Water(Device_Type.GPU, Display.getDrawable(), terrain, skyDome);
 	}
 
 	/**
@@ -223,6 +223,8 @@ public class Main {
         skyDomeTex  = Texture.generateTexture("./media/skyTex/sky05.png", 5);
         //skyCloudTex = Texture.generateTexture("./media/skyTex/sky_sw.jpg", 7);
         floorTex = Texture.generateTexture("./media/textures/floor01.png", 6);
+        
+        skyDome.setColorTex(skyDomeTex);
         
         skySP = new ShaderProgram("shader/Sky.vsh", "shader/Sky.fsh");
     }

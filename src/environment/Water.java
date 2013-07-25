@@ -140,8 +140,9 @@ public class Water {
 	private static CLKernel kernelReduce;
 	private static CLKernel kernelDistribute;
 
-	//OPenGL Geometries
+	//OpenGL Geometries
 	private Geometry terrain;
+	private Geometry sky;
 	private Geometry waterMap;
 	private Geometry waterBlured;
 	
@@ -166,9 +167,10 @@ public class Water {
 	 * @param rain	Rainstreaks object
 	 * @throws LWJGLException
 	 */
-	public Water(Device_Type device_type, Drawable drawable, Geometry terrain) throws LWJGLException
+	public Water(Device_Type device_type, Drawable drawable, Geometry terrain, Geometry sky) throws LWJGLException
 	{		
 		this.terrain = terrain;
+		this.sky = sky;
 		rainfactor = 0.075f;
 		oozingfactor = 0.095f;
 		dampingfactor = 0.005f;
@@ -546,6 +548,9 @@ public class Water {
         WaterRenderSP.setUniform("scale", scaleTerrain);
         WaterRenderSP.setUniform("color", new Vector4f(0.85f, 0.85f, 0.85f, 1.0f));
         WaterRenderSP.setUniform("colorTex", reflected);
+        WaterRenderSP.setUniform("normalTex", terrain.getNormalTex());
+        WaterRenderSP.setUniform("skyTex", sky.getColorTex());
+        WaterRenderSP.setUniform("eyePosition", cam.getCamPos());
 		
         if (points)
         {
