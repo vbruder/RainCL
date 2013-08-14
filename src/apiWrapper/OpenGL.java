@@ -419,6 +419,41 @@ public class OpenGL {
     public static final int GL_TEXTURE_3D = GL12.GL_TEXTURE_3D;
     
     /**
+     * GL13.GL_TEXTURE_CUBE_MAP;
+     */
+    public static final int GL_TEXTURE_CUBE_MAP = GL13.GL_TEXTURE_CUBE_MAP;
+    
+    /**
+     * GL13.GL_TEXTURE_CUBE_MAP_POSITIVE_X;
+     */
+    public static final int GL_TEXTURE_CUBE_MAP_POSITIVE_X = GL13.GL_TEXTURE_CUBE_MAP_POSITIVE_X;
+    
+    /**
+     * GL13.GL_TEXTURE_CUBE_MAP_NEGATIVE_X;
+     */
+    public static final int GL_TEXTURE_CUBE_MAP_NEGATIVE_X = GL13.GL_TEXTURE_CUBE_MAP_NEGATIVE_X;
+
+    /**
+     * GL13.GL_TEXTURE_CUBE_MAP_POSITIVE_Y;
+     */
+    public static final int GL_TEXTURE_CUBE_MAP_POSITIVE_Y = GL13.GL_TEXTURE_CUBE_MAP_POSITIVE_Y;
+    
+    /**
+     * GL13.GL_TEXTURE_CUBE_MAP_NEGATIVE_Y;
+     */
+    public static final int GL_TEXTURE_CUBE_MAP_NEGATIVE_Y = GL13.GL_TEXTURE_CUBE_MAP_NEGATIVE_Y;
+
+    /**
+     * GL13.GL_TEXTURE_CUBE_MAP_POSITIVE_Z;
+     */
+    public static final int GL_TEXTURE_CUBE_MAP_POSITIVE_Z = GL13.GL_TEXTURE_CUBE_MAP_POSITIVE_Z;
+
+    /**
+     * GL13.GL_TEXTURE_CUBE_MAP_NEGATIVE_Z;
+     */
+    public static final int GL_TEXTURE_CUBE_MAP_NEGATIVE_Z = GL13.GL_TEXTURE_CUBE_MAP_NEGATIVE_Z;
+    
+    /**
      * GL30.GL_TEXTURE_2D_ARRAY;
      */
     public static final int GL_TEXTURE_2D_ARRAY = GL30.GL_TEXTURE_2D_ARRAY;    

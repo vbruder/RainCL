@@ -222,12 +222,12 @@ public class Geometry {
     
     /**
      * Set color texture.
-     * @param colorTex texture containing normal information
+     * @param colorTex texture containing color information
      */
     public void setColorTex(Texture colorTex) {
     	this.colorTex = colorTex;
     }
-    
+        
     /**
      * Returns the normal texture.
      * @return normal texture

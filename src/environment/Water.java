@@ -539,18 +539,23 @@ public class Water {
 	 * Draw the water on the scene.
 	 * @param cam Camera object
 	 */
-	public void draw(Camera cam, boolean points, Texture reflected, int scaleTerrain)
+	public void draw(Camera cam, boolean points, Texture reflected, int scaleTerrain, Vector3f fogThickness)
 	{
     	WaterRenderSP.use();
         
         Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);  
         WaterRenderSP.setUniform("viewProj", viewProj);
+        WaterRenderSP.setUniform("view", cam.getView());
+        Matrix4f invView = new Matrix4f(cam.getView());
+        //invView.invert();
+        WaterRenderSP.setUniform("inverseView", invView);
         WaterRenderSP.setUniform("scale", scaleTerrain);
         WaterRenderSP.setUniform("color", new Vector4f(0.85f, 0.85f, 0.85f, 1.0f));
         WaterRenderSP.setUniform("colorTex", reflected);
         WaterRenderSP.setUniform("normalTex", terrain.getNormalTex());
         WaterRenderSP.setUniform("skyTex", sky.getColorTex());
         WaterRenderSP.setUniform("eyePosition", cam.getCamPos());
+        WaterRenderSP.setUniform("fogThickness", fogThickness);
 		
         if (points)
         {

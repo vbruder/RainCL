@@ -86,14 +86,15 @@ public class GeometryFactory {
     }
     
     /**
-     * Creates a sphere with texture on it.
+     * Creates a sphere with texture colors on it.
      * @param r Radius of the Sphere
      * @param n Number of vertical stripes
      * @param k Number of horizontal stripes
      * @param imageFile Path to image file for texture
      * @return Sphere geometry
      */
-    public static Geometry createSphere(float r, int n, int k, String imageFile) {
+    public static Geometry createSphere(float r, int n, int k, String imageFile)
+    {
         float[][][] image = Util.getImageContents(imageFile);
         
         FloatBuffer fb = BufferUtils.createFloatBuffer((3+3+4) * (n+1)*(k+1));
@@ -155,7 +156,8 @@ public class GeometryFactory {
      * @param k Number of horizontal stripes
      * @return Sphere geometry
      */
-    public static Geometry createSphere(float r, int n, int k) {
+    public static Geometry createSphere(float r, int n, int k)
+    {
         
         FloatBuffer fb = BufferUtils.createFloatBuffer((3+3+2) * (n+1)*(k+1));
         
@@ -216,7 +218,8 @@ public class GeometryFactory {
      * @param k number of horizontal stripes
      * @return sky dome geometry
      */
-    public static Geometry createSkyDome(float r, int n, int k) {
+    public static Geometry createSkyDome(float r, int n, int k)
+    {
         FloatBuffer fb = BufferUtils.createFloatBuffer((3+2) * (n+1)*((k/2)+2));
         
         float dTheta = Util.PI / (float)k;
@@ -265,6 +268,40 @@ public class GeometryFactory {
         return skyDome;
     }
     
+    public static Geometry createCube(float size)
+    {
+    	FloatBuffer fb = BufferUtils.createFloatBuffer(6*8);
+    	fb.put(new float[] {
+				    		//position				//texture coords
+				    		 size,   size,  size,   1.0f, 1.0f, 1.0f,	//front
+				    		-size,   size,  size,   0.0f, 1.0f, 1.0f,
+				    		 size,  -size,  size,   1.0f, 0.0f, 1.0f,
+				    		-size,  -size,  size,   0.0f, 0.0f, 1.0f,
+				    		
+				   		     size,   size, -size,   1.0f, 1.0f, 0.0f,	//back
+				   		    -size,   size, -size,   0.0f, 1.0f, 0.0f,
+				   		     size,  -size, -size,   1.0f, 0.0f, 0.0f,
+				   		    -size,  -size, -size,   0.0f, 0.0f, 0.0f,
+    	});
+    	fb.rewind();
+    	
+    	IntBuffer ib = BufferUtils.createIntBuffer(2*7);
+    	ib.put(new int[] {
+    			5, 4, 7, 6, 2, 4, 0, 
+        		5, 1, 7, 3, 2, 1, 0
+    	});
+    	ib.rewind();
+    	
+    	Geometry geo = new Geometry();
+    	geo.setIndices(ib, GL_TRIANGLE_STRIP);
+    	geo.setVertices(fb);
+    	geo.addVertexAttribute(ShaderProgram.ATTR_POS, 3, 0);
+    	geo.addVertexAttribute(ShaderProgram.ATTR_TEX, 3, 12);
+    	
+		return geo;
+    }
+    
+    
     /**
      * Creates a terrain out of a height map.
      * @param path to terrain data maps
@@ -272,7 +309,8 @@ public class GeometryFactory {
      * @param scale - scaling factor for size
      * @return terrain geometry 
      */
-    static public Geometry createTerrainFromMap(String path, float amplitude, int scale) {
+    public static Geometry createTerrainFromMap(String path, float amplitude, int scale)
+    {
         // vertex array id
         int vaid = glGenVertexArrays();
         glBindVertexArray(vaid);
