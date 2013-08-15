@@ -545,12 +545,7 @@ public class Water {
         
         Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);  
         WaterRenderSP.setUniform("viewProj", viewProj);
-        WaterRenderSP.setUniform("view", cam.getView());
-        Matrix4f invView = new Matrix4f(cam.getView());
-        //invView.invert();
-        WaterRenderSP.setUniform("inverseView", invView);
         WaterRenderSP.setUniform("scale", scaleTerrain);
-        WaterRenderSP.setUniform("color", new Vector4f(0.85f, 0.85f, 0.85f, 1.0f));
         WaterRenderSP.setUniform("colorTex", reflected);
         WaterRenderSP.setUniform("normalTex", terrain.getNormalTex());
         WaterRenderSP.setUniform("skyTex", sky.getColorTex());
@@ -560,7 +555,6 @@ public class Water {
         if (points)
         {
         	glDisable(GL_BLEND);
-        	WaterRenderSP.setUniform("color", new Vector4f(1.0f, 1.0f, 1.0f, 1.0f));
         	glBindVertexArray(vertexArray);
         	glDrawArrays(GL_POINTS, 0, (int)gws.get(0));
         }

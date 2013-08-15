@@ -83,10 +83,10 @@ public class Main {
     private static final Matrix4f viewProjMatrix = new Matrix4f();
         
     //environment
-    private static boolean drawTerrain 	= true;
+    private static boolean drawTerrain 	= false;
     private static boolean drawRain 	= false;
-    private static boolean drawWater 	= false;
-    private static boolean drawSky 		= false;
+    private static boolean drawWater 	= true;
+    private static boolean drawSky 		= true;
     private static boolean drawClouds 	= false;
     private static boolean drawFog		= false;
     
@@ -402,7 +402,7 @@ public class Main {
             if (drawWater)
             {
             	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-//            	glEnable(GL_BLEND);
+            	glEnable(GL_BLEND);
             	watermap.draw(cam, points, reflected, scaleTerrain, fogThickness);
             	glDisable(GL_BLEND);
             }
