@@ -147,6 +147,7 @@ public class Rainstreaks
     //kernel settings
     private final PointerBuffer gws = BufferUtils.createPointerBuffer(1);
     
+    //wind
     private static Vector3f windDir[] = new Vector3f[500];
     private static int windPtr = 0;
     private static float windForce = 10.f;
@@ -259,41 +260,11 @@ public class Rainstreaks
         this.fogRenderSP	= new ShaderProgram("./shader/Fog.vsh", "./shader/Fog.gsh", "./shader/Fog.fsh");
         
         //load the 370 point light textures into a texture array
-        ImageContents content = Util.loadImage("media/rainTex/point/cv0_vPos(0).png");       
-        rainTex = new Texture(GL_TEXTURE_2D_ARRAY, RAINTEX_UNIT);
-        rainTex.bind();
-        glTexImage3D(   GL_TEXTURE_2D_ARRAY,
-                        0,
-                        GL_R16,
-                        content.width,
-                        content.height,
-                        NUM_RAIN_TEXTURES,
-                        0,
-                        GL_RED,
-                        GL_FLOAT,
-                        null);
-
-        for (int i = 0; i < NUM_RAIN_TEXTURES; i++)
-        {
-            content = Util.loadImage("media/rainTex/point/cv0_vPos(" + i + ").png");
-            glTexSubImage3D(GL_TEXTURE_2D_ARRAY,
-                            0,
-                            0,
-                            0,
-                            i,
-                            content.width,
-                            content.height,
-                            1,
-                            GL_RED,
-                            GL_FLOAT,
-                            content.data);
-        }
-        glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
-        
+        rainTex = Util.createTextureArray("media/rainTex/point/cv0_vPos(", ").png", RAINTEX_UNIT, GL_R16, GL_RED, NUM_RAIN_TEXTURES);
         //create normalization 1D-texture
         createRainfactors();
     }
-
+    
     /**
      * Create initial position and velocity data pseudo randomly.
      */
@@ -808,7 +779,7 @@ public class Rainstreaks
        Vector3f vec = new Vector3f(1.f, 1.f, 1.f);
        Main.setFogThickness( (Vector3f) vec.scale(0.03f + getLogMaxParticles()*0.05f) );
     }
-    
+
     /**
      * @return the rain streaks shader program
      */
@@ -824,5 +795,6 @@ public class Rainstreaks
     {
     	return ((float) Math.log( ((double) maxParticles) / Math.log(2))/ 10.f - 1.f) ;
     }
+    
 }
 

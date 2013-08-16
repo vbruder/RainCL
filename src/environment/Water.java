@@ -134,11 +134,11 @@ public class Water {
 	private static CLContext context;
 	private static CLCommandQueue queue;
 	private static CLProgram program;
-	private static CLKernel kernelAccumulate;
 	private static CLKernel kernelRainOozing;
 	private static CLKernel kernelFlow;
 	private static CLKernel kernelReduce;
 	private static CLKernel kernelDistribute;
+	private CLKernel kernelBlur;
 
 	//OpenGL Geometries
 	private Geometry terrain;
@@ -152,13 +152,20 @@ public class Water {
 
     boolean swap = false;
 
+    //gauss data
 	private FloatBuffer gaussDataBuffer;
-	
 	private int maskSize = 11;
 	private float sigma = 10;
 
-
-	private CLKernel kernelBlur;
+	//ripples
+	private float circle = 0.f;
+	
+    private static final int NORMALTEX_UNIT		 = 15;
+    private static final int BUMPTEX_UNIT		 = 16;
+    private static final int NUM_NORMAL_TEXTURES = 16;
+    
+    private Texture normalTex;
+    private Texture bumpTex;
 
 	/**
 	 * Create water object.
@@ -179,6 +186,10 @@ public class Water {
         createWaterData();
         createKernels();
         WaterRenderSP = new ShaderProgram("./shader/Water.vsh", "./shader/Water.fsh");
+        
+        //create texture arrays for normal and bump maps (ripples)
+        normalTex = Util.createTextureArray("media/rainTex/normal/normal", ".png", NORMALTEX_UNIT, GL_RGB, GL_RGB, NUM_NORMAL_TEXTURES);
+        bumpTex = Util.createTextureArray("media/rainTex/bump/bump", ".png", BUMPTEX_UNIT, GL_RGB, GL_RGB, NUM_NORMAL_TEXTURES);
 	}
 	
 	/**
@@ -539,19 +550,25 @@ public class Water {
 	 * Draw the water on the scene.
 	 * @param cam Camera object
 	 */
-	public void draw(Camera cam, boolean points, Texture reflected, int scaleTerrain, Vector3f fogThickness)
+	public void draw(Camera cam, boolean points, Texture reflected, int scaleTerrain, Vector3f fogThickness, Sun sun)
 	{
     	WaterRenderSP.use();
         
         Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);  
         WaterRenderSP.setUniform("viewProj", viewProj);
         WaterRenderSP.setUniform("scale", scaleTerrain);
-        WaterRenderSP.setUniform("colorTex", reflected);
+        //WaterRenderSP.setUniform("colorTex", reflected);
         WaterRenderSP.setUniform("normalTex", terrain.getNormalTex());
+        WaterRenderSP.setUniform("rainNormalTex", normalTex);
+        WaterRenderSP.setUniform("rainBumpTex", bumpTex);
         WaterRenderSP.setUniform("skyTex", sky.getColorTex());
         WaterRenderSP.setUniform("eyePosition", cam.getCamPos());
+        WaterRenderSP.setUniform("lightPos", sun.getDirection());
         WaterRenderSP.setUniform("fogThickness", fogThickness);
-		
+        WaterRenderSP.setUniform("circle", circle);
+        //next step in circle
+        circle = (circle >= 15.f) ? 0.f : circle+1.f;
+        		
         if (points)
         {
         	glDisable(GL_BLEND);

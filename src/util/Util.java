@@ -637,6 +637,52 @@ public class Util {
     }
     
     /**
+     * Creates a texture array out of a set of similarly named picture files.
+     * @param prefix prefix of path and filename
+     * @param suffix suffix of file name
+     * @param textureArray texture object to be bound 
+     * @param texUnit texture unit
+     * @param internalFormat internal texture format
+     * @param format texture format
+     * @param texNumber	number of textures to be put into the array
+     */
+    public static Texture createTextureArray(String prefix, String suffix, int texUnit, int internalFormat, int format, int texNumber)
+    {
+    	ImageContents content = Util.loadImage(prefix + "0" + suffix);       
+    	Texture textureArray = new Texture(GL_TEXTURE_2D_ARRAY, texUnit);
+    	textureArray.bind();
+        glTexImage3D(   GL_TEXTURE_2D_ARRAY,
+                        0,
+                        internalFormat,
+                        content.width,
+                        content.height,
+                        texNumber,
+                        0,
+                        format,
+                        GL_FLOAT,
+                        null);
+
+        for (int i = 0; i < texNumber; i++)
+        {
+            content = Util.loadImage(prefix + i + suffix);
+            glTexSubImage3D(GL_TEXTURE_2D_ARRAY,
+                            0,
+                            0,
+                            0,
+                            i,
+                            content.width,
+                            content.height,
+                            1,
+                            format,
+                            GL_FLOAT,
+                            content.data);
+        }
+        glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
+        
+        return textureArray;
+    }
+    
+    /**
      * Laedt ein Bild und speichert die einzelnen Bildpunke in einem
      * 2-dimensionalen float-Array. Die erste Koordinate ist die y-Position und
      * liegt zwischen 0 und der Hoehe des Bildes - 1. Die zweite Koordinate ist

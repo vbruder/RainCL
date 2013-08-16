@@ -403,7 +403,7 @@ public class Main {
             {
             	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             	glEnable(GL_BLEND);
-            	watermap.draw(cam, points, reflected, scaleTerrain, fogThickness);
+            	watermap.draw(cam, points, reflected, scaleTerrain, fogThickness, sun);
             	glDisable(GL_BLEND);
             }
             

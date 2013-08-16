@@ -2,17 +2,33 @@
 
 #define PI 3.14159265358979
 
-in vec4 texCoords;
+in vec4 cubeCoords;
+in vec2 texCoords;
+in vec4 positionWC;
 
-uniform sampler2D colorTex;
+uniform sampler2DArray rainNormalTex;
+uniform sampler2DArray rainBumpTex;
 uniform samplerCube skyTex;
 uniform vec3 fogThickness;
+uniform vec3 lightPos;
+uniform float circle;
 
 out vec4 fragColor;
 
 void main(void)
 {
-	vec4 skyColor = texture(skyTex, texCoords.xyz);
-	fragColor = mix(skyColor, vec4(0.7), 11*fogThickness.x);
-	fragColor.w = texCoords.w;
+	//repeat texture multiple times over terrain
+	vec2 texCoordsRepeat = texCoords * 16.0;
+	//calculate surface color (reflection and fresnel)
+	vec4 reflectionColor = texture(skyTex, cubeCoords.stp);
+	vec4 surfaceColor = mix(reflectionColor, vec4(0.7), 11*fogThickness.x);
+	
+	//calculate bump mapping
+	vec3 normal = normalize(texture2DArray(rainNormalTex, vec3(texCoordsRepeat, circle)).xyz);
+	vec3 position = positionWC.xyz + (1.5 * texture2DArray(rainBumpTex, vec3(texCoordsRepeat, circle)).r * normal);
+
+	vec3 vPosLight = (position - lightPos);
+
+	fragColor.rgb = surfaceColor.rgb * max(dot(normalize(vPosLight), normal), 0);
+	fragColor.a = cubeCoords.q;
 }
