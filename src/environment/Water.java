@@ -122,6 +122,7 @@ public class Water {
 
 	//szene manipulation factors
 	private float rainfactor;
+	private float rainstrength;
 	private float oozingfactor;
 	private float dampingfactor;
 
@@ -429,8 +430,8 @@ public class Water {
 	    clEnqueueAcquireGLObjects(queue, memWaterHeight, null, null);
 	    clEnqueueAcquireGLObjects(queue, memBlur, null, null);
 	    
-	    float rain = (float) ((double) Math.log(Rainstreaks.getMaxParticles()) / Math.log(2))/10.0f - 1.0f; // 0..1
-	    kernelRainOozing.setArg( 3, rain*rainfactor);
+	    rainstrength = (float) ((double) Math.log(Rainstreaks.getMaxParticles()) / Math.log(2))/10.0f - 1.0f; // 0..1
+	    kernelRainOozing.setArg( 3, rainstrength*rainfactor);
 	    kernelRainOozing.setArg( 4, oozingfactor);
 	    kernelRainOozing.setArg( 5, 1e-3f*deltaTime);	    
         clEnqueueNDRangeKernel(queue, kernelRainOozing, 1, null, gws, null, null, null); 
@@ -556,8 +557,8 @@ public class Water {
         WaterRenderSP.setUniform("lightPos", sun.getDirection());
         WaterRenderSP.setUniform("fogThickness", fogThickness);
         WaterRenderSP.setUniform("circle", circle);
-        //next step in circle for ripple animation
-        circle = (circle >= 15.f) ? 0.f : circle+1.f;
+        //next step in circle for ripple animation, depends on rain strength
+        circle = (circle >= 15.f) ? 0.f : circle + rainstrength;
         
         //draw point visualization of water if enabled
         if (points)
