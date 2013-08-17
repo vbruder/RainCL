@@ -20,10 +20,11 @@ uniform vec3 sunDir;
 uniform vec3 sunColor;
 uniform float sunIntensity;
 
-uniform vec3 pointLightDir;
-uniform vec3 pointLightColor;
-uniform float pointLightIntensity;
-//TODO: multiple point lights
+//TODO: point lights
+//uniform vec3 pointLightDir;
+//uniform vec3 pointLightColor;
+//uniform float pointLightIntensity;
+
 //uniform vec3 pointLightDir[MAX_POINT_LIGHTS];
 //uniform vec3 pointLightIntensity[MAX_POINT_LIGHTS];
 

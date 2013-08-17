@@ -59,7 +59,6 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.LWJGLException;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.opencl.CL10;
-import org.lwjgl.opencl.CL10GL;
 import org.lwjgl.opencl.CLCommandQueue;
 import org.lwjgl.opencl.CLContext;
 import org.lwjgl.opencl.CLDevice;
@@ -72,7 +71,6 @@ import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL30;
 import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
-import org.lwjgl.util.vector.Vector4f;
 
 import util.Camera;
 import util.Geometry;
@@ -295,7 +293,7 @@ public class Water {
         GL11.glPointSize(2f);
                
         //create water surface mesh
-        // index buffer
+        //index buffer
         int size = (int) Math.sqrt(terrainDim);
         IntBuffer indexData = BufferUtils.createIntBuffer((size-1)*2*size+(size-2));
         for (int y = 0; y < size-1; y++)
@@ -323,10 +321,7 @@ public class Water {
         waterMap.construct();
         waterBuffer.rewind();
 
-        Texture colorTex = Texture.generateTexture("media/textures/waterTex.png", 20);
-        waterMap.setColorTex(colorTex);
-        
-        //water as point visualization stuff 
+        //water as points for visualization purposes
         memWaterHeight = clCreateFromGLBuffer(context, CL_MEM_READ_WRITE, waterMap.getVbid());
         vertexArray = glGenVertexArrays();
     	glBindVertexArray(vertexArray);
@@ -337,6 +332,7 @@ public class Water {
     	
     	glBindVertexArray(0);
         
+    	//water blurred with Gauss
         waterBlured = new Geometry();
         waterBlured.setIndices(indexData, GL_TRIANGLE_STRIP);
         waterBlured.setVertices(waterBuffer);
@@ -391,8 +387,6 @@ public class Water {
 	 */
 	private void createKernels()
 	{
-		// TODO kernel to accumulate data (sort of grid)
-				
 		//kernel for rain and oozing
 		kernelRainOozing = clCreateKernel(program, "rainOozing");
 		kernelRainOozing.setArg(0, memWater);
@@ -423,7 +417,6 @@ public class Water {
 		kernelBlur.setArg(3, maskSize);
 		
 		createGauss();
-		
 	}
 	
 	/**
@@ -467,9 +460,8 @@ public class Water {
 	    kernelDistribute.setArg( 6, 1e-3f*deltaTime);	    
         clEnqueueNDRangeKernel(queue, kernelDistribute, 1, null, gws, null, null, null); 
 
-
-        	kernelBlur.setArg( 0, memWaterHeight);
-        	kernelBlur.setArg( 1, memBlur);
+        kernelBlur.setArg( 0, memWaterHeight);
+        kernelBlur.setArg( 1, memBlur);
 
         clEnqueueNDRangeKernel(queue, kernelBlur, 1, null, gws, null, null, null);
         
@@ -477,8 +469,6 @@ public class Water {
         clEnqueueReleaseGLObjects(queue, memBlur, null, null);
         
         clFinish(queue);
-        
-
 	}
 	
 	/**
@@ -547,7 +537,7 @@ public class Water {
     }
 	
 	/**
-	 * Draw the water on the scene.
+	 * Draw the water surfaces on the scene.
 	 * @param cam Camera object
 	 */
 	public void draw(Camera cam, boolean points, Texture reflected, int scaleTerrain, Vector3f fogThickness, Sun sun)
@@ -566,18 +556,21 @@ public class Water {
         WaterRenderSP.setUniform("lightPos", sun.getDirection());
         WaterRenderSP.setUniform("fogThickness", fogThickness);
         WaterRenderSP.setUniform("circle", circle);
-        //next step in circle
+        //next step in circle for ripple animation
         circle = (circle >= 15.f) ? 0.f : circle+1.f;
-        		
+        
+        //draw point visualization of water if enabled
         if (points)
         {
         	glDisable(GL_BLEND);
         	glBindVertexArray(vertexArray);
         	glDrawArrays(GL_POINTS, 0, (int)gws.get(0));
         }
+        //else draw triangle mesh
         else
+        {
         	waterBlured.draw();
-        	//waterMap.draw();
+        }
 	}
 	
 	/**

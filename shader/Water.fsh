@@ -21,7 +21,7 @@ void main(void)
 	vec2 texCoordsRepeat = texCoords * 16.0;
 	//calculate surface color (reflection and fresnel)
 	vec4 reflectionColor = texture(skyTex, cubeCoords.stp);
-	vec4 surfaceColor = mix(reflectionColor, vec4(0.7), 11*fogThickness.x);
+	vec4 surfaceColor = mix(reflectionColor, vec4(0.6), 20*fogThickness.x);
 	
 	//calculate bump mapping
 	vec3 normal = normalize(texture2DArray(rainNormalTex, vec3(texCoordsRepeat, circle)).xyz);

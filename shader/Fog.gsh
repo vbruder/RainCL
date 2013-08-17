@@ -18,9 +18,9 @@ out float opacity;
 //Based on Tristan Lorach's "Soft Particles" demo (Nvidia SDK)
 void main(void)
 {
-	float sz = 2000;
+	float sz = 1000;
 	vec3 v1 = vec3(0, sz, 0);
-	vec3 v2 = vec3(sz, 0, 0);
+	vec3 v2 = vec3(2*sz, 0, 0);
 	
     vec4 pos = gl_in[0].gl_Position;
     vec4 posWC = view * pos;
@@ -29,7 +29,7 @@ void main(void)
     vec3 right = cross(toCam, vec3(0.0, 1.0, 0.0)) * sz; 
 	
 	//fade out if close to the near plane        
-    float d = 1.0 - clamp(0.1 + toCam.z, 0.0, 1.0);
+    float d = 1.0 - clamp(0.1 + toCam.z, 0.1, 0.3);
 
     posWC.xyz += v2 - v1;
     gl_Position = proj * posWC;

@@ -22,7 +22,7 @@ vec3 calcLighting(vec3 normal, vec3 diff, vec3 spec, vec3 ambi)
 	vec3 viewVec = positionFS - eyePosition;
 	float lenView = length(viewVec);
 	vec3 view = normalize(viewVec);
-	vec3 expDir = exp2(-fogThickness * lenView * 2.5);
+	vec3 expDir = exp2(-fogThickness * lenView * 3.0);
 	float wetSurface = clamp(k_spec/2.0*clamp(normal.y, 0.0, 1.0), 0.0, 1.0);
 	vec3 reflVec = reflect(view, normal);
 	

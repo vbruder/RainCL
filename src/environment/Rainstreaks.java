@@ -115,7 +115,7 @@ public class Rainstreaks
     
     private static final int NUM_RAIN_TEXTURES = 370;
     private static final int NUM_FOG_TEXTURES = 256;
-    private static final int NUM_FOG_SPRITES = 2;
+    private static final int NUM_FOG_SPRITES = 8;
     
     //OpenCL pointer
     private static CLContext context;
@@ -175,7 +175,6 @@ public class Rainstreaks
     
     //environment
     private Sun sun;
-    private PointLightOrb orb;
     private float pointLightIntensity = 1.0f;
     
     private static Random r = new Random((new java.util.Date()).getTime());
@@ -187,11 +186,10 @@ public class Rainstreaks
      * @param drawable OpenGL drawable.
      * @throws LWJGLException
      */
-    public Rainstreaks(Device_Type device_type, Drawable drawable, Camera cam, PointLightOrb orb, Sun sun) throws LWJGLException
+    public Rainstreaks(Device_Type device_type, Drawable drawable, Camera cam, Sun sun) throws LWJGLException
     {
         maxParticles = 1 << 17;
         this.eyePos = cam.getCamPos();
-        this.orb = orb;
         this.sun = sun;
         //range of cylinder around cam
         clusterScale = 30.0f;
@@ -374,62 +372,24 @@ public class Rainstreaks
     }
     
     /**
-     * Create date for fog visualization and animation.
+     * Create data and buffers for fog visualization and animation.
      */
     private void createFogData()
     {
     	fogDataBuffer = BufferUtils.createFloatBuffer(4*NUM_FOG_SPRITES);
     	for (int i = 0; i < NUM_FOG_SPRITES; i++)
     	{
-    		fogDataBuffer.put(10.f + i*20);
-    		fogDataBuffer.put(20.f);
-    		fogDataBuffer.put(10.f - i*1000);
+    		fogDataBuffer.put(500.f);
+    		fogDataBuffer.put(0.f);
+    		fogDataBuffer.put(-200.f + i*50);
     		//random texture out of 8
     		fogDataBuffer.put(r.nextInt(NUM_FOG_TEXTURES));
 		}
     	fogDataBuffer.rewind();
     	
         //load the 8 fog textures into a texture array
-        ImageContents content = Util.loadImage("media/fogTex/Smoke0000.bmp");       
-        fogTex = new Texture(GL_TEXTURE_2D_ARRAY, FOGTEX_UNIT);
-        fogTex.bind();
-        glTexImage3D(   GL_TEXTURE_2D_ARRAY,
-                        0,
-                        GL_RGB8,
-                        content.width,
-                        content.height,
-                        NUM_FOG_TEXTURES,
-                        0,
-                        GL_RED,
-                        GL_FLOAT,
-                        null);
+    	fogTex = Util.createTextureArray("media/fogTex/Smoke (", ").bmp", FOGTEX_UNIT, GL_RGB8, GL_RED, NUM_FOG_TEXTURES);
 
-        for (int i = 0; i < NUM_FOG_TEXTURES; i++)
-        {
-            DecimalFormat df = new DecimalFormat( "0000" );
-            content = Util.loadImage("media/fogTex/Smoke" + df.format(i) + ".bmp");
-            glTexSubImage3D(GL_TEXTURE_2D_ARRAY,
-                            0,
-                            0,
-                            0,
-                            i,
-                            content.width,
-                            content.height,
-                            1,
-                            GL_RED,
-                            GL_FLOAT,
-                            content.data);
-        }
-        glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
-        
-        createFogGL();
-    }
-    
-    /**
-     * Create GL buffer for fog and share with OpenCL.
-     */
-    private static void createFogGL()
-    {
         //create OpenGL -CL buffer for fog
         vertArrayFogID = glGenVertexArrays();
         glBindVertexArray(vertArrayFogID);
@@ -618,9 +578,6 @@ public class Rainstreaks
         streakRenderSP.setUniform("sunDir", sun.getDirection());
         streakRenderSP.setUniform("sunColor", sun.getColor());
         streakRenderSP.setUniform("sunIntensity", sun.getIntensity());
-        streakRenderSP.setUniform("pointLightDir", orb.getPosition());
-        streakRenderSP.setUniform("pointLightColor", orb.getColor());
-        streakRenderSP.setUniform("pointLightIntensity", pointLightIntensity);
         
         glBindVertexArray(vertArrayID);
         glDrawArrays(GL_POINTS, 0, maxParticles);

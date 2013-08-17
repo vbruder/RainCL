@@ -16,7 +16,6 @@ import apiWrapper.OpenAL;
 import apiWrapper.OpenCL;
 import apiWrapper.OpenCL.Device_Type;
 
-import environment.PointLightOrb;
 import environment.Rainstreaks;
 import environment.Sun;
 import environment.Water;
@@ -60,7 +59,6 @@ public class Main {
     // shader programs
     private static ShaderProgram defShadingSP;
     private static ShaderProgram terrainSP;
-    private static ShaderProgram orbSP;
     private static ShaderProgram skySP;
     
     // current configurations
@@ -87,24 +85,17 @@ public class Main {
     private static boolean drawRain 	= false;
     private static boolean drawWater 	= true;
     private static boolean drawSky 		= true;
-    private static boolean drawClouds 	= false;
     private static boolean drawFog		= false;
     
     private static Rainstreaks raindrops = null;
 
-	private static PointLightOrb orb;
     private static Sun sun;
     private static Water watermap = null;
     //sky
     private static Geometry skyBox;
-    private static Geometry skyCloud;
-    private static Geometry floorQuad;
-    private static Texture skyDomeTex;
-    private static Texture skyCloudTex;
-    private static Texture floorTex;
     private static Texture cubeMap;
     private static Matrix4f skyMoveMatrix = new Matrix4f();
-    private static Matrix4f  cloudModelMatrix = new Matrix4f();
+
     //terrain
     private static Geometry terrain;
     private static String terrainDataPath = "media/terrain/";
@@ -157,20 +148,12 @@ public class Main {
             createSky();
             
             //create light sources
-            //sun
             sun = new Sun(new Vector3f(1.0f, 1.0f, 1.0f), new Vector3f(-30.0f, 50.0f, -30.0f), 0.09f);
-            //TODO: point light(s)
-            orbSP = new ShaderProgram("./shader/Orb.vsh", "./shader/Orb.fsh");
-            orb = new PointLightOrb();
-            orb.setRadius(0.05f);
-            orb.setOrbitRadius(1.25f + (float)Math.random());
-            orb.setOrbitTilt(Util.PI_DIV4 - (float)Math.random() * Util.PI_DIV2);
-            orb.setSpeed((float)Math.random());
-            orb.setColor(new Vector3f((float)Math.random(), (float)Math.random(), (float)Math.random()));
-                       
+            
+            //create rain system
             createRainsys();
 
-            //starting position
+            //camera starting position
             cam.move(50.0f, 50.0f, 20.0f);
             
             //start render loop
@@ -206,34 +189,21 @@ public class Main {
     		watermap.destroy();
     	}
         //create rain streaks
-        raindrops = new Rainstreaks(Device_Type.GPU, Display.getDrawable(), cam, orb, sun);
+        raindrops = new Rainstreaks(Device_Type.GPU, Display.getDrawable(), cam, sun);
         //create water map
         watermap = new Water(Device_Type.GPU, Display.getDrawable(), terrain, skyBox);
 	}
 
 	/**
-     * Create data for sky dome.
+     * Create data for sky box.
      */
     private static void createSky()
     {
     	skyBox = GeometryFactory.createCube(75.f);
     	
+    	//create cube map data
     	cubeMap = new Texture(GL_TEXTURE_CUBE_MAP, 5);
-    	
-//        skyDome   = GeometryFactory.createSkyDome(100, 75, 75);
-//        skyCloud  = GeometryFactory.createSkyDome( 95, 75, 75);
-//        floorQuad = GeometryFactory.createFloorQuad(100.f);
-//        
-//        //TODO: Texture units
-//        skyDomeTex  = Texture.generateTexture("./media/skyTex/sky05.png", 5);
-//        //skyCloudTex = Texture.generateTexture("./media/skyTex/sky_sw.jpg", 7);
-//        floorTex = Texture.generateTexture("./media/textures/floor01.png", 6);
-//        
-//        skyDome.setColorTex(skyDomeTex);
-//        
-
 		String[] cubeMapFileName = {"left", "right", "up", "down", "front", "back"};
-
 		int[] cubeMapTargets = 	{	
 									GL_TEXTURE_CUBE_MAP_POSITIVE_X,
 									GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
@@ -242,11 +212,11 @@ public class Main {
 									GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
 									GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
 								};
-       
         cubeMap.bind();
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
+		
+		//textures on cube map
         for(int i = 0; i < 6; i++)
         {
         	Util.ImageContents contents = Util.loadImage("media/skyTex/" + cubeMapFileName[i] + ".png");
@@ -335,8 +305,6 @@ public class Main {
             
             sceneShader.bind();
             sceneShader.clear();
-
-            //orb.bindLightInformationToShader(raindrops.getShaderProgram().getID());
             
             //sky dome
             if (drawSky)
@@ -350,17 +318,6 @@ public class Main {
 	            glFrontFace(GL_CW);
 	            skyBox.draw();
 	            glFrontFace(GL_CCW);
-            }
-                        
-            //TODO: clouds?
-            if (drawClouds)
-            {
-            	glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
-	            glEnable(GL_BLEND);
-	            skySP.setUniform("model", cloudModelMatrix);
-	            skySP.setUniform("textureImage", skyCloudTex);
-	            skyCloud.draw();
-	            glDisable(GL_BLEND);
             }
             
             //terrain
@@ -392,13 +349,14 @@ public class Main {
             	glBlendFunc(GL_ONE_MINUS_SRC_ALPHA, GL_ONE);
             	glEnable(GL_BLEND);
             	glDisable(GL_DEPTH_TEST);
+            	glDisable(GL_CULL_FACE);
             	raindrops.drawFog(cam);
+            	glEnable(GL_CULL_FACE);
             	glDisable(GL_BLEND);
             	glEnable(GL_DEPTH_TEST);
             }
 	            
             //water map
-            //TODO: Draw water on terrain
             if (drawWater)
             {
             	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -415,14 +373,6 @@ public class Main {
             	raindrops.draw(cam);
             	glDisable(GL_BLEND);
             }
-            	
-            //TODO: Point lights
-//            glUseProgram(orbSP.getID());
-//            Matrix4f viewProj = new Matrix4f();
-//            Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);  
-//            orbSP.setUniform("viewProj", viewProj);
-//            orb.draw(orbSP.getID());
-            
             
             sceneShader.finish();
             
@@ -576,14 +526,11 @@ public class Main {
         Util.translationX(cam.getCamPos().x, skyMoveMatrix);
         Util.mul(skyMoveMatrix, skyMoveMatrix, Util.translationY(20.f, null));
         Util.mul(skyMoveMatrix, skyMoveMatrix, Util.translationZ(cam.getCamPos().z, null));
-        Util.rotationY((0.005f)*Util.PI_MUL2 * ingameTime, cloudModelMatrix);
-        Util.mul(cloudModelMatrix, skyMoveMatrix, cloudModelMatrix);
         
         // update time properly
         ingameTime += ingameTimePerSecond * 1e-3f * (float)millis;        
         raindrops.updateSimulation(millis);
         watermap.updateSimulation(millis);
-        //orb.animate(millis);
     }
     
     //Getters and setters

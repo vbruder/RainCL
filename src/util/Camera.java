@@ -21,7 +21,7 @@ public final class Camera
     
     // near and far plane
     private float near = 1e-2f;
-    private float far = 1e3f;
+    private float far = 200.0f;
     
     /**
      * Default constructor.
