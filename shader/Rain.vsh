@@ -10,7 +10,6 @@ out VertexData
 {
     float texArrayID;
     float randEnlight;
-    vec3 positionWC;
     vec3 velocity;
 } vertex;
 
@@ -18,7 +17,6 @@ void main(void)
 {
     vertex.texArrayID = vertexSeed.w;
     vertex.randEnlight = vertexVelo.w;
-    vec3 positionWC = positionMC.xyz;
     vec3 velocity	= vertexVelo.xyz;
     gl_Position = positionMC;
 }

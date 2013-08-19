@@ -476,7 +476,7 @@ public class Settings extends JDialog implements TimerListener
             lblNewLabel.setBounds(10, 10, 384, 20);
             lpAbout.add(lblNewLabel);
             
-            JLabel lblVersion = new JLabel("Version: 0.2 (Alpha)");
+            JLabel lblVersion = new JLabel("Version: 1.0");
             lblVersion.setBounds(10, 40, 384, 14);
             lpAbout.add(lblVersion);
             

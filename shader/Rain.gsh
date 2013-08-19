@@ -9,7 +9,6 @@ in VertexData
 {
     float texArrayID;
     float randEnlight;
-    vec3 position;
     vec3 velocity;
 } vertex[];
 
