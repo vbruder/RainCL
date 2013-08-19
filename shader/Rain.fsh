@@ -10,6 +10,8 @@
 in vec3 fragmentTexCoords;
 in float randEnlight;
 in float texArrayID;
+in vec3 particlePosition;
+in vec3 particleVelocity;
 
 uniform sampler2DArray rainTex;
 uniform sampler1D rainfactors;
@@ -44,41 +46,44 @@ vec4 rainResponse(vec3 lightVec, vec3 lightColor, float lightIntensity, bool fal
     {  
         float distToLight = length(lightVec);
         fallOff = 1.0/(distToLight*distToLight);
-        fallOff = clamp(fallOff, 0.0, 1.0);   
+        fallOff = clamp(fallOff, 0.0, 1.0); 
     }
 
     if ((fallOff > 0.01) && (lightIntensity > 0.01))
     {
         //TODO: uniform?? openCL mem-object?
-        vec3 dropDirection = vec3(0.0,-1.0,0.0);
+        vec3 dropDirection = vec3(0.01, -1.0, 0.0);
 
         int maxVIDX = 4;
         int maxHIDX = 8;
 
         // Inputs: lightDir, eyePosition, dropDir
-        lightVec = normalize(lightVec);
-        vec3 eyePos   = normalize(eyePosition);
+        lightVec = normalize(particlePosition - lightVec);
+        vec3 eyePos = particlePosition - eyePosition;
+        float dist = distance(eyePosition, particlePosition);
+        eyePos = normalize(eyePos);
+        
         //TODO: eyePosition weird (-x, -z)
-        eyePos.x -= 0.72;
-        eyePos.z -= 0.72;
+        //eyePos.x -= 0.72;
+        //eyePos.z -= 0.72;
         vec3 dropDir  = normalize(dropDirection);
         
         bool is_EpLp_angle_ccw = true;
         float hangle = 0;
-        float vangle = abs((acos(dot(lightVec, dropDir))*180/PI) - 90); // 0 to 90
+        float vangle = acos(dot(lightVec, dropDir)) / PI;// * 0.5; // 0 to 90
         vec3 Lp = normalize(lightVec - dot(lightVec, dropDir)*dropDir);
         vec3 Ep = normalize(eyePos - dot(eyePos, dropDir)*dropDir);
-        hangle = acos(dot(Ep,Lp)) * 180/PI;             // 0 to 180
-        hangle = (hangle-10)/20.0;                      // -0.5 to 8.5
+        hangle = acos(dot(Ep,Lp)) / PI;// * 180/PI;             // 0 to 180
+        //hangle = (hangle-10)/20.0;                      // -0.5 to 8.5
         is_EpLp_angle_ccw = dot(dropDir, cross(Ep,Lp)) > 0;
         
-        if (vangle >= 88.0)
+        if (vangle * PI / 180.0 >= 88.0)
         {
             hangle = 0;
             is_EpLp_angle_ccw = true;
         }
                 
-        vangle = (vangle-10.0)/20.0; // -0.5 to 4.5
+        //vangle = (vangle-10.0)/20.0; // -0.5 to 4.5
         
         // Outputs:
         // verticalLightIndex[1|2] - two indices in the vertical direction
@@ -98,7 +103,7 @@ vec4 rainResponse(vec3 lightVec, vec3 lightColor, float lightIntensity, bool fal
         int horizontalLightIndex2 = 0;
         float s = 0;
         
-        s = fract(hangle);
+        s = hangle;//fract(hangle);
         horizontalLightIndex1 = int(floor(hangle)); // 0 to 8
         horizontalLightIndex2 = horizontalLightIndex1 + 1;
         if (horizontalLightIndex1 < 0)
@@ -129,10 +134,10 @@ vec4 rainResponse(vec3 lightVec, vec3 lightColor, float lightIntensity, bool fal
             textureCoordsH2 = fragmentTexCoords.x;
             horizontalLightIndex1 = 0;
             horizontalLightIndex2 = 0;
-            s = 0;
+            //s = 0;
         }
         
-        // Generate the final texture coordinates for each sample
+        // Generate final texture coordinates for each sample
         int type = int(texArrayID);
         ivec2 texIndicesV1 = ivec2( (verticalLightIndex1*90 + horizontalLightIndex1*10 + type), 
                                     (verticalLightIndex1*90 + horizontalLightIndex2*10 + type));
@@ -140,7 +145,7 @@ vec4 rainResponse(vec3 lightVec, vec3 lightColor, float lightIntensity, bool fal
         vec3 tex2 = vec3(textureCoordsH2, fragmentTexCoords.y, texIndicesV1.y);
         if ((verticalLightIndex1 < 4) && (verticalLightIndex2 >= 4)) 
         {
-            s = 0;
+            //s = 0;
             horizontalLightIndex1 = 0;
             horizontalLightIndex2 = 0;
             textureCoordsH1 = fragmentTexCoords.x;
@@ -152,7 +157,7 @@ vec4 rainResponse(vec3 lightVec, vec3 lightColor, float lightIntensity, bool fal
         vec3 tex3 = vec3(textureCoordsH1, fragmentTexCoords.y, texIndicesV2.x);        
         vec3 tex4 = vec3(textureCoordsH2, fragmentTexCoords.y, texIndicesV2.y);
 
-        // Sample opacity from the textures
+        // Sample opacity from textures
         float col1 = texture2DArray(rainTex, tex1).r * texelFetch(rainfactors, texIndicesV1.x, 0).r;
         float col2 = texture2DArray(rainTex, tex2).r * texelFetch(rainfactors, texIndicesV1.y, 0).r;
         float col3 = texture2DArray(rainTex, tex3).r * texelFetch(rainfactors, texIndicesV2.x, 0).r;
@@ -163,17 +168,19 @@ vec4 rainResponse(vec3 lightVec, vec3 lightColor, float lightIntensity, bool fal
         float hOpacity2 = mix(col3, col4, s);
         opacity = mix(hOpacity1, hOpacity2, t);
         // inverse gamma correction (expand dynamic range)
-        opacity = pow(opacity, 0.7);            
-        opacity *= 2.0 * lightIntensity * fallOff;
+        opacity = pow(opacity, 0.7);    
+        opacity *= 1.0 * lightIntensity * fallOff * max(dist, 0.5);
+    	//return vec4(s, 0, 0, opacity);
+
     }
-         
-   return vec4(lightColor, opacity);
+	return vec4(1,1,1, opacity);         
 }
 
 void main(void)
 {
+
     //sun (directional) lighting
-    vec4 sunLight = rainResponse(sunDir, sunColor, sunIntensity * randEnlight, false);
+    vec4 sunLight = rainResponse(-sunDir, sunColor, 1, false);//sunIntensity * randEnlight, false);
 
     //TODO: point lighting
     vec4 pointLight = vec4(0,0,0,0); 

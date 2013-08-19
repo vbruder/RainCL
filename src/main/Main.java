@@ -81,10 +81,10 @@ public class Main {
     private static final Matrix4f viewProjMatrix = new Matrix4f();
         
     //environment
-    private static boolean drawTerrain 	= false;
-    private static boolean drawRain 	= false;
-    private static boolean drawWater 	= true;
-    private static boolean drawSky 		= true;
+    private static boolean drawTerrain 	= true;
+    private static boolean drawRain 	= true;
+    private static boolean drawWater 	= false;
+    private static boolean drawSky 		= false;
     private static boolean drawFog		= false;
     
     private static Rainstreaks raindrops = null;
@@ -140,8 +140,8 @@ public class Main {
             glEnable(GL_DEPTH_TEST);   
             
             //deferred shading
-            screenQuad = GeometryFactory.createScreenQuad();
-            defShadingSP = new ShaderProgram("./shader/Main_VS.glsl", "./shader/Main_FS.glsl");
+//            screenQuad = GeometryFactory.createScreenQuad();
+//            defShadingSP = new ShaderProgram("./shader/Main_VS.glsl", "./shader/Main_FS.glsl");
             
             //create environment
             createTerrain();            
@@ -256,16 +256,16 @@ public class Main {
     	//background color
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         
-        DeferredShader reflectShader = new DeferredShader();
-        reflectShader.init(0);
-        reflectShader.registerShaderProgram(defShadingSP);
+//        DeferredShader reflectShader = new DeferredShader();
+//        reflectShader.init(0);
+//        reflectShader.registerShaderProgram(defShadingSP);
         
-        DeferredShader sceneShader = new DeferredShader();
-        sceneShader.init(0);
-        sceneShader.registerShaderProgram(defShadingSP);
-        
-        FrameBuffer fbo = new FrameBuffer();
-        fbo.init(true, WIDTH, HEIGHT);
+//        DeferredShader sceneShader = new DeferredShader();
+//        sceneShader.init(0);
+//        sceneShader.registerShaderProgram(defShadingSP);
+//        
+//        FrameBuffer fbo = new FrameBuffer();
+//        fbo.init(true, WIDTH, HEIGHT);
         
         long last = System.currentTimeMillis();
         long now, millis;
@@ -294,17 +294,17 @@ public class Main {
             // clear screen
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             
-            // enable deferred shading
-            reflectShader.bind();
-            reflectShader.clear();
-
-            reflectScene();
-            Texture reflected = reflectShader.getDiffuseTexture();
-            reflectShader.finish();
+//            // enable deferred shading
+//            reflectShader.bind();
+//            reflectShader.clear();
+//
+//            reflectScene();
+//            Texture reflected = reflectShader.getDiffuseTexture();
+//            reflectShader.finish();
 //            reflectShader.DrawTexture(reflectShader.getDiffuseTexture());
-            
-            sceneShader.bind();
-            sceneShader.clear();
+//            
+//            sceneShader.bind();
+//            sceneShader.clear();
             
             //sky dome
             if (drawSky)
@@ -318,6 +318,19 @@ public class Main {
 	            glFrontFace(GL_CW);
 	            skyBox.draw();
 	            glFrontFace(GL_CCW);
+            }
+            
+            //volumetric fog
+            if (drawFog)
+            {
+            	glBlendFunc(GL_ONE_MINUS_SRC_ALPHA, GL_ONE);
+            	glEnable(GL_BLEND);
+            	glDisable(GL_DEPTH_TEST);
+            	glDisable(GL_CULL_FACE);
+            	raindrops.drawFog(cam);
+            	glEnable(GL_CULL_FACE);
+            	glDisable(GL_BLEND);
+            	glEnable(GL_DEPTH_TEST);
             }
             
             //terrain
@@ -343,40 +356,28 @@ public class Main {
 	            
 	            terrain.draw();
             }
-            
-            if (drawFog)
-            {
-            	glBlendFunc(GL_ONE_MINUS_SRC_ALPHA, GL_ONE);
-            	glEnable(GL_BLEND);
-            	glDisable(GL_DEPTH_TEST);
-            	glDisable(GL_CULL_FACE);
-            	raindrops.drawFog(cam);
-            	glEnable(GL_CULL_FACE);
-            	glDisable(GL_BLEND);
-            	glEnable(GL_DEPTH_TEST);
-            }
 	            
             //water map
             if (drawWater)
             {
             	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             	glEnable(GL_BLEND);
-            	watermap.draw(cam, points, reflected, scaleTerrain, fogThickness, sun);
+            	watermap.draw(cam, points, scaleTerrain, fogThickness, sun);
             	glDisable(GL_BLEND);
             }
             
             //rain streaks
             if (drawRain)
             {
-            	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             	glEnable(GL_BLEND);
+            	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            	//glDisable(GL_BLEND);
             	raindrops.draw(cam);
             	glDisable(GL_BLEND);
             }
             
-            sceneShader.finish();
-            
-            sceneShader.DrawTexture(sceneShader.getDiffuseTexture());
+//            sceneShader.finish();        
+//            sceneShader.DrawTexture(sceneShader.getDiffuseTexture());
             
             // present screen
             Display.update();
@@ -384,7 +385,7 @@ public class Main {
         }
         terrainSP.delete();
         raindrops.getShaderProgram().delete();
-        sceneShader.delete();
+//        sceneShader.delete();
     }
     
     private static void reflectScene()

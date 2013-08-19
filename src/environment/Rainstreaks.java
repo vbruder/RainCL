@@ -592,9 +592,6 @@ public class Rainstreaks
         fogRenderSP.use();
         
     	eyePos = new Vector3f(cam.getCamPos().x, cam.getCamPos().y, cam.getCamPos().z);
-    	
-//        Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);
-//        fogRenderSP.setUniform("viewProj", viewProj);
         
     	fogRenderSP.setUniform("view", cam.getView());
     	fogRenderSP.setUniform("proj", cam.getProjection());

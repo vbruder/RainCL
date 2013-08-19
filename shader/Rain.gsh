@@ -9,6 +9,8 @@ in VertexData
 {
     float texArrayID;
     float randEnlight;
+    vec3 position;
+    vec3 velocity;
 } vertex[];
 
 uniform mat4 viewProj;
@@ -19,24 +21,28 @@ uniform float dt;
 out vec3 fragmentTexCoords;
 out float randEnlight;
 out float texArrayID;
+out vec3 particlePosition;
+out vec3 particleVelocity;
 
 // GS for billboard technique (make two triangles from point).
 void main(void)                                                                         
 {
     //streak size
-    float height = 0.25;
-    float width = height/50.0;
+    float height = 0.4;
+    float width = height/40.0;
                                                                                  
     vec3 pos = gl_in[0].gl_Position.xyz;                                            
     vec3 toCamera = normalize(eyePosition - pos);                                    
     vec3 up = vec3(0.0, 1.0, 0.0);                                                  
-    vec3 right = cross(toCamera, up) * width * length(eyePosition - pos);
+    vec3 right = cross(toCamera, up) * width * length(eyePosition - pos) * 0.5;
                                                     
     //bottom left
     pos -= right;
     fragmentTexCoords.xy = vec2(0, 0);
     fragmentTexCoords.z = vertex[0].texArrayID;
     randEnlight = vertex[0].randEnlight;
+    particlePosition = pos;
+    particleVelocity = vertex[0].velocity;
     texArrayID = vertex[0].texArrayID;
     gl_Position = viewProj * vec4(pos + (windDir*dt), 1.0);
     EmitVertex();
@@ -46,6 +52,8 @@ void main(void)
     fragmentTexCoords.xy = vec2(0, 1);
     fragmentTexCoords.z = vertex[0].texArrayID;
     randEnlight = vertex[0].randEnlight;
+    particlePosition = pos;
+    particleVelocity = vertex[0].velocity;
     texArrayID = vertex[0].texArrayID;
     gl_Position = viewProj * vec4(pos, 1.0);
     EmitVertex();
@@ -56,6 +64,8 @@ void main(void)
     fragmentTexCoords.xy = vec2(1, 0);
     fragmentTexCoords.z = vertex[0].texArrayID;
     randEnlight = vertex[0].randEnlight;
+    particlePosition = pos;
+    particleVelocity = vertex[0].velocity;
     texArrayID = vertex[0].texArrayID;
     gl_Position = viewProj * vec4(pos + (windDir*dt), 1.0);
     EmitVertex();
@@ -64,7 +74,9 @@ void main(void)
     pos.y += height;
     fragmentTexCoords.xy = vec2(1, 1);
     fragmentTexCoords.z = vertex[0].texArrayID;
-    randEnlight = vertex[0].randEnlight;
+    randEnlight = vertex[0].randEnlight,
+    particlePosition = pos;
+    particleVelocity = vertex[0].velocity;
     texArrayID = vertex[0].texArrayID;
     gl_Position = viewProj * vec4(pos, 1.0);
     EmitVertex();

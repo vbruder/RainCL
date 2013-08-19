@@ -1,6 +1,6 @@
 #version 400 core
 
-#define PI 3.14159265358979
+#extension GL_EXT_gpu_shader4 : enable
 
 in vec4 cubeCoords;
 in vec2 texCoords;

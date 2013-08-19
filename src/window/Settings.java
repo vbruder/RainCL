@@ -382,8 +382,8 @@ public class Settings extends JDialog implements TimerListener
                 cbxSound.setSelected(main.Main.isAudio());
             }
             
-            JLayeredPane lpLighting = new JLayeredPane();
-            tabbedPane.addTab("Lighting", null, lpLighting, null);
+//            JLayeredPane lpLighting = new JLayeredPane();
+//            tabbedPane.addTab("Lighting", null, lpLighting, null);
             
             JLayeredPane lpSysInfo = new JLayeredPane();
             tabbedPane.addTab("System Info", null, lpSysInfo, null);

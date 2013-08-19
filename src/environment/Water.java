@@ -161,6 +161,7 @@ public class Water {
 	
     private static final int NORMALTEX_UNIT		 = 15;
     private static final int BUMPTEX_UNIT		 = 16;
+    
     private static final int NUM_NORMAL_TEXTURES = 16;
     
     private Texture normalTex;
@@ -541,14 +542,13 @@ public class Water {
 	 * Draw the water surfaces on the scene.
 	 * @param cam Camera object
 	 */
-	public void draw(Camera cam, boolean points, Texture reflected, int scaleTerrain, Vector3f fogThickness, Sun sun)
+	public void draw(Camera cam, boolean points, int scaleTerrain, Vector3f fogThickness, Sun sun)
 	{
     	WaterRenderSP.use();
         
         Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);  
         WaterRenderSP.setUniform("viewProj", viewProj);
         WaterRenderSP.setUniform("scale", scaleTerrain);
-        //WaterRenderSP.setUniform("colorTex", reflected);
         WaterRenderSP.setUniform("normalTex", terrain.getNormalTex());
         WaterRenderSP.setUniform("rainNormalTex", normalTex);
         WaterRenderSP.setUniform("rainBumpTex", bumpTex);
