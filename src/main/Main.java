@@ -114,7 +114,7 @@ public class Main {
     private static TimerCaller tc = new TimerCaller();
     //view
     private static float fps;
-    private static Vector3f fogThickness = new Vector3f(0.07f, 0.07f, 0.07f);
+    private static Vector3f fogThickness;
 
     /**
      * Main method as entry point into the framework.
@@ -133,33 +133,29 @@ public class Main {
                 sound.init();
             }
             
-            //OpenGL scene parameters
+            // OpenGL scene parameters
             glEnable(GL_CULL_FACE);
             glFrontFace(GL_CCW);
             glCullFace(GL_BACK);
             glEnable(GL_DEPTH_TEST);   
             
-            //deferred shading
-//            screenQuad = GeometryFactory.createScreenQuad();
-//            defShadingSP = new ShaderProgram("./shader/Main_VS.glsl", "./shader/Main_FS.glsl");
-            
-            //create environment
+            // create environment
             createTerrain();            
             createSky();
             
-            //create light sources
-            sun = new Sun(new Vector3f(1.0f, 1.0f, 1.0f), new Vector3f(80.0f, 150.0f, -40.0f), 0.09f);
+            // create light sources
+            sun = new Sun(new Vector3f(1.0f, 1.0f, 1.0f), new Vector3f(50.0f, 100.0f, -50.0f), 0.09f);
             
-            //create rain system
+            // create rain system
             createRainsys();
 
-            //camera starting position
+            // camera starting position
             cam.move(50.0f, 50.0f, 20.0f);
             
-            //start render loop
+            // start render loop
             render();
 
-            //cleanup
+            // cleanup
             raindrops.destroy();
             watermap.destroy();
             OpenCL.destroy();
@@ -190,6 +186,7 @@ public class Main {
     	}
         //create rain streaks
         raindrops = new Rainstreaks(Device_Type.GPU, Display.getDrawable(), cam, sun);
+        Rainstreaks.setMaxParticles(1 << 17);
         //create water map
         watermap = new Water(Device_Type.GPU, Display.getDrawable(), terrain, skyBox);
 	}

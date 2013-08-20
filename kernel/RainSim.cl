@@ -39,6 +39,7 @@ kernel void rainSim	(
     
     float4 myPos = position[myId].s0123;
     float3 myVelos = velos[myId].xyz;
+    float3 eyePos = (float3)(eyePosX, eyePosY, eyePosZ);
 		
 	float2 tc = (float2)(0.5f, 0.5f) + myPos.xz;
 	float4 height = heightScale * read_imagef(heightmap, sampler, (float2)(1-tc.x, tc.y));
@@ -46,10 +47,12 @@ kernel void rainSim	(
     //myPos.y = height.x;
     height.x = 0.0f;
 	
+	float dist = distance(eyePos, myPos.xyz);
+	
 	//respawn particle
-	if (myPos.y <= (height.x - 2.0f))
+	if (myPos.y <= (height.x - 2.0f) || dist > 50.0f)
 	{
-		myPos.xyz = seed[myId].xyz + (float3)(eyePosX, eyePosY, eyePosZ);
+		myPos.xyz = seed[myId].xyz + eyePos;
         myPos.y += 1.f;
 	}
 

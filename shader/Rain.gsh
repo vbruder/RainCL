@@ -27,7 +27,7 @@ out vec3 particleVelocity;
 void main(void)                                                                         
 {
     //streak size
-    float height = 0.4;
+    float height = 0.5;
     float width = height/40.0;
                                                                                  
     vec3 pos = gl_in[0].gl_Position.xyz;                                            

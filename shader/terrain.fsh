@@ -31,13 +31,13 @@ vec3 calcLighting(vec3 normal, vec3 diff, vec3 spec, vec3 ambi)
     vec3 sDir = normalize(sunDir - eyePosition);
     float cosGammaDir = dot(sDir, view);
     float dirLighting = k_diff * sunIntensity * clamp(dot(normal, lightDirNorm), 0.0, 1.0);
-    //diffuse
+    // diffuse
     vec3 diffDirLight = dirLighting*expDir;        
-    //ambient
+    // ambient
 	vec3 ambiFactor = vec3(0.96/pow(1 - cosGammaDir*0.2, 2.0)) *4;
     vec3 ambiDirLight = ambiFactor * sunIntensity * vec3(1 - expDir);
-    //specular
-    vec3 specDirLight = clamp(pow(dot(-lightDirNorm, reflVec), 20.0), 0.0, 1.0) * sunIntensity * k_spec * expDir; 
+    // specular
+    vec3 specDirLight = clamp(pow(dot(lightDirNorm, reflVec), 20.0), 0.0, 1.0) * sunIntensity * k_spec * expDir; 
 
 	return vec3(ambiDirLight.xyz + diff*(diffDirLight.xyz) + spec*specDirLight);
 }

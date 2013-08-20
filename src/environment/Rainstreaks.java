@@ -161,7 +161,7 @@ public class Rainstreaks
     //shader
     private ShaderProgram streakRenderSP;
     private ShaderProgram fogRenderSP;
-    private Vector3f eyePos = new Vector3f(0.f, 0.f, 0.f);
+    private static Vector3f eyePos = new Vector3f(0.f, 0.f, 0.f);
     private final Matrix4f viewProj = new Matrix4f();
     //array IDs
 	private static int vertArrayID;
@@ -189,11 +189,11 @@ public class Rainstreaks
     public Rainstreaks(Device_Type device_type, Drawable drawable, Camera cam, Sun sun) throws LWJGLException
     {
         maxParticles = 1 << 17;
-        this.eyePos = cam.getCamPos();
+        eyePos = cam.getCamPos();
         this.sun = sun;
-        //range of cylinder around cam
-        clusterScale = 50.0f;
-        //velocity factor
+        // range of cylinder around camera
+        clusterScale = 30.0f;
+        // velocity factor
         veloFactor = 250.0f;
         
         this.gws.put(0, maxParticles);
@@ -274,7 +274,7 @@ public class Rainstreaks
 		veloBuffer = BufferUtils.createFloatBuffer(4 * maxParticles);
 		
 		//must be 2^x
-		int numLodLvl = 1 << 2;
+		int numLodLvl = 1 << 3;
 		//fill buffers
 		for (int lodLvl = 0; lodLvl < numLodLvl; lodLvl++)
         {   
@@ -284,9 +284,9 @@ public class Rainstreaks
     		    float x, y, z;
     		    do
     		    {
-    		        x = (r.nextFloat() - 0.5f) * (clusterScale + lodLvl);
-                    y = (r.nextFloat() + 0.1f) * (clusterScale + lodLvl);  
-                    z = (r.nextFloat() - 0.5f) * (clusterScale + lodLvl);
+    		        x = (r.nextFloat() - 0.5f) * (clusterScale + lodLvl*5);
+                    y = (r.nextFloat() + 0.1f) * (clusterScale);  
+                    z = (r.nextFloat() - 0.5f) * (clusterScale + lodLvl*5);
     		    }
                 while ((z < 0.2f && z > -0.2f) && (x < 0.2f && x > -0.2f));
     		    //respawn if particle is too close to viewer
@@ -474,7 +474,7 @@ public class Rainstreaks
      */
     private static void createKernels() {
                
-        //kernel
+        // kernel
         kernelMoveStreaks = clCreateKernel(program, "rainSim");
         kernelMoveStreaks.setArg(0, memRainPos);
         kernelMoveStreaks.setArg(1, memVelos);
@@ -482,15 +482,15 @@ public class Rainstreaks
         kernelMoveStreaks.setArg(3, memHeightMap);
         kernelMoveStreaks.setArg(4, maxParticles);
         kernelMoveStreaks.setArg(5, 0.f);
-        //Eye position
+        // Eye position
         kernelMoveStreaks.setArg(6, 0.f);
         kernelMoveStreaks.setArg(7, 0.f);
         kernelMoveStreaks.setArg(8, 0.f);
-        //Wind direction
+        // Wind direction
         kernelMoveStreaks.setArg( 9, 0.f);
         kernelMoveStreaks.setArg(10, 0.f);
         
-        //TODO: Fog kernel with wind direction
+        // Fog kernel
         kernelMoveFog = clCreateKernel(program, "fogSim");
         kernelMoveFog.setArg(0, memFogPos);
         kernelMoveFog.setArg(1, 0.f);
@@ -566,7 +566,7 @@ public class Rainstreaks
         //render rain streaks
     	streakRenderSP.use();
         
-    	eyePos = new Vector3f(cam.getCamPos().x, cam.getCamPos().y, cam.getCamPos().z);
+    	eyePos = cam.getCamPos();
         Matrix4f.mul(cam.getProjection(), cam.getView(), viewProj);  
         streakRenderSP.setUniform("viewProj", viewProj);
         streakRenderSP.setUniform("rainTex", rainTex);
@@ -591,7 +591,7 @@ public class Rainstreaks
         //render fog
         fogRenderSP.use();
         
-    	eyePos = new Vector3f(cam.getCamPos().x, cam.getCamPos().y, cam.getCamPos().z);
+//    	eyePos = new Vector3f(cam.getCamPos().x, cam.getCamPos().y, cam.getCamPos().z);
         
     	fogRenderSP.setUniform("view", cam.getView());
     	fogRenderSP.setUniform("proj", cam.getProjection());
