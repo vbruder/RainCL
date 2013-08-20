@@ -192,7 +192,7 @@ public class Rainstreaks
         this.eyePos = cam.getCamPos();
         this.sun = sun;
         //range of cylinder around cam
-        clusterScale = 30.0f;
+        clusterScale = 50.0f;
         //velocity factor
         veloFactor = 250.0f;
         
@@ -313,7 +313,7 @@ public class Rainstreaks
                 float tmpR = r.nextFloat();
                 if (tmpR > 0.9f)
                 {
-                    veloBuffer.put(1.f + (1.f - tmpR*0.1f));
+                    veloBuffer.put(1.f + (1.f - tmpR)*0.1f); // 1.0 to 1.01 
                 }
                 else
                 {

@@ -51,47 +51,42 @@ vec4 rainResponse(vec3 lightVec, vec3 lightColor, float lightIntensity, bool fal
 
     if ((fallOff > 0.01) && (lightIntensity > 0.01))
     {
-        //TODO: uniform?? openCL mem-object?
-        vec3 dropDirection = vec3(0.01, -1.0, 0.0);
-
         int maxVIDX = 4;
         int maxHIDX = 8;
 
         // Inputs: lightDir, eyePosition, dropDir
         lightVec = normalize(particlePosition - lightVec);
-        vec3 eyePos = particlePosition - eyePosition;
-        float dist = distance(eyePosition, particlePosition);
-        eyePos = normalize(eyePos);
-        
-        //TODO: eyePosition weird (-x, -z)
-        //eyePos.x -= 0.72;
-        //eyePos.z -= 0.72;
-        vec3 dropDir  = normalize(dropDirection);
+        vec3 eyeVec = normalize(particlePosition - eyePosition);
+        // float dist = distance(eyePosition, particlePosition);
+
+        vec3 dropDir  = normalize(particleVelocity);
         
         bool is_EpLp_angle_ccw = true;
         float hangle = 0;
-        float vangle = acos(dot(lightVec, dropDir)) / PI;// * 0.5; // 0 to 90
-        vec3 Lp = normalize(lightVec - dot(lightVec, dropDir)*dropDir);
-        vec3 Ep = normalize(eyePos - dot(eyePos, dropDir)*dropDir);
-        hangle = acos(dot(Ep,Lp)) / PI;// * 180/PI;             // 0 to 180
+        // angle between light vactor and drop direction
+        float vangle = acos(dot(lightVec, dropDir)) / PI; // 0 to 1
+        // light vector projection
+        vec3 lightProj = normalize(lightVec - dot(lightVec, dropDir)*dropDir);
+        // eye vector projection
+        vec3 eyeProj = normalize(eyeVec - dot(eyeVec, dropDir)*dropDir);
+        hangle = acos(dot(eyeProj, lightProj)) / PI; // 0 to 1
+
         //hangle = (hangle-10)/20.0;                      // -0.5 to 8.5
-        is_EpLp_angle_ccw = dot(dropDir, cross(Ep,Lp)) > 0;
+        //vangle = (vangle-10.0)/20.0; // -0.5 to 4.5
+        is_EpLp_angle_ccw = dot(dropDir, cross(eyeProj, lightProj)) > 0;
         
         if (vangle * PI / 180.0 >= 88.0)
         {
             hangle = 0;
             is_EpLp_angle_ccw = true;
         }
-                
-        //vangle = (vangle-10.0)/20.0; // -0.5 to 4.5
         
         // Outputs:
         // verticalLightIndex[1|2] - two indices in the vertical direction
         // t - fraction at which the vangle is between these two indices (for mix)
-        int verticalLightIndex1 = int(floor(vangle)); // 0 to 5
-        int verticalLightIndex2 = int(min(maxVIDX, (verticalLightIndex1 + 1)));
-        verticalLightIndex1 = max(0, verticalLightIndex1);
-        float t = fract(vangle);
+        int verticalLightIndex1 = int(floor(vangle * 5)); // 0 to 5
+        int verticalLightIndex2 = int(min(maxVIDX, (verticalLightIndex1 + 1))); // 4 to 6
+        float t = fract(vangle); //0 to 0.999..
 
         // textureCoordsH[1|2] used in case we need to flip the texture horizontally
         float textureCoordsH1 = fragmentTexCoords.x;
@@ -99,18 +94,10 @@ vec4 rainResponse(vec3 lightVec, vec3 lightColor, float lightIntensity, bool fal
         
         // horizontalLightIndex[1|2] - two indices in the horizontal direction
         // s - fraction at which the hangle is between these two indices (for mix)
-        int horizontalLightIndex1 = 0;
-        int horizontalLightIndex2 = 0;
-        float s = 0;
-        
-        s = hangle;//fract(hangle);
-        horizontalLightIndex1 = int(floor(hangle)); // 0 to 8
-        horizontalLightIndex2 = horizontalLightIndex1 + 1;
-        if (horizontalLightIndex1 < 0)
-        {
-            horizontalLightIndex1 = 0;
-            horizontalLightIndex2 = 0;
-        }                 
+        int horizontalLightIndex1 = int(floor(hangle * 8)); // 0 to 8
+        int horizontalLightIndex2 = horizontalLightIndex1 + 1; // 1 to 9
+        float s = fract(hangle); //0 to 0.999..
+                       
         if (is_EpLp_angle_ccw)
         {
             if (horizontalLightIndex2 > maxHIDX) 
@@ -138,12 +125,12 @@ vec4 rainResponse(vec3 lightVec, vec3 lightColor, float lightIntensity, bool fal
         }
         
         // Generate final texture coordinates for each sample
-        int type = int(texArrayID);
+        int type = int(texArrayID); // 0 to 7
         ivec2 texIndicesV1 = ivec2( (verticalLightIndex1*90 + horizontalLightIndex1*10 + type), 
                                     (verticalLightIndex1*90 + horizontalLightIndex2*10 + type));
         vec3 tex1 = vec3(textureCoordsH1, fragmentTexCoords.y, texIndicesV1.x);
         vec3 tex2 = vec3(textureCoordsH2, fragmentTexCoords.y, texIndicesV1.y);
-        if ((verticalLightIndex1 < 4) && (verticalLightIndex2 >= 4)) 
+        if ((verticalLightIndex1 < maxVIDX) && (verticalLightIndex2 >= maxVIDX)) 
         {
             //s = 0;
             horizontalLightIndex1 = 0;
@@ -164,23 +151,23 @@ vec4 rainResponse(vec3 lightVec, vec3 lightColor, float lightIntensity, bool fal
         float col4 = texture2DArray(rainTex, tex4).r * texelFetch(rainfactors, texIndicesV2.y, 0).r;
 
         // Compute interpolated opacity using the s and t factors
-        float hOpacity1 = mix(col1, col2, s);
-        float hOpacity2 = mix(col3, col4, s);
+        float hOpacity1 = mix(col1, col2, s*2);
+        float hOpacity2 = mix(col3, col4, s*2);
         opacity = mix(hOpacity1, hOpacity2, t);
         // inverse gamma correction (expand dynamic range)
-        opacity = pow(opacity, 0.7);    
-        opacity *= 2.0 * lightIntensity * fallOff;// * max(dist, 0.5);
-    	//return vec4(s, 0, 0, opacity);
+        //opacity = pow(opacity, 0.7);    
+        opacity *= 3.0 * lightIntensity * fallOff;// * max(dist, 0.5);
+    	//return vec4(t, 0, 0, opacity);
 
     }
-	return vec4(1,1,1, opacity);         
+	return vec4(lightColor, opacity);         
 }
 
 void main(void)
 {
 
     //sun (directional) lighting
-    vec4 sunLight = rainResponse(-sunDir, sunColor, sunIntensity * randEnlight, false);
+    vec4 sunLight = rainResponse(sunDir, sunColor, 1.0, false);//sunIntensity * 10 * randEnlight, false);
 
     //TODO: point lighting
     vec4 pointLight = vec4(0,0,0,0); 
