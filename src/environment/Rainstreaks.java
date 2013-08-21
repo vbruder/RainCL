@@ -192,7 +192,7 @@ public class Rainstreaks
         eyePos = cam.getCamPos();
         this.sun = sun;
         // range of cylinder around camera
-        clusterScale = 30.0f;
+        clusterScale = 20.0f;
         // velocity factor
         veloFactor = 250.0f;
         
@@ -307,7 +307,7 @@ public class Rainstreaks
                 
                 //add spawning velocity (small random velocity in x- and z-direction for variety and AA 
                 veloBuffer.put(veloFactor*(r.nextFloat() / 100.f));
-                veloBuffer.put(veloFactor*((r.nextFloat() + 0.75f) / 20.f));
+                veloBuffer.put(veloFactor*((r.nextFloat() + 1.0f) / 20.f));
                 veloBuffer.put(veloFactor*(r.nextFloat() / 100.f));
                 //add random number in w coordinate, used to light up random streaks
                 float tmpR = r.nextFloat();

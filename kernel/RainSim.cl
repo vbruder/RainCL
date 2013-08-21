@@ -56,9 +56,9 @@ kernel void rainSim	(
         myPos.y += 1.f;
 	}
 
-    myPos.x += (windDirX + myVelos.x) * dt;
-    myPos.y -= 			   myVelos.y  * dt;
-    myPos.z += (windDirZ + myVelos.z) * dt;
+//    myPos.x += (windDirX + myVelos.x) * dt;
+//    myPos.y -= 			 myVelos.y  * dt;
+//    myPos.z += (windDirZ + myVelos.z) * dt;
     
     position[myId].s0123 = myPos;
 }

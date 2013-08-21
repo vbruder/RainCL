@@ -144,7 +144,7 @@ public class Main {
             createSky();
             
             // create light sources
-            sun = new Sun(new Vector3f(1.0f, 1.0f, 1.0f), new Vector3f(50.0f, 100.0f, -50.0f), 0.09f);
+            sun = new Sun(new Vector3f(1.0f, 1.0f, 1.0f), new Vector3f(0.55f, 0.73f, 0.40f), 0.09f);
             
             // create rain system
             createRainsys();

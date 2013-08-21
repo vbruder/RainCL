@@ -17,6 +17,6 @@ void main(void)
 {
     vertex.texArrayID = vertexSeed.w;
     vertex.randEnlight = vertexVelo.w;
-    vec3 velocity	= vertexVelo.xyz;
+    vertex.velocity = vertexVelo.xyz;
     gl_Position = positionMC;
 }
