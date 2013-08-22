@@ -49,7 +49,6 @@ import static apiWrapper.OpenGL.glDeleteVertexArrays;
 import static apiWrapper.OpenCL.CL_MEM_COPY_HOST_PTR;
 import static apiWrapper.OpenCL.CL_MEM_READ_ONLY;
 import static apiWrapper.OpenCL.CL_MEM_READ_WRITE;
-import static apiWrapper.OpenCL.CL_MEM_USE_HOST_PTR;
 import static apiWrapper.OpenCL.clBuildProgram;
 import static apiWrapper.OpenCL.clCreateBuffer;
 import static apiWrapper.OpenCL.clCreateCommandQueue;
@@ -59,7 +58,6 @@ import static apiWrapper.OpenCL.clCreateProgramWithSource;
 import static apiWrapper.OpenCL.clEnqueueAcquireGLObjects;
 import static apiWrapper.OpenCL.clEnqueueNDRangeKernel;
 import static apiWrapper.OpenCL.clEnqueueReleaseGLObjects;
-import static apiWrapper.OpenCL.clEnqueueWriteBuffer;
 import static apiWrapper.OpenCL.clFinish;
 import static apiWrapper.OpenCL.clReleaseCommandQueue;
 import static apiWrapper.OpenCL.clReleaseContext;
@@ -71,7 +69,6 @@ import static apiWrapper.OpenCL.clRetainMemObject;
 
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
-import java.text.DecimalFormat;
 import java.util.Random;
 
 import main.Main;
@@ -148,7 +145,7 @@ public class Rainstreaks
     private final PointerBuffer gws = BufferUtils.createPointerBuffer(1);
     
     //wind
-    private static Vector3f windDir[] = new Vector3f[500];
+    private static Vector3f windDir[] = new Vector3f[256];
     private static int windPtr = 0;
     private static float windForce = 10.f;
     

@@ -28,7 +28,7 @@ void main(void)
 {
     //streak size
     float height = 0.5;
-    float width = height/50.0;
+    float width = height/40.0;
                                                                                  
     vec3 pos = gl_in[0].gl_Position.xyz;                                            
     vec3 toCamera = normalize(eyePosition - pos);                                    
