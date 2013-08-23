@@ -270,4 +270,13 @@ public class Geometry {
     public FloatBuffer getVertexValueBuffer() {
     	return vertexValueBuffer;
     }
+
+    /**
+     * Returns index data.
+     * @return Float buffer containing index data.
+     */
+	public IntBuffer getIndexValueBuffer() {
+		return indexValueBuffer;
+	}
+    
 }

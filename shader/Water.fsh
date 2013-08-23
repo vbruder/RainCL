@@ -31,4 +31,6 @@ void main(void)
 
 	fragColor.rgb = surfaceColor.rgb * max(dot(normalize(vPosLight), normal), 0);
 	fragColor.a = cubeCoords.q;
+	
+	fragColor.rgba = vec4(1,1,1,1);
 }

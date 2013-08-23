@@ -145,7 +145,7 @@ public class Rainstreaks
     private final PointerBuffer gws = BufferUtils.createPointerBuffer(1);
     
     //wind
-    private static Vector3f windDir[] = new Vector3f[256];
+    private static Vector3f windDir[] = new Vector3f[512];
     private static int windPtr = 0;
     private static float windForce = 10.f;
     
@@ -522,9 +522,9 @@ public class Rainstreaks
         clEnqueueNDRangeKernel(queue, kernelMoveFog, 1, null, gws, null, null, null);
         gws.put(0, maxParticles);        
         
-        clEnqueueReleaseGLObjects(queue, memRainPos, null, null);
         clEnqueueReleaseGLObjects(queue, memFogPos, null, null);
         clEnqueueReleaseGLObjects(queue, memHeightMap, null, null);
+        clEnqueueReleaseGLObjects(queue, memRainPos, null, null);
         
         clFinish(this.queue);
         

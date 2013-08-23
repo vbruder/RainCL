@@ -61,7 +61,7 @@ public class Main {
     private static boolean bContinue = true;
 
     private static boolean culling = true;
-    private static boolean wireframe = true;
+    private static boolean wireframe = false;
     private static boolean audio = false;
     private static boolean points = false;
 
@@ -78,9 +78,9 @@ public class Main {
         
     //environment
     private static boolean drawTerrain 	= true;
-    private static boolean drawRain 	= true;
-    private static boolean drawWater 	= false;
-    private static boolean drawSky 		= false;
+    private static boolean drawRain 	= false;
+    private static boolean drawWater 	= true;
+    private static boolean drawSky 		= true;
     private static boolean drawFog		= false;
     
     private static Rainstreaks raindrops = null;
@@ -140,7 +140,7 @@ public class Main {
             createSky();
             
             // create light sources
-            sun = new Sun(new Vector3f(1.0f, 1.0f, 1.0f), new Vector3f(30.0f, 50.0f, -30.0f), 0.09f);
+            sun = new Sun(new Vector3f(1.0f, 1.0f, 1.0f), new Vector3f(30.0f, 50.0f, -30.0f), 0.1f);
             
             // create rain system
             createRainsys();
@@ -364,7 +364,7 @@ public class Main {
             {
             	glEnable(GL_BLEND);
             	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            	//glDisable(GL_BLEND);
+            	glDisable(GL_BLEND);
             	raindrops.draw(cam);
             	glDisable(GL_BLEND);
             }

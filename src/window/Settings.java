@@ -229,9 +229,9 @@ public class Settings extends JDialog implements TimerListener
                 lpEnvironment.add(lblWind);
                 
                 final JSlider slrWind = new JSlider();
-                slrWind.setMinorTickSpacing(2);
+                slrWind.setMinorTickSpacing(4);
                 slrWind.setMinimum( 0);
-                slrWind.setMaximum(20);
+                slrWind.setMaximum(40);
                 slrWind.setPaintTicks(true);
                 slrWind.setBackground(Color.WHITE);
                 slrWind.setBounds(66, 83, 328, 26);
@@ -556,7 +556,6 @@ public class Settings extends JDialog implements TimerListener
 
     protected void undoChanges()
     {
-        //TODO: not only back to default
         if (changedParticles)
         {
             environment.Rainstreaks.setMaxParticles(particles);

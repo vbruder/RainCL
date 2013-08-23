@@ -74,6 +74,7 @@ import org.lwjgl.util.vector.Vector3f;
 
 import util.Camera;
 import util.Geometry;
+import util.GeometryFactory;
 import util.ShaderProgram;
 import util.Texture;
 import util.Util;
@@ -296,32 +297,40 @@ public class Water {
                
         //create water surface mesh
         //index buffer
-        int size = (int) Math.sqrt(terrainDim);
-        IntBuffer indexData = BufferUtils.createIntBuffer((size-1)*2*size+(size-2));
-        for (int y = 0; y < size-1; y++)
-        {
-            for (int x = 0; x < size; x++)
-            {
-                indexData.put(y*size + x);
-                indexData.put((y+1)*size + x);
-            }
-            if (y < size-2)
-                indexData.put(-1);
-        }
-        indexData.position(0); 
+//        int size = (int) Math.sqrt(terrainDim);
+//        IntBuffer indexData = BufferUtils.createIntBuffer((size-1)*2*size+(size-2));
+//        for (int y = 0; y < size-1; y++)
+//        {
+//            for (int x = 0; x < size; x++)
+//            {
+//                indexData.put(y*size + x);
+//                indexData.put((y+1)*size + x);
+//            }
+//            if (y < size-2)
+//                indexData.put(-1);
+//        }
+//        indexData.position(0); 
+        
+//        waterMap = GeometryFactory.createTerrainFromMap("media/terrain/", 32.0f, 128);
         
         //vertex buffer (deep copy)
-        FloatBuffer waterBuffer = BufferUtils.createFloatBuffer(terrainDim*4);
+        FloatBuffer waterBuffer = BufferUtils.createFloatBuffer(terrain.getVertexValueBuffer().capacity());
         waterBuffer.put(terrain.getVertexValueBuffer());
         terrain.getVertexValueBuffer().rewind();
         waterBuffer.rewind();
         
+        IntBuffer waterBufferID = BufferUtils.createIntBuffer(terrain.getIndexValueBuffer().capacity());
+        waterBufferID.put(terrain.getIndexValueBuffer());
+        terrain.getIndexValueBuffer().rewind();
+        waterBufferID.rewind();
+        
         waterMap = new Geometry();
-        waterMap.setIndices(indexData, GL_TRIANGLE_STRIP);
+        waterMap.setIndices(waterBufferID, GL_TRIANGLE_STRIP);
         waterMap.setVertices(waterBuffer);
         waterMap.addVertexAttribute(ShaderProgram.ATTR_POS, 4, 0);
         waterMap.construct();
         waterBuffer.rewind();
+        waterBufferID.rewind();
 
         //water as points for visualization purposes
         memWaterHeight = clCreateFromGLBuffer(context, CL_MEM_READ_WRITE, waterMap.getVbid());
@@ -336,7 +345,7 @@ public class Water {
         
     	//water blurred with Gauss
         waterBlured = new Geometry();
-        waterBlured.setIndices(indexData, GL_TRIANGLE_STRIP);
+        waterBlured.setIndices(waterBufferID, GL_TRIANGLE_STRIP);
         waterBlured.setVertices(waterBuffer);
         waterBlured.addVertexAttribute(ShaderProgram.ATTR_POS, 4, 0);
         waterBlured.construct();

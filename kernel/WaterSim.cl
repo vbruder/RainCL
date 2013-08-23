@@ -77,7 +77,7 @@ kernel void flowWaterTangential(
 	float dx = border ? 0.0 : topleft - topright + 2*left - 2*right + downleft - downright;
 	float dz = border ? 0.0 : topleft + 2*top + topright - downleft - 2*down - downright;
 	
-	float sharpness = -0.01;
+	float sharpness = -3.01;
 	
 	float dy = sharpness * sqrt(dx*dx + dz*dz);
 	
@@ -113,7 +113,6 @@ kernel void flowWaterTangential(
 		//water[abs(id + dir2.y*rowlen + dir2.x) % N] += waterVal*dt *len;
 		
 		//Moore neighborhood
-		
 			 if (dir == 0) (water[id - rowlen + 1]) += waterVal*dt*len;
 		else if (dir == 1) (water[id          + 1]) += waterVal*dt*len;
 		else if (dir == 2) (water[id + rowlen + 1]) += waterVal*dt*len;
@@ -122,7 +121,6 @@ kernel void flowWaterTangential(
 		else if (dir == 5) (water[id          - 1]) += waterVal*dt*len;
 		else if (dir == 6) (water[id - rowlen - 1]) += waterVal*dt*len;
 		else if (dir == 7) (water[id - rowlen - 1]) += waterVal*dt*len;
-		
 	}
 }
 
@@ -159,7 +157,7 @@ kernel void reduceFlowedWater(
 	float dx = border ? 0.0 : topleft - topright + 2*left - 2*right + downleft - downright;
 	float dz = border ? 0.0 : topleft + 2*top + topright - downleft - 2*down - downright;
 	
-	float sharpness = -3.0;
+	float sharpness = -3.01;
 	
 	float dy = sharpness * sqrt(dx*dx + dz*dz);
 	
@@ -196,12 +194,8 @@ kernel void distributeWater(
 	uint gws = get_global_size(0);
 	uint rowlen = sqrt((float) gws);
 	
-	float heightVal  = heightScaled[id];			// -1..12?
+	float heightVal  = heightScaled[id];			// 0..12
 	float waterVal   = water[id];
-	
-	//check if border bucket
-//	if ( (id % rowlen == 0) || id < rowlen || id > rowlen*(rowlen-1) || ((id % rowlen)-1 == 0) )
-//		border = 1;
 	
 	float hff = 0.0;
 	int cnt = 0;

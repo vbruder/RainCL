@@ -165,7 +165,7 @@ vec4 rainResponse(vec3 lightVec, vec3 lightColor, float lightIntensity, bool fal
         opacity = mix(hOpacity1, hOpacity2, 0.5);
         // inverse gamma correction (expand dynamic range)
         opacity = pow(opacity, 0.7);    
-        opacity *= 1.0 * lightIntensity * fallOff;// * max(dist, 0.5);
+        opacity *= 3.0 * lightIntensity * fallOff;
     	//return vec4((verticalLightIndex1+1.0), 0,0, 1);
     	//return vec4(opacity, 0,0, 1);
 
