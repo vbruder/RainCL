@@ -105,7 +105,6 @@ import util.Util.ImageContents;
 public class Rainstreaks
 {
     //TODO: implement proper texture unit count
-    private static final int HEIGHTTEX_UNIT 	= 11;
     private static final int RAINTEX_UNIT 		= 12;
     private static final int RAINFACTORS_UNIT 	= 13;
     private static final int FOGTEX_UNIT 		= 14;
@@ -133,7 +132,6 @@ public class Rainstreaks
     private static CLMem memRainPos;
     private static CLMem memVelos;
     private static CLMem memSeed;
-    private static CLMem memHeightMap;
     private static CLMem memFogPos;
     
     //particle settings
@@ -150,7 +148,6 @@ public class Rainstreaks
     private static float windForce = 10.f;
     
     //texture IDs
-    private static Texture heightTex;
     private Texture rainTex;
     private Texture rainFactTex;
     private Texture fogTex;
@@ -417,53 +414,16 @@ public class Rainstreaks
         glEnableVertexAttribArray(ShaderProgram.ATTR_POS);
         glEnableVertexAttribArray(ShaderProgram.ATTR_SEED);
         glEnableVertexAttribArray(ShaderProgram.ATTR_VELO);
-        glEnableVertexAttribArray(ShaderProgram.ATTR_COLOR);
         
         glVertexAttribPointer(ShaderProgram.ATTR_POS,   4, GL_FLOAT, false, 16,  0);
         glVertexAttribPointer(ShaderProgram.ATTR_SEED,  4, GL_FLOAT, false, 16, 16);      
         glVertexAttribPointer(ShaderProgram.ATTR_VELO,  4, GL_FLOAT, false, 16, 32);
-        glVertexAttribPointer(ShaderProgram.ATTR_COLOR, 4, GL_FLOAT, false, 16, 48);
 
         memRainPos = clCreateFromGLBuffer(context, CL_MEM_READ_WRITE, vertBufferID);
         memSeed  = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, seedBuffer); 
         memVelos = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, veloBuffer);
         
-        loadTexturesCL();
         createKernels();
-    }
-    
-    /**
-     * Load OpenGL terrain height texture into OpenCL buffer.
-     */
-    private static void loadTexturesCL()
-    {
-        IntBuffer errorCheck = BufferUtils.createIntBuffer(1);
-        
-        //load height map
-        ImageContents contentHeight = Util.loadImage("media/terrain/terrainHeight01.png");
-        FloatBuffer dataH = BufferUtils.createFloatBuffer(contentHeight.height * contentHeight.width);
-        for(int i = 0; i < dataH.capacity(); ++i)
-        {
-            dataH.put(contentHeight.data.get(i));
-        }
-        dataH.rewind();
-        
-        heightTex = new Texture(GL_TEXTURE_2D, HEIGHTTEX_UNIT);
-        heightTex.bind();
-        glTexImage2D(   GL_TEXTURE_2D,
-                        0,
-                        GL_R16F,
-                        contentHeight.width,
-                        contentHeight.height,
-                        0,
-                        GL_RED,
-                        GL_FLOAT,
-                        dataH);
-        glGenerateMipmap(GL_TEXTURE_2D);
-
-        memHeightMap = CL10GL.clCreateFromGLTexture2D(context, CL10.CL_MEM_READ_ONLY, GL_TEXTURE_2D, 0, heightTex.getId(), errorCheck);
-
-        OpenCL.checkError(errorCheck.get(0));
     }
 
     /**
@@ -476,16 +436,15 @@ public class Rainstreaks
         kernelMoveStreaks.setArg(0, memRainPos);
         kernelMoveStreaks.setArg(1, memVelos);
         kernelMoveStreaks.setArg(2, memSeed);
-        kernelMoveStreaks.setArg(3, memHeightMap);
-        kernelMoveStreaks.setArg(4, maxParticles);
-        kernelMoveStreaks.setArg(5, 0.f);
+        kernelMoveStreaks.setArg(3, maxParticles);
+        kernelMoveStreaks.setArg(4, 0.f);
         // Eye position
+        kernelMoveStreaks.setArg(5, 0.f);
         kernelMoveStreaks.setArg(6, 0.f);
         kernelMoveStreaks.setArg(7, 0.f);
-        kernelMoveStreaks.setArg(8, 0.f);
         // Wind direction
-        kernelMoveStreaks.setArg( 9, 0.f);
-        kernelMoveStreaks.setArg(10, 0.f);
+        kernelMoveStreaks.setArg(8, 0.f);
+        kernelMoveStreaks.setArg(9, 0.f);
         
         // Fog kernel
         kernelMoveFog = clCreateKernel(program, "fogSim");
@@ -505,15 +464,14 @@ public class Rainstreaks
         glFinish();
         
         clEnqueueAcquireGLObjects(queue, memRainPos, null, null);
-        clEnqueueAcquireGLObjects(queue, memHeightMap, null, null);
         clEnqueueAcquireGLObjects(queue, memFogPos, null, null);
         
-        kernelMoveStreaks.setArg( 5, dt);
-        kernelMoveStreaks.setArg( 6, eyePos.x);
-        kernelMoveStreaks.setArg( 7, eyePos.y);
-        kernelMoveStreaks.setArg( 8, eyePos.z);
-        kernelMoveStreaks.setArg( 9, windDir[windPtr].x);
-        kernelMoveStreaks.setArg(10, windDir[windPtr].z);
+        kernelMoveStreaks.setArg(4, dt);
+        kernelMoveStreaks.setArg(5, eyePos.x);
+        kernelMoveStreaks.setArg(6, eyePos.y);
+        kernelMoveStreaks.setArg(7, eyePos.z);
+        kernelMoveStreaks.setArg(8, windDir[windPtr].x);
+        kernelMoveStreaks.setArg(9, windDir[windPtr].z);
         clEnqueueNDRangeKernel(queue, kernelMoveStreaks, 1, null, gws, null, null, null);  
         gws.put(0, NUM_FOG_SPRITES);
         kernelMoveFog.setArg(1, dt);
@@ -523,7 +481,6 @@ public class Rainstreaks
         gws.put(0, maxParticles);        
         
         clEnqueueReleaseGLObjects(queue, memFogPos, null, null);
-        clEnqueueReleaseGLObjects(queue, memHeightMap, null, null);
         clEnqueueReleaseGLObjects(queue, memRainPos, null, null);
         
         clFinish(this.queue);
@@ -550,7 +507,6 @@ public class Rainstreaks
         	clRetainMemObject(memRainPos);
         	clRetainMemObject(memSeed);
         	clRetainMemObject(memVelos);
-        	clRetainMemObject(memHeightMap);
         	glDeleteBuffers(vertBufferID);
         	glDeleteVertexArrays(vertArrayID);
         	
@@ -588,8 +544,6 @@ public class Rainstreaks
         //render fog
         fogRenderSP.use();
         
-//    	eyePos = new Vector3f(cam.getCamPos().x, cam.getCamPos().y, cam.getCamPos().z);
-        
     	fogRenderSP.setUniform("view", cam.getView());
     	fogRenderSP.setUniform("proj", cam.getProjection());
     	
@@ -606,11 +560,12 @@ public class Rainstreaks
      */
     public void destroy()
     {
+    	clReleaseMemObject(memFogPos);
         clReleaseMemObject(memRainPos);
         clReleaseMemObject(memVelos);
         clReleaseMemObject(memSeed);
-        clReleaseMemObject(memHeightMap);
         clReleaseKernel(kernelMoveStreaks);
+        clReleaseKernel(kernelMoveFog);
         clReleaseCommandQueue(queue);
         clReleaseProgram(program);
         clReleaseContext(context);

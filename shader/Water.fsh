@@ -12,6 +12,7 @@ uniform samplerCube skyTex;
 uniform vec3 fogThickness;
 uniform vec3 lightPos;
 uniform float circle;
+uniform float whiteFac;
 
 out vec4 fragColor;
 
@@ -32,5 +33,5 @@ void main(void)
 	fragColor.rgb = surfaceColor.rgb * max(dot(normalize(vPosLight), normal), 0);
 	fragColor.a = cubeCoords.q;
 	
-	fragColor.rgba = vec4(1,1,1,1);
+	fragColor *= whiteFac;
 }

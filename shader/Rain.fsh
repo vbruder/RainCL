@@ -44,14 +44,14 @@ vec4 rainResponse(vec3 lightVec, vec3 lightColor, float lightIntensity, bool fal
 
 
 	lightVec = lightVec - particlePosition;
-    if (fallOffFactor)
-    {  
-        float distToLight = length(lightVec);
-        fallOff = 1.0/(distToLight*distToLight);
-        fallOff = clamp(fallOff, 0.0, 1.0); 
-    }
+//    if (fallOffFactor)
+//    {  
+//        float distToLight = length(lightVec);
+//        fallOff = 1.0/(distToLight*distToLight);
+//        fallOff = clamp(fallOff, 0.0, 1.0); 
+//    }
 
-    if ((fallOff > 0.01) && (lightIntensity > 0.01))
+//    if ((fallOff > 0.01) && (lightIntensity > 0.01))
     {
         int maxVIDX = 4;
         int maxHIDX = 8;
@@ -63,7 +63,7 @@ vec4 rainResponse(vec3 lightVec, vec3 lightColor, float lightIntensity, bool fal
         bool is_EpLp_angle_ccw = true;
         float hangle = 0;
         // angle between light vector and drop direction
-        float vangle = abs(acos(dot(lightVec, vec3(0,-1,0))) * 180/PI - 90); // 0 to 90
+        float vangle = abs(acos(dot(lightVec, dropDir)) * 180/PI - 90); // 0 to 90
         // light vector projection
         vec3 lightProj = normalize(lightVec - dot(lightVec, dropDir)*dropDir);
         // eye vector projection
@@ -156,8 +156,6 @@ vec4 rainResponse(vec3 lightVec, vec3 lightColor, float lightIntensity, bool fal
         float col2 = texture2DArray(rainTex, tex2).r * texelFetch(rainfactors, texIndicesV1.y, 0).r;
         float col3 = texture2DArray(rainTex, tex3).r * texelFetch(rainfactors, texIndicesV2.x, 0).r;
         float col4 = texture2DArray(rainTex, tex4).r * texelFetch(rainfactors, texIndicesV2.y, 0).r;
-		
-		float test2 = verticalLightIndex1;
 
         // Compute interpolated opacity using the s and t factors
         float hOpacity1 = mix(col1, col2, s);
@@ -165,9 +163,9 @@ vec4 rainResponse(vec3 lightVec, vec3 lightColor, float lightIntensity, bool fal
         opacity = mix(hOpacity1, hOpacity2, 0.5);
         // inverse gamma correction (expand dynamic range)
         opacity = pow(opacity, 0.7);    
-        opacity *= 3.0 * lightIntensity * fallOff;
+        opacity *= 0.7 * lightIntensity * fallOff;
     	//return vec4((verticalLightIndex1+1.0), 0,0, 1);
-    	//return vec4(opacity, 0,0, 1);
+    	//return vec4(vangle, 0,0, 1);
 
     }
 	return vec4(lightColor, opacity);         
@@ -177,7 +175,7 @@ void main(void)
 {
 
     //sun (directional) lighting
-    vec4 sunLight = rainResponse(-sunDir, sunColor, 1.0, false);
+    vec4 sunLight = rainResponse(sunDir, sunColor, 1.0, false);
 
     //TODO: point lighting
     vec4 pointLight = vec4(0,0,0,0); 

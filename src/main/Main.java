@@ -140,7 +140,7 @@ public class Main {
             createSky();
             
             // create light sources
-            sun = new Sun(new Vector3f(1.0f, 1.0f, 1.0f), new Vector3f(30.0f, 50.0f, -30.0f), 0.1f);
+            sun = new Sun(new Vector3f(1.0f, 1.0f, 1.0f), new Vector3f(-200.0f, -80.0f, -100.0f), 0.1f);
             
             // create rain system
             createRainsys();
@@ -364,7 +364,7 @@ public class Main {
             {
             	glEnable(GL_BLEND);
             	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            	glDisable(GL_BLEND);
+//            	glDisable(GL_BLEND);
             	raindrops.draw(cam);
             	glDisable(GL_BLEND);
             }

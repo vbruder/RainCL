@@ -74,7 +74,6 @@ import org.lwjgl.util.vector.Vector3f;
 
 import util.Camera;
 import util.Geometry;
-import util.GeometryFactory;
 import util.ShaderProgram;
 import util.Texture;
 import util.Util;
@@ -180,7 +179,7 @@ public class Water {
 		this.terrain = terrain;
 		this.sky = sky;
 		rainfactor = 0.075f;
-		oozingfactor = 0.095f;
+		oozingfactor = 0.097f;
 		dampingfactor = 0.005f;
 		
         createCLContext(device_type, Util.getFileContents("./kernel/WaterSim.cl"), drawable);
@@ -572,6 +571,7 @@ public class Water {
         //draw point visualization of water if enabled
         if (points)
         {
+        	WaterRenderSP.setUniform("whiteFac", 100.0f);
         	glDisable(GL_BLEND);
         	glBindVertexArray(vertexArray);
         	glDrawArrays(GL_POINTS, 0, (int)gws.get(0));
@@ -579,6 +579,7 @@ public class Water {
         //else draw triangle mesh
         else
         {
+        	WaterRenderSP.setUniform("whiteFac", 1.0f);
         	waterBlured.draw();
         }
 	}
@@ -590,6 +591,8 @@ public class Water {
 	{
 		GL30.glDeleteVertexArrays(vertexArray);
 		waterMap.delete();
+		waterBlured.delete();
+		
 		clReleaseMemObject(memGradient);
 		clReleaseMemObject(memAttribute);
         clReleaseMemObject(memHeight);
@@ -600,9 +603,15 @@ public class Water {
         clReleaseMemObject(memVelos);
         clReleaseMemObject(memWater);
         clReleaseMemObject(memWaterHeight);
+        clReleaseMemObject(memBlur);
+        clReleaseMemObject(memGauss);
         
+        clReleaseKernel(kernelBlur);
+        clReleaseKernel(kernelDistribute);
         clReleaseKernel(kernelReduce);
         clReleaseKernel(kernelFlow);
+        clReleaseKernel(kernelRainOozing);
+        
         clReleaseProgram(program);
         clReleaseCommandQueue(queue);
         //clReleaseContext(context);

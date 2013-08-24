@@ -22,7 +22,7 @@ kernel void rainOozing(
 		//add rain to water
 		gain += rain * dt;	 					// 0.1 - 1.0
 		
-		//remove oozing waterw
+		//remove oozing water
 		gain -= attribute[id] * oozing * dt;	
 
 		//calculate new water value and set water map. Set limits.
@@ -31,13 +31,13 @@ kernel void rainOozing(
 		tmp[id] = water[id];
 	}
 	
-	if (water[id] < -0.1)
+	if (water[id] < -0.3)
 	{
-		water[id] = -0.1;
+		water[id] = -0.3;
 	}
-	if (water[id] > +5.0)
+	if (water[id] > +2.0)
 	{
-		water[id] = 5;
+		water[id] = 2;
 	}
 }
 
@@ -199,7 +199,7 @@ kernel void distributeWater(
 	
 	float hff = 0.0;
 	int cnt = 0;
-	float eps = 0.1;
+	float eps = 0.0;
 	float rightN, leftN, topN, botN;
 	rightN = leftN = topN = botN = 0.0;
 	
@@ -253,8 +253,10 @@ kernel void distributeWater(
 	
 	//calculate height-field-fluids function
 	float h = 1;//2.0f / 512.0f;
-	float c = 1;
-	hff = c * rightN + leftN + botN + topN - (cnt)*(waterVal) / h;
+	float c = 0.5;
+	hff = c * (rightN + leftN + botN + topN) - (cnt)*(waterVal) / h;
+	
+	if (cnt == 0 && waterVal > 1.0) hff *= 0.5;
 	
 	//clamping
 	float maxOffset = 1;

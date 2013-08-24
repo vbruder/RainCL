@@ -229,9 +229,9 @@ public class Settings extends JDialog implements TimerListener
                 lpEnvironment.add(lblWind);
                 
                 final JSlider slrWind = new JSlider();
-                slrWind.setMinorTickSpacing(4);
+                slrWind.setMinorTickSpacing(5);
                 slrWind.setMinimum( 0);
-                slrWind.setMaximum(40);
+                slrWind.setMaximum(50);
                 slrWind.setPaintTicks(true);
                 slrWind.setBackground(Color.WHITE);
                 slrWind.setBounds(66, 83, 328, 26);
@@ -252,7 +252,7 @@ public class Settings extends JDialog implements TimerListener
                 
                 final JSlider slrFog = new JSlider();
                 slrFog.setMinorTickSpacing(1);
-                slrFog.setMaximum(10);
+                slrFog.setMaximum(5);
                 slrFog.setPaintTicks(true);
                 slrFog.setBackground(Color.WHITE);
                 slrFog.setBounds(66, 140, 328, 26);

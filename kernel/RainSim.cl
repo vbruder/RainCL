@@ -1,19 +1,5 @@
-#define maxRadius 5.0f
-#define heightScale 0.25f
 
 constant sampler_t sampler = CLK_NORMALIZED_COORDS_TRUE | CLK_FILTER_LINEAR | CLK_ADDRESS_REPEAT;
-
-/**
- *  Generate pseudo random float
- *  @param seed (e.g. elem ID)
- *  @return random number
- */
-float getRand(int seed)
-{
-    float rand = (float)((seed * 0x5DEECE66DL + 0xBL) & ((1L << 48) - 1));
-    rand /= 1000000000;
-    return rand;
-}
 
 /**
  * Kernel to move rain streaks with camera and according to wind direction.
@@ -22,8 +8,6 @@ kernel void rainSim	(
 						global float4* position,
 						global float4* velos,
 						global float4* seed,
-						//height map
-						read_only image2d_t heightmap,
 						//constants
 						const uint maxParticles,
 						const float dt,
@@ -40,24 +24,18 @@ kernel void rainSim	(
     float4 myPos = position[myId].s0123;
     float3 myVelos = velos[myId].xyz;
     float3 eyePos = (float3)(eyePosX, eyePosY, eyePosZ);
-		
-	float2 tc = (float2)(0.5f, 0.5f) + myPos.xz;
-	float4 height = heightScale * read_imagef(heightmap, sampler, (float2)(1-tc.x, tc.y));
-
-    //myPos.y = height.x;
-    height.x = 0.0f;
 	
 	float dist = distance(eyePos, myPos.xyz);
 	
 	//respawn particle
-	if (myPos.y <= (height.x - 2.0f) || dist > 50.0f)
+	if (myPos.y <= -1.0f || dist > 50.0f)
 	{
 		myPos.xyz = seed[myId].xyz + eyePos;
         myPos.y += 1.f;
 	}
 
     myPos.x += (windDirX + myVelos.x) * dt;
-    myPos.y -= 			 myVelos.y  * dt;
+    myPos.y -= 			   myVelos.y  * dt;
     myPos.z += (windDirZ + myVelos.z) * dt;
     
     position[myId].s0123 = myPos;
