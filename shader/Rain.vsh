@@ -9,14 +9,13 @@ in vec4 vertexVelo;
 out VertexData
 {
     float texArrayID;
-    float randEnlight;
-    vec3 velocity;
+    vec4 velocity;
 } vertex;
 
 void main(void)
 {
     vertex.texArrayID = vertexSeed.w;
-    vertex.randEnlight = vertexVelo.w;
-    vertex.velocity = vertexVelo.xyz;
+    // random enlight value in w component of velocity
+    vertex.velocity = vertexVelo;
     gl_Position = positionMC;
 }

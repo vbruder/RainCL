@@ -5,8 +5,6 @@
 #define PI 3.14159265
 #define MAX_POINT_LIGHTS 2
 
-//in vec4 positionFS;
-//in vec3 normal;
 in vec3 fragmentTexCoords;
 in float randEnlight;
 in float texArrayID;
@@ -42,8 +40,8 @@ vec4 rainResponse(vec3 lightVec, vec3 lightColor, float lightIntensity, bool fal
     float opacity = 0.0;
     float fallOff = 1.0;
 
-
 	lightVec = lightVec - particlePosition;
+//	  // point lights
 //    if (fallOffFactor)
 //    {  
 //        float distToLight = length(lightVec);
@@ -129,7 +127,7 @@ vec4 rainResponse(vec3 lightVec, vec3 lightColor, float lightIntensity, bool fal
         }
         
         verticalLightIndex2 = 3;
-        verticalLightIndex1 = 3;
+        verticalLightIndex1 = 0;
         // Generate final texture coordinates for each sample
         int type = int(texArrayID); // 0 to 7
         ivec2 texIndicesV1 = ivec2( (verticalLightIndex1*90 + horizontalLightIndex1*10 + type), 
@@ -157,15 +155,17 @@ vec4 rainResponse(vec3 lightVec, vec3 lightColor, float lightIntensity, bool fal
         float col3 = texture2DArray(rainTex, tex3).r * texelFetch(rainfactors, texIndicesV2.x, 0).r;
         float col4 = texture2DArray(rainTex, tex4).r * texelFetch(rainfactors, texIndicesV2.y, 0).r;
 
-        // Compute interpolated opacity using the s and t factors
+        // Compute interpolated opacity using the s factor
         float hOpacity1 = mix(col1, col2, s);
         float hOpacity2 = mix(col3, col4, s);
-        opacity = mix(hOpacity1, hOpacity2, 0.5);
-        // inverse gamma correction (expand dynamic range)
+        opacity = mix(hOpacity1, hOpacity2, 0.9);
+        // inverse gamma correction
         opacity = pow(opacity, 0.7);    
         opacity *= 0.7 * lightIntensity * fallOff;
-    	//return vec4((verticalLightIndex1+1.0), 0,0, 1);
-    	//return vec4(vangle, 0,0, 1);
+        
+        //DEBUG:
+    	//return vec4((verticalLightIndex1+8.0), 0,0, 1);
+    	//return vec4(opacity, 0,0, 1);
 
     }
 	return vec4(lightColor, opacity);         
@@ -175,7 +175,7 @@ void main(void)
 {
 
     //sun (directional) lighting
-    vec4 sunLight = rainResponse(sunDir, sunColor, 1.0, false);
+    vec4 sunLight = rainResponse(sunDir, sunColor, 1.0 + fract(randEnlight), false);
 
     //TODO: point lighting
     vec4 pointLight = vec4(0,0,0,0); 

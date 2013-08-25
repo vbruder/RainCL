@@ -30,7 +30,6 @@ import java.awt.event.ItemListener;
 import java.awt.event.KeyEvent;
 import javax.swing.JTabbedPane;
 import javax.swing.JLayeredPane;
-import java.awt.GridLayout;
 
 import apiWrapper.OpenGL;
 import apiWrapper.OpenCL;
@@ -220,7 +219,7 @@ public class Settings extends JDialog implements TimerListener
                     public void stateChanged(ChangeEvent e) {
                         changedParticles = true;
                         int newValue = (1 << slrParticles.getValue());
-                        environment.Rainstreaks.setMaxParticles(newValue);                 
+                        environment.Rainstreaks.setMaxParticles(newValue);
                     }
                 });
                 

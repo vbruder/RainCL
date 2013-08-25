@@ -4,46 +4,22 @@ import static apiWrapper.OpenGL.GL_ARRAY_BUFFER;
 import static apiWrapper.OpenGL.GL_DYNAMIC_DRAW;
 import static apiWrapper.OpenGL.GL_FLOAT;
 import static apiWrapper.OpenGL.GL_POINTS;
-import static apiWrapper.OpenGL.GL_R8;
 import static apiWrapper.OpenGL.GL_RED;
 import static apiWrapper.OpenGL.GL_R16;
-import static apiWrapper.OpenGL.GL_R16F;
 import static apiWrapper.OpenGL.GL_R32F;
-import static apiWrapper.OpenGL.GL_RG;
-import static apiWrapper.OpenGL.GL_RG8;
-import static apiWrapper.OpenGL.GL_RGB;
 import static apiWrapper.OpenGL.GL_RGB8;
-import static apiWrapper.OpenGL.GL_RGBA;
-import static apiWrapper.OpenGL.GL_RGBA8;
-import static apiWrapper.OpenGL.GL_SHORT;
-import static apiWrapper.OpenGL.GL_STATIC_DRAW;
 import static apiWrapper.OpenGL.GL_TEXTURE_1D;
-import static apiWrapper.OpenGL.GL_TEXTURE_2D;
-import static apiWrapper.OpenGL.GL_TEXTURE_2D_ARRAY;
-import static apiWrapper.OpenGL.GL_UNSIGNED_BYTE;
-import static apiWrapper.OpenGL.GL_UNSIGNED_INT;
 import static apiWrapper.OpenGL.glFinish;
 import static apiWrapper.OpenGL.glBindBuffer;
-import static apiWrapper.OpenGL.glBindTexture;
 import static apiWrapper.OpenGL.glBindVertexArray;
 import static apiWrapper.OpenGL.glBufferData;
 import static apiWrapper.OpenGL.glDrawArrays;
-import static apiWrapper.OpenGL.glDrawElements;
-import static apiWrapper.OpenGL.glEnable;
 import static apiWrapper.OpenGL.glEnableVertexAttribArray;
 import static apiWrapper.OpenGL.glGenBuffers;
 import static apiWrapper.OpenGL.glGenVertexArrays;
 import static apiWrapper.OpenGL.glGenerateMipmap;
-import static apiWrapper.OpenGL.glGetUniformLocation;
 import static apiWrapper.OpenGL.glTexImage1D;
-import static apiWrapper.OpenGL.glTexImage2D;
-import static apiWrapper.OpenGL.glTexImage3D;
-import static apiWrapper.OpenGL.glTexSubImage3D;
-import static apiWrapper.OpenGL.glUniform1f;
-import static apiWrapper.OpenGL.glUniform3f;
 import static apiWrapper.OpenGL.glVertexAttribPointer;
-import static apiWrapper.OpenGL.glDeleteFramebuffers;
-import static apiWrapper.OpenGL.glDeleteRenderbuffers;
 import static apiWrapper.OpenGL.glDeleteBuffers;
 import static apiWrapper.OpenGL.glDeleteVertexArrays;
 import static apiWrapper.OpenCL.CL_MEM_COPY_HOST_PTR;
@@ -68,7 +44,6 @@ import static apiWrapper.OpenCL.create;
 import static apiWrapper.OpenCL.clRetainMemObject;
 
 import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
 import java.util.Random;
 
 import main.Main;
@@ -77,7 +52,6 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.LWJGLException;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.opencl.CL10;
-import org.lwjgl.opencl.CL10GL;
 import org.lwjgl.opencl.CLCommandQueue;
 import org.lwjgl.opencl.CLContext;
 import org.lwjgl.opencl.CLDevice;
@@ -89,14 +63,12 @@ import org.lwjgl.opengl.Drawable;
 import org.lwjgl.util.vector.Matrix4f;
 import org.lwjgl.util.vector.Vector3f;
 
-import apiWrapper.OpenCL;
 import apiWrapper.OpenCL.Device_Type;
 
 import util.Camera;
 import util.ShaderProgram;
 import util.Texture;
 import util.Util;
-import util.Util.ImageContents;
 
 /**
  * Rainstreaks particle system
@@ -104,7 +76,6 @@ import util.Util.ImageContents;
  */
 public class Rainstreaks
 {
-    //TODO: implement proper texture unit count
     private static final int RAINTEX_UNIT 		= 12;
     private static final int RAINFACTORS_UNIT 	= 13;
     private static final int FOGTEX_UNIT 		= 14;
@@ -138,6 +109,7 @@ public class Rainstreaks
     private static int maxParticles;
     private static float clusterScale;
     private static float veloFactor;
+    private static boolean particlesChanged = false;
     
     //kernel settings
     private final PointerBuffer gws = BufferUtils.createPointerBuffer(1);
@@ -285,7 +257,13 @@ public class Rainstreaks
                 while ((z < 0.2f && z > -0.2f) && (x < 0.2f && x > -0.2f));
     		    //respawn if particle is too close to viewer
                 
-                //add to seed buffer
+    		    //add to position buffer
+    		    posBuffer.put(x);
+    		    posBuffer.put(y);
+    		    posBuffer.put(z);
+    		    posBuffer.put(1.f);
+
+    		    //add to seed buffer
                 seedBuffer.put(x);
                 seedBuffer.put(y);
                 seedBuffer.put(z);
@@ -293,21 +271,15 @@ public class Rainstreaks
                 //type is for choosing 1 out of 8 different textures
                 seedBuffer.put((float) r.nextInt(8));
                 
-                //add to position buffer
-                posBuffer.put(x);
-                posBuffer.put(y);
-                posBuffer.put(z);
-                posBuffer.put(1.f);
-                
                 //add spawning velocity (small random velocity in x- and z-direction for variety and AA 
                 veloBuffer.put(veloFactor*(r.nextFloat() / 100.f));
                 veloBuffer.put(veloFactor*((r.nextFloat() + 1.0f) / 20.f));
                 veloBuffer.put(veloFactor*(r.nextFloat() / 100.f));
                 //add random number in w coordinate, used to light up random streaks
                 float tmpR = r.nextFloat();
-                if (tmpR > 0.9f)
+                if (tmpR > 0.8f)
                 {
-                    veloBuffer.put(1.f + (1.f - tmpR)*0.1f); // 1.0 to 1.01 
+                    veloBuffer.put(1.f + (1.f - tmpR)); // 1.0 to 1.2
                 }
                 else
                 {
@@ -322,7 +294,7 @@ public class Rainstreaks
                 
         //3 buffers * 4 floats (xyzw) * maxParticles
         vertexDataBuffer = BufferUtils.createFloatBuffer(3 * 4 * maxParticles);
-        for (int i = 0; i < maxParticles; i++)
+        for (int i = 0; i < maxParticles; i += 4)
         {
             vertexDataBuffer.put(posBuffer.get(i + 0));
             vertexDataBuffer.put(posBuffer.get(i + 1));
@@ -502,18 +474,21 @@ public class Rainstreaks
     public void draw(Camera cam)
     {
     	//check weather rain strength was changed
-        if (maxParticles != (posBuffer.capacity()/4))
+        if (particlesChanged)
         {
         	clRetainMemObject(memRainPos);
         	clRetainMemObject(memSeed);
         	clRetainMemObject(memVelos);
-        	glDeleteBuffers(vertBufferID);
-        	glDeleteVertexArrays(vertArrayID);
+
+        	clFinish(this.queue);
         	
+            glDeleteBuffers(vertBufferID);
+            glDeleteVertexArrays(vertArrayID);
             createRainData();
             createBuffer();
             kernelMoveStreaks.setArg(5, maxParticles);
-            this.gws.put(0, maxParticles);            
+            this.gws.put(0, maxParticles);
+            particlesChanged = false;
         }
         
         //render rain streaks
@@ -678,12 +653,22 @@ public class Rainstreaks
 
     /**
      * @param maxParticles the maxParticles to set
+     * @throws InterruptedException 
      */
-    public static void setMaxParticles(int maxParticles)
+    public static void setMaxParticles(int numParticles) 
     {
-       Rainstreaks.maxParticles = maxParticles;
-       Vector3f vec = new Vector3f(1.f, 1.f, 1.f);
-       Main.setFogThickness( (Vector3f) vec.scale(0.03f + getLogMaxParticles()*0.05f) );
+    	particlesChanged = true;
+    	Thread.currentThread();
+		try
+		{
+			Thread.sleep(100);
+		} catch (InterruptedException e)
+		{
+			e.printStackTrace();
+		}
+        Rainstreaks.maxParticles = numParticles;
+        Vector3f vec = new Vector3f(1.f, 1.f, 1.f);
+        Main.setFogThickness( (Vector3f) vec.scale(0.03f + getLogMaxParticles()*0.05f) );
     }
 
     /**

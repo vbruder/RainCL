@@ -8,8 +8,7 @@ layout (triangle_strip, max_vertices = 4) out;
 in VertexData
 {
     float texArrayID;
-    float randEnlight;
-    vec3 velocity;
+    vec4 velocity;
 } vertex[];
 
 uniform mat4 viewProj;
@@ -39,9 +38,9 @@ void main(void)
     pos -= right;
     fragmentTexCoords.xy = vec2(0, 0);
     fragmentTexCoords.z = vertex[0].texArrayID;
-    randEnlight = vertex[0].randEnlight;
+    randEnlight = vertex[0].velocity.w;
     particlePosition = pos;
-    particleVelocity = vertex[0].velocity;
+    particleVelocity = vertex[0].velocity.xyz;
     texArrayID = vertex[0].texArrayID;
     gl_Position = viewProj * vec4(pos + (windDir*dt), 1.0);
     EmitVertex();
@@ -50,9 +49,9 @@ void main(void)
     pos.y += height;
     fragmentTexCoords.xy = vec2(0, 1);
     fragmentTexCoords.z = vertex[0].texArrayID;
-    randEnlight = vertex[0].randEnlight;
+    randEnlight = vertex[0].velocity.w;
     particlePosition = pos;
-    particleVelocity = vertex[0].velocity;
+    particleVelocity = vertex[0].velocity.xyz;
     texArrayID = vertex[0].texArrayID;
     gl_Position = viewProj * vec4(pos, 1.0);
     EmitVertex();
@@ -62,9 +61,9 @@ void main(void)
     pos += right;
     fragmentTexCoords.xy = vec2(1, 0);
     fragmentTexCoords.z = vertex[0].texArrayID;
-    randEnlight = vertex[0].randEnlight;
+    randEnlight = vertex[0].velocity.w;
     particlePosition = pos;
-    particleVelocity = vertex[0].velocity;
+    particleVelocity = vertex[0].velocity.xyz;
     texArrayID = vertex[0].texArrayID;
     gl_Position = viewProj * vec4(pos + (windDir*dt), 1.0);
     EmitVertex();
@@ -73,9 +72,9 @@ void main(void)
     pos.y += height;
     fragmentTexCoords.xy = vec2(1, 1);
     fragmentTexCoords.z = vertex[0].texArrayID;
-    randEnlight = vertex[0].randEnlight,
+    randEnlight = vertex[0].velocity.w;
     particlePosition = pos;
-    particleVelocity = vertex[0].velocity;
+    particleVelocity = vertex[0].velocity.xyz;
     texArrayID = vertex[0].texArrayID;
     gl_Position = viewProj * vec4(pos, 1.0);
     EmitVertex();

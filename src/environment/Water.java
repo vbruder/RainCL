@@ -4,53 +4,27 @@
 package environment;
 
 import static apiWrapper.OpenGL.*;
-import static apiWrapper.OpenGL.GL_DYNAMIC_DRAW;
-import static apiWrapper.OpenGL.GL_STATIC_DRAW;
 import static apiWrapper.OpenGL.GL_FLOAT;
 import static apiWrapper.OpenGL.GL_POINTS;
-import static apiWrapper.OpenGL.GL_R16F;
-import static apiWrapper.OpenGL.GL_RED;
-import static apiWrapper.OpenGL.GL_RGBA;
 import static apiWrapper.OpenGL.GL_BLEND;
-import static apiWrapper.OpenGL.GL_TEXTURE_2D;
 import static apiWrapper.OpenGL.GL_TRIANGLE_STRIP;
-import static apiWrapper.OpenGL.glBindBuffer;
-import static apiWrapper.OpenGL.glBindVertexArray;
-import static apiWrapper.OpenGL.glBufferData;
-import static apiWrapper.OpenGL.glDrawArrays;
-import static apiWrapper.OpenGL.glEnableVertexAttribArray;
-import static apiWrapper.OpenGL.glGenBuffers;
-import static apiWrapper.OpenGL.glGenVertexArrays;
-import static apiWrapper.OpenGL.glGenerateMipmap;
-import static apiWrapper.OpenGL.glTexImage2D;
-import static apiWrapper.OpenGL.glVertexAttribPointer;
-import static apiWrapper.OpenGL.glFinish;
 import static apiWrapper.OpenCL.clBuildProgram;
 import static apiWrapper.OpenCL.clCreateCommandQueue;
 import static apiWrapper.OpenCL.clCreateProgramWithSource;
 import static apiWrapper.OpenCL.create;
 import static apiWrapper.OpenCL.CL_MEM_COPY_HOST_PTR;
-import static apiWrapper.OpenCL.CL_MEM_READ_ONLY;
 import static apiWrapper.OpenCL.CL_MEM_READ_WRITE;
-import static apiWrapper.OpenCL.CL_MEM_USE_HOST_PTR;
-import static apiWrapper.OpenCL.clBuildProgram;
 import static apiWrapper.OpenCL.clCreateBuffer;
-import static apiWrapper.OpenCL.clCreateCommandQueue;
 import static apiWrapper.OpenCL.clCreateFromGLBuffer;
 import static apiWrapper.OpenCL.clCreateKernel;
-import static apiWrapper.OpenCL.clCreateProgramWithSource;
 import static apiWrapper.OpenCL.clEnqueueAcquireGLObjects;
 import static apiWrapper.OpenCL.clEnqueueNDRangeKernel;
 import static apiWrapper.OpenCL.clEnqueueReleaseGLObjects;
-import static apiWrapper.OpenCL.clEnqueueWriteBuffer;
 import static apiWrapper.OpenCL.clFinish;
 import static apiWrapper.OpenCL.clReleaseCommandQueue;
-import static apiWrapper.OpenCL.clReleaseContext;
 import static apiWrapper.OpenCL.clReleaseKernel;
 import static apiWrapper.OpenCL.clReleaseMemObject;
 import static apiWrapper.OpenCL.clReleaseProgram;
-import static apiWrapper.OpenCL.create;
-import static apiWrapper.OpenCL.clRetainMemObject;
 
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
@@ -97,7 +71,6 @@ public class Water {
 	private FloatBuffer heightDataBuffer;
 	private FloatBuffer normalDataBuffer;
 	private FloatBuffer attributeDataBuffer;
-	private FloatBuffer gradientDataBuffer;
 	private FloatBuffer tmpWHDataBuffer;
 	private FloatBuffer waterDataBuffer;
 	private FloatBuffer tmpWaterDataBuffer;
@@ -112,7 +85,6 @@ public class Water {
 	private CLMem memAttribute;
 	private CLMem memWaterHeight;
 	private CLMem memHeightScale;
-	private CLMem memGradient;
 	private CLMem memTmpWaterHeight;
 	private CLMem memWater;
 	private CLMem memTmpWater;
@@ -251,16 +223,6 @@ public class Water {
         attributeDataBuffer.rewind();
         memAttribute = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, attributeDataBuffer);
         
-        //load gradient map data
-        ImageContents contentGradient = Util.loadImage("media/terrain/terrainGradient01.png");
-        gradientDataBuffer = BufferUtils.createFloatBuffer(terrainDim);
-        for(int i = 0; i < gradientDataBuffer.capacity(); ++i)
-        {
-        	gradientDataBuffer.put(contentGradient.data.get(i));
-        }
-        gradientDataBuffer.rewind();
-        memGradient = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, gradientDataBuffer);
-
         //velocity buffer for height field fluid calculation
         velosDataBuffer = BufferUtils.createFloatBuffer(terrainDim);
         BufferUtils.zeroBuffer(velosDataBuffer);
@@ -593,7 +555,6 @@ public class Water {
 		waterMap.delete();
 		waterBlured.delete();
 		
-		clReleaseMemObject(memGradient);
 		clReleaseMemObject(memAttribute);
         clReleaseMemObject(memHeight);
         clReleaseMemObject(memNormal);

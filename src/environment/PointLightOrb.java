@@ -23,7 +23,6 @@ public class PointLightOrb {
     private float orbitRadius = 0.0f;
     private float orbitAngle = 0.0f;
     private float orbitTilt = 0.0f;
-    private float speed = 0.0f;
     
     public void setColor(Vector3f color) {
         this.color.set(color);
@@ -35,10 +34,6 @@ public class PointLightOrb {
 
     public void setOrbitRadius(float orbitRadius) {
         this.orbitRadius = orbitRadius;
-    }
-
-    public void setSpeed(float speed) {
-        this.speed = speed;
     }
 
     public void setOrbitTilt(float orbitTilt) {

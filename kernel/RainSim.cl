@@ -61,7 +61,5 @@ kernel void fogSim  (
 	if ( fabs(fmod(myPos.z, 0.3f)) < 0.1 )
 		myPos.w = myPos.w < 255 ? myPos.w+1.0 : 0;
 	
-	//myPos.xz += 0.1 * (float2)(windDirX, windDirZ);
-	
 	position[myId].xzw = myPos.z > 250 ? (float3) (10, -250, myPos.w) : myPos.xzw;
 }

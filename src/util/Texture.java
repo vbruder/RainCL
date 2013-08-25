@@ -2,11 +2,7 @@ package util;
 
 import static apiWrapper.OpenGL.*;
 
-import org.lwjgl.Sys;
 import org.lwjgl.opengl.GL11;
-import org.lwjgl.opengl.GL20;
-import org.lwjgl.opengl.GL30;
-import org.lwjgl.opengl.GL33;
 
 /**
  * Class representing a OpenGL texture object.

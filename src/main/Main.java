@@ -21,8 +21,6 @@ import environment.Sun;
 import environment.Water;
 
 import util.Camera;
-import util.DeferredShader;
-import util.FrameBuffer;
 import util.Geometry;
 import util.GeometryFactory;
 import util.ShaderProgram;
@@ -62,26 +60,22 @@ public class Main {
 
     private static boolean culling = true;
     private static boolean wireframe = false;
-    private static boolean audio = false;
+    private static boolean audio = true;
     private static boolean points = false;
 
 	// control
     private static final Vector3f moveDir = new Vector3f(0.0f, 0.0f, 0.0f);
     private static final Camera cam = new Camera(); 
     
-    // animation parameters
-    private static float ingameTime = 0;
-    private static float ingameTimePerSecond = 1.0f;
-    
     // uniform data
     private static final Matrix4f viewProjMatrix = new Matrix4f();
         
     //environment
     private static boolean drawTerrain 	= true;
-    private static boolean drawRain 	= false;
+    private static boolean drawRain 	= true;
     private static boolean drawWater 	= true;
     private static boolean drawSky 		= true;
-    private static boolean drawFog		= false;
+    private static boolean drawFog		= true;
     
     private static Rainstreaks raindrops = null;
 
@@ -249,17 +243,6 @@ public class Main {
     	//background color
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         
-//        DeferredShader reflectShader = new DeferredShader();
-//        reflectShader.init(0);
-//        reflectShader.registerShaderProgram(defShadingSP);
-        
-//        DeferredShader sceneShader = new DeferredShader();
-//        sceneShader.init(0);
-//        sceneShader.registerShaderProgram(defShadingSP);
-//        
-//        FrameBuffer fbo = new FrameBuffer();
-//        fbo.init(true, WIDTH, HEIGHT);
-        
         long last = System.currentTimeMillis();
         long now, millis;
         long frameTimeDelta = 0;
@@ -286,18 +269,6 @@ public class Main {
             animate(millis);
             // clear screen
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            
-//            // enable deferred shading
-//            reflectShader.bind();
-//            reflectShader.clear();
-//
-//            reflectScene();
-//            Texture reflected = reflectShader.getDiffuseTexture();
-//            reflectShader.finish();
-//            reflectShader.DrawTexture(reflectShader.getDiffuseTexture());
-//            
-//            sceneShader.bind();
-//            sceneShader.clear();
             
             //sky dome
             if (drawSky)
@@ -369,67 +340,14 @@ public class Main {
             	glDisable(GL_BLEND);
             }
             
-//            sceneShader.finish();        
-//            sceneShader.DrawTexture(sceneShader.getDiffuseTexture());
-            
             // present screen
             Display.update();
             Display.sync(60);
         }
         terrainSP.delete();
         raindrops.getShaderProgram().delete();
-//        sceneShader.delete();
     }
     
-    private static void reflectScene()
-	{
-    	//reflection matrix
-        Matrix4f reflMat = new Matrix4f();
-        reflMat.m00 = 1.f; reflMat.m10 =  0.f; reflMat.m20 =  0.f; reflMat.m30 = 0.f;
-        reflMat.m01 = 0.f; reflMat.m11 =  1.f; reflMat.m21 =  0.f; reflMat.m31 = 0.f;
-        reflMat.m02 = 0.f; reflMat.m12 =  0.f; reflMat.m22 = -1.f; reflMat.m32 = 0.f;
-        reflMat.m03 = 0.f; reflMat.m13 =  0.f; reflMat.m23 =  0.f; reflMat.m33 = 1.f;
-        
-        Matrix4f view = new Matrix4f();
-        Matrix4f.mul(reflMat, cam.getView(), view);
-		
-        //sky box
-        skySP.use();
-        skySP.setUniform("proj", cam.getProjection());
-        skySP.setUniform("view", view);
-        skySP.setUniform("model", skyMoveMatrix);
-        skySP.setUniform("cubeMap", cubeMap);
-        skySP.setUniform("fogThickness", fogThickness);
-        //glFrontFace(GL_CW);
-        skyBox.draw();
-        //glFrontFace(GL_CCW);
-        
-        //terrain
-        if (drawTerrain)
-        {
-        	terrainSP.use();
-            //VS
-            terrainSP.setUniform("proj", cam.getProjection());
-            terrainSP.setUniform("view", view);
-            terrainSP.setUniform("scale", scaleTerrain);
-            //FS
-            terrainSP.setUniform("normalTex", terrain.getNormalTex());
-            terrainSP.setUniform("lightTex", terrain.getLightTex());
-            terrainSP.setUniform("specularTex", terrain.getSpecularTex());
-            terrainSP.setUniform("colorTex", terrain.getColorTex());
-            terrainSP.setUniform("sunIntensity", sun.getIntensity());
-            terrainSP.setUniform("sunDir", sun.getDirection());
-            terrainSP.setUniform("k_diff", k_diff);
-            terrainSP.setUniform("k_spec", k_spec);
-            terrainSP.setUniform("k_ambi", k_ambi);
-            terrainSP.setUniform("eyePosition", cam.getCamPos());
-            terrainSP.setUniform("fogThickness", fogThickness);
-            
-            glFrontFace(GL_CW);
-            //terrain.draw();
-            glFrontFace(GL_CCW);
-        }
-	}
 
 	/**
      * Handle input and change camera accordingly.
@@ -522,7 +440,6 @@ public class Main {
         Util.mul(skyMoveMatrix, skyMoveMatrix, Util.translationZ(cam.getCamPos().z, null));
         
         // update time properly
-        ingameTime += ingameTimePerSecond * 1e-3f * (float)millis;        
         raindrops.updateSimulation(millis);
         watermap.updateSimulation(millis);
     }
@@ -542,11 +459,11 @@ public class Main {
      */
     public static void setAudio(boolean audio)
     {
-        Main.audio = audio;
-        if (audio)
+        if (audio && !Main.audio)
             sound.init();
-        else
+        else if (!audio)
             sound.stopSound();
+        Main.audio = audio;
     }
 
     /**
