@@ -57,11 +57,8 @@ public class Main {
     
     // current configurations
     private static boolean bContinue = true;
-
     private static boolean culling = true;
     private static boolean wireframe = false;
-    private static boolean audio = true;
-    private static boolean points = false;
 
 	// control
     private static final Vector3f moveDir = new Vector3f(0.0f, 0.0f, 0.0f);
@@ -76,6 +73,9 @@ public class Main {
     private static boolean drawWater 	= true;
     private static boolean drawSky 		= true;
     private static boolean drawFog		= true;
+    
+    private static boolean audio = false;
+    private static boolean points = false;
     
     private static Rainstreaks raindrops = null;
 

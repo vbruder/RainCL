@@ -202,12 +202,14 @@ kernel void distributeWater(
 	float eps = 0.0;
 	float rightN, leftN, topN, botN;
 	rightN = leftN = topN = botN = 0.0;
+	bool border;
 	
 	//right neighbor
 	if ( !(id == rowlen*rowlen-1) && (id % rowlen)-1 == 0 )
 	{
-		rightN = waterVal;
-		++cnt;
+		border = true;
+		// rightN = waterVal;
+		// ++cnt;
 	}
 	else if (heightScaled[id + 1] > heightVal + eps)
 	{
@@ -218,8 +220,9 @@ kernel void distributeWater(
 	//left neighbor
 	if (!(id == 0) && id % rowlen == 0)
 	{
-		leftN = waterVal;
-		++cnt;
+		border = true;
+		// leftN = waterVal;
+		// ++cnt;
 	}
 	else if (heightScaled[id - 1] > heightVal + eps)
 	{
@@ -230,8 +233,9 @@ kernel void distributeWater(
 	//bottom neighbor
 	if ( !(id == rowlen*(rowlen-1)+1) && id > rowlen*(rowlen-1) )
 	{
-		botN = waterVal;
-		++cnt;
+		border = true;
+		// botN = waterVal;
+		// ++cnt;
 	}
 	else if (heightScaled[id + rowlen] > heightVal + eps)
 	{
@@ -242,8 +246,9 @@ kernel void distributeWater(
 	//top neighbor
 	if (!(id == rowlen-1) && id < rowlen)
 	{
-		topN = waterVal;
-		++cnt;
+		border = true;
+		//topN = waterVal;
+		//++cnt;
 	}
 	else if (heightScaled[id - rowlen] > heightVal + eps)
 	{
@@ -268,9 +273,16 @@ kernel void distributeWater(
 	
 	float finalWater = waterVal + heightVal + currVelos * dt;
 	
-	water[id] = waterVal + currVelos * dt;
-	
-	tmp[id].y = finalWater;
+	if (!border)
+	{
+		water[id] = waterVal;
+		tmp[id].y = waterVal + heightVal;
+	}
+	else
+	{
+		water[id] = waterVal + currVelos * dt;
+		tmp[id].y = finalWater;
+	}
 	
 	//debug:	
 	//water[id] =  waterVal;
@@ -292,25 +304,30 @@ kernel void blurWater(	global float4* 	src,
     int h = get_global_size(1);
     
 	uint N = w*h;
+	uint index;
 	
     float hh = 0;
     int halfSize = maskSize / 2;
-    
-    for(int i = 0; i < maskSize; ++i)
-    {
-        int row = i - halfSize;
-        
-        for(int j = 0; j < maskSize; ++j)
-        {
-            int col = j - halfSize;
-        
-            uint index = (y + row) * w + x + col;
-        
-            index = index >= N ? index % N : index;
+    bool border = false;
+	
+   	//check if border
+	if ( !((x % w < maskSize) || ((y % w) < maskSize) || ((x % w) > (w - maskSize)) || ((y % w) > (w - maskSize))) )
+	{   
+		for(int i = 0; i < maskSize; ++i)
+		{
+			int row = i - halfSize;
+			
+			for(int j = 0; j < maskSize; ++j)
+			{
+				int col = j - halfSize;
+			
+				index = (y + row) * w + x + col;
+			
+				index = index >= N ? index % N : index;
 
-            hh += src[index].y * mask[i * maskSize + j];
-        }
-    }
-    
-    dst[y * w + x].y = hh;
+				hh += src[index].y * mask[i * maskSize + j];
+			}
+		}
+		dst[y * w + x].y = hh;
+	}
 } 

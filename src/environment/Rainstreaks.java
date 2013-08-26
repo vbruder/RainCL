@@ -258,9 +258,9 @@ public class Rainstreaks
     		    //respawn if particle is too close to viewer
                 
     		    //add to position buffer
-    		    posBuffer.put(x);
+    		    posBuffer.put(x + eyePos.x);
     		    posBuffer.put(y);
-    		    posBuffer.put(z);
+    		    posBuffer.put(z + eyePos.z);
     		    posBuffer.put(1.f);
 
     		    //add to seed buffer

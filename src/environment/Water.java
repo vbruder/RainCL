@@ -78,6 +78,7 @@ public class Water {
 	
 	//global work size for OpenCL kernels
 	private PointerBuffer gws = new PointerBuffer(1);
+	private PointerBuffer gwsSqt = new PointerBuffer(2);
 	
 	//OpenCL memory objects
 	private CLMem memHeight;
@@ -125,8 +126,8 @@ public class Water {
 
     //gauss data
 	private FloatBuffer gaussDataBuffer;
-	private int maskSize = 11;
-	private float sigma = 10;
+	private int maskSize = 5;
+	private float sigma = 16;
 
 	//ripples
 	private float circle = 0.f;
@@ -170,6 +171,7 @@ public class Water {
 	 */
 	public void sigma(float delta)
 	{
+		System.out.println("sigma:  " + sigma);
 		sigma += delta;
 		createGauss();
 	}
@@ -180,6 +182,7 @@ public class Water {
 	 */
 	public void size(int delta)
 	{
+		System.out.println("maskSize:  " + maskSize);
 		maskSize += delta;
 		createGauss();
 	}
@@ -250,6 +253,9 @@ public class Water {
         //set water map initially to height data
         gws.put(0, terrainDim);
         
+        gwsSqt.put(0, (long) Math.sqrt(terrainDim));
+        gwsSqt.put(1, (long) Math.sqrt(terrainDim));
+        
         tmpWHDataBuffer = BufferUtils.createFloatBuffer(terrainDim);
         tmpWHDataBuffer = terrain.getVertexValueBuffer();
         memTmpWaterHeight = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, tmpWHDataBuffer);
@@ -276,7 +282,14 @@ public class Water {
         
         //vertex buffer (deep copy)
         FloatBuffer waterBuffer = BufferUtils.createFloatBuffer(terrain.getVertexValueBuffer().capacity());
-        waterBuffer.put(terrain.getVertexValueBuffer());
+        for (int i = 0; i < terrain.getVertexValueBuffer().capacity(); i++)
+        {
+        	if ((i-1) % 4 == 0)
+        		waterBuffer.put(i, terrain.getVertexValueBuffer().get(i) - 0.1f);
+        	else
+        		waterBuffer.put(i, terrain.getVertexValueBuffer().get(i));
+		}
+        
         terrain.getVertexValueBuffer().rewind();
         waterBuffer.rewind();
         
@@ -435,7 +448,7 @@ public class Water {
         kernelBlur.setArg( 0, memWaterHeight);
         kernelBlur.setArg( 1, memBlur);
 
-        clEnqueueNDRangeKernel(queue, kernelBlur, 1, null, gws, null, null, null);
+        clEnqueueNDRangeKernel(queue, kernelBlur, 2, null, gwsSqt, null, null, null);
         
         clEnqueueReleaseGLObjects(queue, memWaterHeight, null, null);
         clEnqueueReleaseGLObjects(queue, memBlur, null, null);
