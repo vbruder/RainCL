@@ -259,7 +259,7 @@ public class Rainstreaks
                 
     		    //add to position buffer
     		    posBuffer.put(x + eyePos.x);
-    		    posBuffer.put(y);
+    		    posBuffer.put(y + eyePos.y);
     		    posBuffer.put(z + eyePos.z);
     		    posBuffer.put(1.f);
 
