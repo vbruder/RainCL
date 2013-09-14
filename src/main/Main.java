@@ -444,7 +444,7 @@ public class Main {
         watermap.updateSimulation(millis);
     }
     
-    //Getters and setters
+    // Getters and setters
     
     /**
      * @return true if audio

@@ -77,7 +77,7 @@ kernel void flowWaterTangential(
 	float dx = border ? 0.0 : topleft - topright + 2*left - 2*right + downleft - downright;
 	float dz = border ? 0.0 : topleft + 2*top + topright - downleft - 2*down - downright;
 	
-	float sharpness = -3.01;
+	float sharpness = -3.0;
 	
 	float dy = sharpness * sqrt(dx*dx + dz*dz);
 	

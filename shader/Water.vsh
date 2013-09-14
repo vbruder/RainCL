@@ -28,7 +28,7 @@ void main(void)
 	
 	vec3 viewPos = normalize(eyePosition - positionMC.xyz);
 	
-	cubeCoords.q = 1.0 - dot(viewPos, vec3(0, normal.y, 0));
+	cubeCoords.q = 0.9 - dot(viewPos, vec3(0, normal.y, 0));
 	
 	positionWC = positionMC;
 	gl_Position = viewProj * positionMC;

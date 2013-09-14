@@ -26,8 +26,8 @@ out vec3 particleVelocity;
 void main(void)                                                                         
 {
     //streak size
-    float height = 0.5;
-    float width = height/30.0;
+    float height = 0.6;
+    float width = height/60.0;
                                                                                  
     vec3 pos = gl_in[0].gl_Position.xyz;                                            
     vec3 toCamera = normalize(eyePosition - pos);                                    
