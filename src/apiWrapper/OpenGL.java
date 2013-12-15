@@ -17,12 +17,12 @@ public class OpenGL {
     /**
      * Width of OpenGL window.
      */
-    public static final int WIDTH = 1280;
+    public static final int WIDTH = 1920;
     
     /**
      * Height of OpenGL window.
      */
-    public static final int HEIGHT = 720;
+    public static final int HEIGHT = 1080;
     
     /**
      * Primitive Restart Index
