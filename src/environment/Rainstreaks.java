@@ -85,7 +85,7 @@ public class Rainstreaks
     private static final int NUM_RAIN_TEXTURES = 370;
     private static final int NUM_FOG_TEXTURES = 256;
     private static final int NUM_FOG_SPRITES = 8;
-    private static final int NUM_GRASS_SPRITES = 1024;
+    private static final int NUM_GRASS_SPRITES = 1 << 10;
     
     //OpenCL pointer
     private static CLContext context;
@@ -392,9 +392,9 @@ public class Rainstreaks
     	{
     		for (int j = 0; j < Math.sqrt(NUM_GRASS_SPRITES); j++)
         	{
-	    		grassDataBuffer.put(0.8f*i);
+	    		grassDataBuffer.put(1.0f*i);
 	    		grassDataBuffer.put(0.0f  );
-	    		grassDataBuffer.put(0.8f*j);
+	    		grassDataBuffer.put(1.0f*j);
 	    		grassDataBuffer.put(1.0f  );
         	}
 		}
