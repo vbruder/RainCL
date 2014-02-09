@@ -392,15 +392,15 @@ public class Rainstreaks
     	{
     		for (int j = 0; j < Math.sqrt(NUM_GRASS_SPRITES); j++)
         	{
-	    		grassDataBuffer.put(1.0f*i);
-	    		grassDataBuffer.put(0.0f  );
-	    		grassDataBuffer.put(1.0f*j);
+	    		grassDataBuffer.put(0.3f*i + r.nextFloat()/10 );
+	    		grassDataBuffer.put(0.0f + r.nextFloat()/1);
+	    		grassDataBuffer.put(0.3f*j + r.nextFloat()/10);
 	    		grassDataBuffer.put(1.0f  );
         	}
 		}
     	grassDataBuffer.rewind();
     	grassTex = Texture.generateTexture("media/grassTex/grassTex.jpg", GRASS_TEX_UNIT);
-    	grassAlphaTex = Texture.generateTexture("media/grassTex/grassAlphaTex.jpg", GRASS_ALPHA_TEX_UNIT);
+    	grassAlphaTex = Texture.generateTexture("media/grassTex/grassAlphaTex.png", GRASS_ALPHA_TEX_UNIT);
     	
         //create OpenGL -CL buffer for grass
         vertArrayGrassID = glGenVertexArrays();

@@ -292,7 +292,9 @@ public class Main {
             	glEnable(GL_BLEND);
             	glDisable(GL_DEPTH_TEST);
             	glDisable(GL_CULL_FACE);
+            	glDisable(GL_DEPTH_TEST);
             	raindrops.drawFog(cam);
+            	glEnable(GL_DEPTH_TEST);
             	glEnable(GL_CULL_FACE);
             	glDisable(GL_BLEND);
             	glEnable(GL_DEPTH_TEST);
@@ -304,7 +306,9 @@ public class Main {
 	        	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	        	glEnable(GL_BLEND);
 	        	glDisable(GL_CULL_FACE);
+	        	glDisable(GL_DEPTH_TEST);
 	        	raindrops.drawGrass(cam);
+	        	glEnable(GL_DEPTH_TEST);
 	        	glEnable(GL_CULL_FACE);
 	        	glDisable(GL_BLEND);
 
