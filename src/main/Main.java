@@ -68,11 +68,12 @@ public class Main {
     private static final Matrix4f viewProjMatrix = new Matrix4f();
         
     //environment
-    private static boolean drawTerrain 	= true;
-    private static boolean drawRain 	= true;
-    private static boolean drawWater 	= true;
-    private static boolean drawSky 		= true;
-    private static boolean drawFog		= true;
+    private static boolean drawTerrain 	= false;
+    private static boolean drawRain 	= false;
+    private static boolean drawWater 	= false;
+    private static boolean drawSky 		= false;
+    private static boolean drawFog		= false;
+    private static boolean drawGrass	= true;
     
     private static boolean audio = false;
     private static boolean points = false;
@@ -291,10 +292,26 @@ public class Main {
             	glEnable(GL_BLEND);
             	glDisable(GL_DEPTH_TEST);
             	glDisable(GL_CULL_FACE);
+            	glDisable(GL_DEPTH_TEST);
             	raindrops.drawFog(cam);
+            	glEnable(GL_DEPTH_TEST);
             	glEnable(GL_CULL_FACE);
             	glDisable(GL_BLEND);
             	glEnable(GL_DEPTH_TEST);
+            }
+            
+            //grass blade geometries
+            if (drawGrass)
+            {
+	        	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	        	glEnable(GL_BLEND);
+	        	glDisable(GL_CULL_FACE);
+	        	glDisable(GL_DEPTH_TEST);
+	        	raindrops.drawGrass(cam);
+	        	glEnable(GL_DEPTH_TEST);
+	        	glEnable(GL_CULL_FACE);
+	        	glDisable(GL_BLEND);
+
             }
             
             //terrain

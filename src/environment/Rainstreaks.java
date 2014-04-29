@@ -76,13 +76,16 @@ import util.Util;
  */
 public class Rainstreaks
 {
-    private static final int RAINTEX_UNIT 		= 12;
-    private static final int RAINFACTORS_UNIT 	= 13;
-    private static final int FOGTEX_UNIT 		= 14;
+    private static final int RAINTEX_UNIT 			= 12;
+    private static final int RAINFACTORS_UNIT 		= 13;
+    private static final int FOGTEX_UNIT 			= 14;
+    private static final int GRASS_TEX_UNIT			= 15;
+    private static final int GRASS_ALPHA_TEX_UNIT	= 16;
     
     private static final int NUM_RAIN_TEXTURES = 370;
     private static final int NUM_FOG_TEXTURES = 256;
     private static final int NUM_FOG_SPRITES = 8;
+    private static final int NUM_GRASS_SPRITES = 1 << 10;
     
     //OpenCL pointer
     private static CLContext context;
@@ -98,12 +101,14 @@ public class Rainstreaks
     private static FloatBuffer veloBuffer;
     private static FloatBuffer vertexDataBuffer;
     private static FloatBuffer fogDataBuffer;
+    private static FloatBuffer grassDataBuffer;
     
     //OpenCL memory objects
     private static CLMem memRainPos;
     private static CLMem memVelos;
     private static CLMem memSeed;
     private static CLMem memFogPos;
+    private static CLMem memGrassPos;
     
     //particle settings
     private static int maxParticles;
@@ -122,19 +127,24 @@ public class Rainstreaks
     //texture IDs
     private Texture rainTex;
     private Texture rainFactTex;
-    private Texture fogTex;
+    private Texture fogTex;  
+    private Texture grassTex;
+    private Texture grassAlphaTex;
     
     //shader
     private ShaderProgram streakRenderSP;
     private ShaderProgram fogRenderSP;
+    private ShaderProgram grassRenderSP;
     private static Vector3f eyePos = new Vector3f(0.f, 0.f, 0.f);
     private final Matrix4f viewProj = new Matrix4f();
     //array IDs
 	private static int vertArrayID;
 	private static int vertArrayFogID;
+	private static int vertArrayGrassID;
 	//buffer IDs
     private static int vertBufferID;
     private static int vertBufferFogID;
+    private static int vertBufferGrassID;
     
     //delta time for animations
     private float dt;
@@ -169,6 +179,7 @@ public class Rainstreaks
         createWindData();
         createFogData();
         createRainData();
+        createGrassData();
         createBuffer();
         createShaderProgram();
     }
@@ -222,6 +233,7 @@ public class Rainstreaks
     { 
         this.streakRenderSP = new ShaderProgram("./shader/Rain.vsh", "./shader/Rain.gsh", "./shader/Rain.fsh");
         this.fogRenderSP	= new ShaderProgram("./shader/Fog.vsh", "./shader/Fog.gsh", "./shader/Fog.fsh");
+        this.grassRenderSP	= new ShaderProgram("./shader/Grass.vsh", "./shader/Grass.gsh", "./shader/Grass.fsh");
         
         //load the 370 point light textures into a texture array
         rainTex = Util.createTextureArray("media/rainTex/point/cv0_vPos(", ").png", RAINTEX_UNIT, GL_R16, GL_RED, NUM_RAIN_TEXTURES);
@@ -369,6 +381,41 @@ public class Rainstreaks
         memFogPos = clCreateFromGLBuffer(context, CL_MEM_READ_WRITE, vertBufferFogID);
     }
     
+    
+    /**
+     * Create data and buffers for grass visualization and animation.
+     */
+    private void createGrassData()
+    {
+    	grassDataBuffer = BufferUtils.createFloatBuffer(4*NUM_GRASS_SPRITES);
+    	for (int i = 0; i < Math.sqrt(NUM_GRASS_SPRITES); i++)
+    	{
+    		for (int j = 0; j < Math.sqrt(NUM_GRASS_SPRITES); j++)
+        	{
+	    		grassDataBuffer.put(0.3f*i + r.nextFloat()/10 );
+	    		grassDataBuffer.put(0.0f + r.nextFloat()/1);
+	    		grassDataBuffer.put(0.3f*j + r.nextFloat()/10);
+	    		grassDataBuffer.put(1.0f  );
+        	}
+		}
+    	grassDataBuffer.rewind();
+    	grassTex = Texture.generateTexture("media/grassTex/grassTex.jpg", GRASS_TEX_UNIT);
+    	grassAlphaTex = Texture.generateTexture("media/grassTex/grassAlphaTex.png", GRASS_ALPHA_TEX_UNIT);
+    	
+        //create OpenGL -CL buffer for grass
+        vertArrayGrassID = glGenVertexArrays();
+        glBindVertexArray(vertArrayGrassID);
+        vertBufferGrassID = glGenBuffers();
+        
+        glBindBuffer(GL_ARRAY_BUFFER, vertBufferGrassID);
+        glBufferData(GL_ARRAY_BUFFER, grassDataBuffer, GL_DYNAMIC_DRAW);
+
+        glEnableVertexAttribArray(ShaderProgram.ATTR_POS);
+        glVertexAttribPointer(ShaderProgram.ATTR_POS, 4, GL_FLOAT, false, 16,  0);
+        memGrassPos = clCreateFromGLBuffer(context, CL_MEM_READ_WRITE, vertBufferGrassID);
+    }
+    
+    
     /**
      * Creates all significant OpenCL buffers.
      */
@@ -437,6 +484,7 @@ public class Rainstreaks
         
         clEnqueueAcquireGLObjects(queue, memRainPos, null, null);
         clEnqueueAcquireGLObjects(queue, memFogPos, null, null);
+        clEnqueueAcquireGLObjects(queue, memGrassPos, null, null);
         
         kernelMoveStreaks.setArg(4, dt);
         kernelMoveStreaks.setArg(5, eyePos.x);
@@ -452,6 +500,7 @@ public class Rainstreaks
         clEnqueueNDRangeKernel(queue, kernelMoveFog, 1, null, gws, null, null, null);
         gws.put(0, maxParticles);        
         
+        clEnqueueReleaseGLObjects(queue, memGrassPos, null, null);
         clEnqueueReleaseGLObjects(queue, memFogPos, null, null);
         clEnqueueReleaseGLObjects(queue, memRainPos, null, null);
         
@@ -529,6 +578,27 @@ public class Rainstreaks
         glBindVertexArray(vertArrayFogID);
         glDrawArrays(GL_POINTS, 0, NUM_FOG_SPRITES);
     }
+    
+    
+    /**
+     * Draw grass sprites.
+     */
+    public void drawGrass(Camera cam)
+    {
+        //render fog
+        grassRenderSP.use();
+        
+        grassRenderSP.setUniform("view", cam.getView());
+        grassRenderSP.setUniform("proj", cam.getProjection());
+    	
+        grassRenderSP.setUniform("eyePosition", eyePos);
+        grassRenderSP.setUniform("grassTex", grassTex);
+        grassRenderSP.setUniform("grassAlphaTex", grassAlphaTex);
+        
+        glBindVertexArray(vertArrayGrassID);
+        glDrawArrays(GL_POINTS, 0, NUM_GRASS_SPRITES);
+    }
+    
     
     /**
      * Free memory.
